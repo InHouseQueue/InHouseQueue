@@ -1,0 +1,9 @@
+1. How to start the bot?
+-> Replace the old token in .env with your new token.
+-> Run main.py file and the bot will start.
+
+2. What all dependencies are required?
+All required dependencies are listed in requirements.txt
+
+
+If you need additional help, feel free to reach out to Aarno#0266

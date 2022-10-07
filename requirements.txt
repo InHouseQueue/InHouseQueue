@@ -1,0 +1,4 @@
+aiosqlite
+disnake == 2.6.0
+disnake-pagination
+python-dotenv
