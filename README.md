@@ -26,7 +26,7 @@ python3 main.py
 ```
 
 ## Hosting
-Recommended to host on a server to the leaderboard is not reset. Video tutorial coming soon!
+Recommended to host on a server so the leaderboard is not reset. Video tutorial coming soon!
 
 # Commands
 ### Queue commands
