@@ -170,7 +170,7 @@ class ReadyButton(ui.View):
                 embed=await self.gen_embed(inter),
             )
 
-            if len(self.players_ready) == 2:
+            if len(self.players_ready) == 10:
                 for member in game_members:
                     await self.bot.execute(
                         f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{game_id}'"
