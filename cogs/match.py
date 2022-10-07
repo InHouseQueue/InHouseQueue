@@ -477,7 +477,7 @@ class Match(Cog):
         if not isinstance(ctx, context.Context):
             await ctx.send(embed=success("Game was started."))
 
-        embed = Embed(title="Match Overview", color=Color.blurple())
+        embed = Embed(title="Match Overview - SR Tournament Draft", color=Color.blurple())
         embed.add_field(name="🔴 Red", value="No members yet")
         embed.add_field(name="🔵 Blue", value="No members yet")
         if ctx.author.avatar:
