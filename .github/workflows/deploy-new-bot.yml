@@ -13,7 +13,7 @@ jobs:
           command: |
             sudo apt-get install git -y
             sudo apt-get install python3-pip -y
-            pip install -r requirements.txt
+            pip install -r /root/${{ env.REPO_NAME }}/requirements.txt
           host: ${{ secrets.HOST }}
           user: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
