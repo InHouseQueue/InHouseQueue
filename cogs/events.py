@@ -25,7 +25,7 @@ class Events(Cog):
             else:
                 embed = msg.embeds[0]
             if (
-                not embed.title == "Match Overview"
+                not embed.title == "Match Overview - SR Tournament Draft"
                 and not embed.description == "Game was found! Time to ready up!"
             ):
                 try:

@@ -477,6 +477,7 @@ class Match(Cog):
         if not isinstance(ctx, context.Context):
             await ctx.send(embed=success("Game was started."))
 
+        # If you change this - update /events.py L28 as well!
         embed = Embed(title="Match Overview - SR Tournament Draft", color=Color.blurple())
         embed.add_field(name="🔴 Red", value="No members yet")
         embed.add_field(name="🔵 Blue", value="No members yet")
