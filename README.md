@@ -66,6 +66,7 @@ Note: Make use of the discord slash command feature - running these commands wil
 
 # How does it work?
 When a match is initiated, 5 buttons appear that represent a role. Once each position has 2 players, all participating players are tagged to announce that a game has been found. All games are given an ID which can be used for various things.
+
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/match%20start.png)
 
 Players are required to ready up. The queue will have a minimum time to ready up. This is displayed as a time in everyones ** local timezone**, if all 10 players do not ready up in time, the queue is reset. 
