@@ -1,3 +1,7 @@
+![Discord Shield](https://discordapp.com/api/guilds/1005601917466058792/widget.png?style=shield) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/badge/version-v0.1.0-red.svg)](https://semver.org)
+
+
+
 # In House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/queue.png)
 
@@ -98,5 +102,5 @@ Please read CONTRIBUTING.md for details on our code of conduct, and the process 
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 # Acknowledgments
-[Aarno]([https://cojored.com/](https://aarno.is-a.dev/)
+[Aarno](https://aarno.is-a.dev)
 
