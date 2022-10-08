@@ -17,7 +17,7 @@ class ChannelCommands(Cog):
             return True
 
         await inter.send(
-            embeds.error(
+            embed=embeds.error(
                 "You need to have **administrator** permission to run this command."
             )
         )
@@ -30,7 +30,7 @@ class ChannelCommands(Cog):
             return True
 
         await ctx.send(
-            embeds.error(
+            embed=embeds.error(
                 "You need to have **administrator** permission to run this command."
             )
         )
@@ -43,14 +43,14 @@ class ChannelCommands(Cog):
         )
         if data:
             return await ctx.send(
-                f"{channel.mention} is already setup as the queue channel."
+                embed=embeds.error(f"{channel.mention} is already setup as the queue channel.")
             )
 
         await self.bot.execute(
             "INSERT INTO queuechannels(channel_id) VALUES($1)", channel.id
         )
 
-        await ctx.send(f"{channel.mention} was successfully set as queue channel.")
+        await ctx.send(embed=embeds.success(f"{channel.mention} was successfully set as queue channel."))
 
     @slash_command(name="setchannel")
     async def setchannel_slash(self, ctx, channel: TextChannel):
@@ -67,7 +67,7 @@ class ChannelCommands(Cog):
         )
         if data:
             return await ctx.send(
-                f"{channel.mention} is already setup as the winner log channel."
+                embed=embeds.error(f"{channel.mention} is already setup as the winner log channel.")
             )
 
         await self.bot.execute(
@@ -76,7 +76,7 @@ class ChannelCommands(Cog):
             channel.id,
         )
 
-        await ctx.send(f"{channel.mention} was successfully set as winner log channel.")
+        await ctx.send(embed=embeds.success(f"{channel.mention} was successfully set as winner log channel."))
 
     @slash_command(name="setwinnerlog")
     async def setwinnerlog_slash(self, ctx, channel: TextChannel):
