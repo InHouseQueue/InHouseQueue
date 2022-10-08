@@ -98,5 +98,5 @@ Please read CONTRIBUTING.md for details on our code of conduct, and the process 
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 # Acknowledgments
-[Aarno]([https://cojored.com/](https://aarno.is-a.dev/))
+[Aarno]([https://cojored.com/](https://aarno.is-a.dev/)
 
