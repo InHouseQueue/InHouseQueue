@@ -47,8 +47,9 @@ Recommended to host on a server so the leaderboard is not reset. Video tutorial 
 - `/win` - Initiate a vote once a game has been completed. The team first to 6 votes, will be confirmed as the winner.
 - `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
 
+Note: `admin reset` Command executed immediately, but requires someone to rejoin the queue to refresh the Embed.
 ### Admin commands
-- **`/admin reset user [member]`** - Removes the member from all queues
+- **`/admin reset user [member]`** - Removes the member from all queues.
 ```
 /admin reset user @John
 ```
