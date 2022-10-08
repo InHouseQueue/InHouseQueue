@@ -1,6 +1,5 @@
 ![Discord Shield](https://discord.com/api/guilds/1005601917466058792/widget.png?style=shield) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/badge/version-v0.1.0-red.svg)](https://semver.org)
 
-
 # In House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/queue.png)
 
@@ -9,6 +8,12 @@ A Discord Bot designed to organise League of Legends In-house games. Inspired by
 Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
 
 **Support for more games are planned.**
+
+## Servers
+
+- Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
+- Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the bot out yourself!
+- Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the bot to your server
 
 # Getting started
 ### Prerequisites
