@@ -72,7 +72,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="user")
     async def user_slash(self, ctx, member: Member):
         """
-            Remove a user from all queues.
+            Remove a user from all queues. Command executed immediately. Requires someone to rejoin the queue to refresh the Embed.
         """
         await ctx.response.defer()
         await self.user(ctx, member)
@@ -93,7 +93,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="queue")
     async def queue_slash(self, ctx, game_id: str):
         """
-            Reset a queue.
+            Reset a queue. Command executed immediately. Requires someone to rejoin the queue to refresh the Embed.
         """
         await ctx.response.defer()
         await self.queue(ctx, game_id)
@@ -184,7 +184,7 @@ class Admin(Cog):
         team=Param(choices=[OptionChoice("Red", "red"), OptionChoice("Blue", "blue")]),
     ):
         """
-            Re-announce winner of a game.
+            Change the winner of a game.
         """
         await ctx.response.defer()
         await self.change_winner(ctx, game_id, team)
@@ -214,7 +214,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="winner")
     async def winner_slash(self, ctx, role: Role):
         """
-            Announce winner of a game.
+            Announce winner of a game. Skips voting. Game must be in progress.
         """
         await ctx.response.defer()
         await self.winner(ctx, role)

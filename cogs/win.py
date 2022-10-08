@@ -185,7 +185,7 @@ class Win(Cog):
     @slash_command(name="win")
     async def win_slash(self, ctx):
         """
-            Select a winner team.
+            Start a vote to select the winning team.
         """
         await ctx.response.defer()
         await self.process_win(ctx.channel, ctx.author)
