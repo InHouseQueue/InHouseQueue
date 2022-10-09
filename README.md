@@ -34,7 +34,7 @@ python3 main.py
 ```
 
 ## Hosting
-Recommended to host on a server so the leaderboard is not reset. Video tutorial coming soon!
+Please see my Hosting Readme - https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/HOSTING.md 
 
 # Commands
 ### Queue commands
