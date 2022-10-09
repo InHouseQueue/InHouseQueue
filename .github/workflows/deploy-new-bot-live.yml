@@ -1,8 +1,8 @@
-name: Deploy new Bot
+name: Deploy new Bot - Live
 on:
   workflow_dispatch:
 env:
-  REPO_NAME: ${{ github.event.repository.name }}
+  REPO_NAME: ${{ github.event.repository.name }}-live
 jobs:
   install-requirements:
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
       runs-on: ubuntu-latest
       timeout-minutes: 2
       env:
-        BOT_TOKEN: ${{ secrets.BOT_TOKEN_TEST }}
+        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
       steps:
         - id: add-bot-token
           uses: fifsky/ssh-action@master
