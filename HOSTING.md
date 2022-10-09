@@ -18,7 +18,7 @@ I use [Vultr](https://my.vultr.com/deploy/) to deploy the bot, but any other VPS
 
 **Note**: I know this will definitely work if you are using Vultr + Ubuntu. Some steps may differ slightly depending on your server provider, but it should be very similar.
 
-A YouTube video going over this in **a lot** of detail - [here](https://www.youtube.com/watch?v=iI9TyX-a5z0)
+A YouTube video going over this in **a lot** of detail - [here](https://www.youtube.com/watch?v=iI9TyX-a5z0). However, you probably only need to do the steps below.
 
 Feel free to use my Vultr $100 free hosting credit [link](https://www.vultr.com/?ref=9182917-8H), if you decide to use Vultr that is!
 ## GitHub Actions workflows
