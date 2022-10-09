@@ -4,20 +4,6 @@ on:
 env:
   REPO_NAME: ${{ github.event.repository.name }}-live
 jobs:
-  install-requirements:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Installing requirements for ${{ env.REPO_NAME }}
-        uses: fifsky/ssh-action@master
-        with:
-          command: |
-            sudo apt-get install git -y
-            sudo apt-get install python3-pip -y
-            pip install -r /root/${{ env.REPO_NAME }}/requirements.txt
-          host: ${{ secrets.HOST }}
-          user: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-
   deploy-via-sftp:
     runs-on: ubuntu-latest
     steps:
