@@ -55,7 +55,7 @@ class ChannelCommands(Cog):
     @slash_command(name="setchannel")
     async def setchannel_slash(self, ctx, channel: TextChannel):
         """
-            Set a channel for queue.
+            Set a channel to be used as the queue.
         """
         await ctx.response.defer()
         await self.setchannel(ctx, channel)
