@@ -1,4 +1,4 @@
-name: Update Bot
+name: Update Bot - Live
 on:
   push:
     branches: [ live ]
