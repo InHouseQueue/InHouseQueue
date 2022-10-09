@@ -41,4 +41,5 @@ Feel free to use my Vultr $100 free hosting credit [link](https://www.vultr.com/
 12. Once this has run successfully, your bot should be online. 
 13. Last step - Run the `Update Bot` work flow. This will restart the bot again.
 14. Once it's successful, everytime you merge into your `main` branch, the bot will restart and will have the new code on your server - automatically. 
-15. Any questions about this or the video please visit my [Support Discord](https://discord.gg/NDKMeT6GE7) Page
+15. My YouTube video has more details on how to start, restart, stop and debug the bot once it is running. Time stamp here [25:13](https://www.youtube.com/watch?v=iI9TyX-a5z0&t=1513s)
+16. Any questions about this or the video please visit my [Support Discord](https://discord.gg/NDKMeT6GE7) Page
