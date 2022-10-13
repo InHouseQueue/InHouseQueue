@@ -53,7 +53,7 @@ class Admin(Cog):
         )
         if member_data:
             game_data = await self.bot.fetchrow(
-                "SELECT * FROM games WHERE game_id = ? ", f'{member_data[3]}'
+                "SELECT * FROM games WHERE game_id = ? ", member_data[3]
             )
             if not game_data:
                 await self.bot.execute(
@@ -80,11 +80,11 @@ class Admin(Cog):
     @reset.command()
     async def queue(self, ctx, game_id):
         member_data = await self.bot.fetchrow(
-            "SELECT * FROM game_member_data WHERE game_id = ?", f'{game_id}'
+            "SELECT * FROM game_member_data WHERE game_id = ?", game_id
         )
         if member_data:
             await self.bot.execute(
-                "DELETE FROM game_member_data WHERE game_id = ? ", f'{game_id}'
+                "DELETE FROM game_member_data WHERE game_id = ? ", game_id
             )
             await ctx.send(embed=success(f"Game **{game_id}** queue was refreshed."))
         else:
