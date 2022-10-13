@@ -49,15 +49,15 @@ class Admin(Cog):
     @reset.command()
     async def user(self, ctx, member: Member):
         member_data = await self.bot.fetchrow(
-            f"SELECT * FROM game_member_data WHERE author_id = {member.id}"
+            f"SELECT * FROM game_member_data WHERE author_id = ? ", member.id
         )
         if member_data:
             game_data = await self.bot.fetchrow(
-                f"SELECT * FROM games WHERE game_id = '{member_data[3]}'"
+                "SELECT * FROM games WHERE game_id = ? ", member_data[3]
             )
             if not game_data:
                 await self.bot.execute(
-                    f"DELETE FROM game_member_data WHERE author_id = {member.id}"
+                    "DELETE FROM game_member_data WHERE author_id = ? ", member.id
                 )
                 await ctx.send(
                     embed=success(f"{member.mention} was removed from all queues.")
@@ -72,7 +72,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="user")
     async def user_slash(self, ctx, member: Member):
         """
-            Remove a user from all queues. Command executed immediately. Requires someone to rejoin the queue to refresh the Embed.
+            Remove a user from all queues. Requires someone to rejoin the queue to refresh the Embed.
         """
         await ctx.response.defer()
         await self.user(ctx, member)
@@ -80,11 +80,11 @@ class Admin(Cog):
     @reset.command()
     async def queue(self, ctx, game_id):
         member_data = await self.bot.fetchrow(
-            f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'"
+            "SELECT * FROM game_member_data WHERE game_id = ?", game_id
         )
         if member_data:
             await self.bot.execute(
-                f"DELETE FROM game_member_data WHERE game_id = '{game_id}'"
+                "DELETE FROM game_member_data WHERE game_id = ? ", game_id
             )
             await ctx.send(embed=success(f"Game **{game_id}** queue was refreshed."))
         else:
@@ -93,7 +93,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="queue")
     async def queue_slash(self, ctx, game_id: str):
         """
-            Reset a queue. Command executed immediately. Requires someone to rejoin the queue to refresh the Embed.
+            Reset a queue. Requires someone to rejoin the queue to refresh the Embed.
         """
         await ctx.response.defer()
         await self.queue(ctx, game_id)
@@ -214,7 +214,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="winner")
     async def winner_slash(self, ctx, role: Role):
         """
-            Announce winner of a game. Skips voting. Game must be in progress.
+            Announce the winner of a game. Skips voting. The game must be in progress.
         """
         await ctx.response.defer()
         await self.winner(ctx, role)
