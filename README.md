@@ -34,7 +34,7 @@ python3 main.py
 ```
 
 ## Hosting
-Recommended to host on a server so the leaderboard is not reset. Video tutorial coming soon!
+Please see my Hosting Readme - https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/HOSTING.md 
 
 # Commands
 ### Queue commands
@@ -96,7 +96,7 @@ Player's wins are tracked and can be displayed with `!leaderboard` command. An a
 
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/leaderboard.png)
 
-The lobby text channel and the team voice channels are deleted once a game is conclude, the roles are also deleted. Further, the results of a game will be sent to a channel of your choice - set this with `/setwinnerlog`. You may have multiple games running on your server at the same time as each game is given a unique ID. This unique ID can be used by admins to cancel, score and reset games. See [Admin](https://github.com/HenrySpartGlobal/InHouseQueue#admin-commands) commands sectin above.  
+The lobby text channel and the team voice channels are deleted once a game is concluded, the roles are also deleted. Further, the results of a game will be sent to a channel of your choice - set this with `/setwinnerlog`. You may have multiple games running on your server at the same time as each game is given a unique ID. This unique ID can be used by admins to cancel, score and reset games. See [Admin](https://github.com/HenrySpartGlobal/InHouseQueue#admin-commands) commands sectin above.  
 
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/finish.png)
 
