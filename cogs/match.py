@@ -98,7 +98,7 @@ class ReadyButton(ui.View):
     async def gen_embed(self, inter):
         embed = inter.message.embeds[0]
         embed.clear_fields()
-        teams = ["red", "blue"]
+        teams = ["blue", "red"]
 
         for team in teams:
 
@@ -278,7 +278,7 @@ class QueueButtons(ui.View):
     async def gen_embed(self, inter) -> Embed:
         embed = inter.message.embeds[0]
         embed.clear_fields()
-        teams = ["red", "blue"]
+        teams = ["blue", "red"]
 
         for team in teams:
 
@@ -315,14 +315,14 @@ class QueueButtons(ui.View):
 
     async def add_participant(self, inter, button) -> None:
         label = button.label.lower()
-        team = "red"
+        team = "blue"
 
         data = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE role = '{label}' and game_id = '{self.game_id}'"
         )
         if data:
-            if data[2] == "red":
-                team = "blue"
+            if data[2] == "blue":
+                team = "red"
             for button in self.children:
                 if button.label.lower() == label:
                     button.disabled = True
@@ -479,8 +479,8 @@ class Match(Cog):
 
         # If you change this - update /events.py L28 as well!
         embed = Embed(title="Match Overview - SR Tournament Draft", color=Color.blurple())
-        embed.add_field(name="🔴 Red", value="No members yet")
         embed.add_field(name="🔵 Blue", value="No members yet")
+        embed.add_field(name="🔴 Red", value="No members yet")
         if ctx.author.avatar:
             embed.set_author(
                 name="Initiated by " + ctx.author.name, icon_url=ctx.author.avatar.url
