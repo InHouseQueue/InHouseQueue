@@ -136,7 +136,7 @@ class ReadyButton(ui.View):
 
     @tasks.loop(seconds=3)
     async def disable_button(self):
-        if (datetime.now() - self.time_of_execution).seconds >= 180:
+        if (datetime.now() - self.time_of_execution).seconds >= 300:
             try:
                 await self.msg.edit(
                     "Game was cancelled as everyone was not ready.", view=None

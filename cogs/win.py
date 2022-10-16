@@ -44,20 +44,20 @@ class Win(Cog):
                 blue = 6
         else:
             msg = await channel.send("Which team won?")
-            await msg.add_reaction("🔴")
             await msg.add_reaction("🔵")
+            await msg.add_reaction("🔴")
             self.active_win_commands.append(channel.id)
 
             while True:
                 reaction, user = await self.bot.wait_for(
                     "reaction_add",
-                    check=lambda reaction, user: str(reaction.emoji) in ["🔵", "🔴"]
+                    check=lambda reaction, user: str(reaction.emoji) in ["🔴", "🔵"]
                     and user.id in [member[0] for member in member_data],
                 )
 
-                if str(reaction.emoji) == "🔵":
-                    blue += 1
                 if str(reaction.emoji) == "🔴":
+                    blue += 1
+                if str(reaction.emoji) == "🔵":
                     red += 1
 
                 if blue >= 6 or red >= 6:  # CHECK
