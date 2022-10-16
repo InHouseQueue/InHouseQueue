@@ -166,7 +166,7 @@ class ReadyButton(ui.View):
 
             self.players_ready.append(inter.author.id)
             await inter.message.edit(
-                f"{len(self.players_ready)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=170))))}:t>",
+                f"{len(self.players_ready)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=290))))}:t>",
                 embed=await self.gen_embed(inter),
             )
 
