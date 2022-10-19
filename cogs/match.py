@@ -134,9 +134,9 @@ class ReadyButton(ui.View):
 
         return embed
 
-    @tasks.loop(seconds=3)
+    @tasks.loop(seconds=1)
     async def disable_button(self):
-        if (datetime.now() - self.time_of_execution).seconds >= 300:
+        if (datetime.now() - self.time_of_execution).seconds >= 600:
             try:
                 await self.msg.edit(
                     "Game was cancelled as everyone was not ready.", view=None
@@ -166,7 +166,7 @@ class ReadyButton(ui.View):
 
             self.players_ready.append(inter.author.id)
             await inter.message.edit(
-                f"{len(self.players_ready)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=290))))}:t>",
+                f"{len(self.players_ready)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=590))))}:t>",
                 embed=await self.gen_embed(inter),
             )
 
@@ -186,10 +186,12 @@ class ReadyButton(ui.View):
                     overwrites_red = {
                         inter.guild.default_role: PermissionOverwrite(connect=False),
                         red_role: PermissionOverwrite(connect=True),
+                        self.bot.user: PermissionOverwrite(send_messages=True, manage_channels=True, connect=True),
                     }
                     overwrites_blue = {
                         inter.guild.default_role: PermissionOverwrite(connect=False),
                         blue_role: PermissionOverwrite(connect=True),
+                        self.bot.user: PermissionOverwrite(send_messages=True, manage_channels=True, connect=True),
                     }
                     mutual_overwrites = {
                         inter.guild.default_role: PermissionOverwrite(
@@ -197,7 +199,7 @@ class ReadyButton(ui.View):
                         ),
                         red_role: PermissionOverwrite(send_messages=True),
                         blue_role: PermissionOverwrite(send_messages=True),
-                        self.bot.user: PermissionOverwrite(send_messages=True)
+                        self.bot.user: PermissionOverwrite(send_messages=True, manage_channels=True),
                     }
 
                     # Creating channels
