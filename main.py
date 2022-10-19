@@ -3,9 +3,10 @@ import os
 import traceback
 
 import aiosqlite
-from disnake import Intents
+from disnake import Intents, Embed, Color, File
 from disnake.ext import commands
 from dotenv import load_dotenv
+from io import StringIO
 
 from core import embeds
 
@@ -157,11 +158,36 @@ async def on_command_error(ctx, error):
     elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
         await ctx.send(embed=embeds.error(str(error)))
     else:
+        await bot.wait_until_ready()
+        channel = bot.get_channel(1032356383506575372) # Server Support Channel
+        # channel = bot.get_channel(1032359147833921616) # Testing Server Channel
+
+        if isinstance(ctx, commands.Context):
+            command = ctx.command
+        else:
+            command = ctx.data.name
+
+        e = Embed(
+            title="Exception!",
+            description=f"Guild: {ctx.guild.name}\nGuildID: {ctx.guild.id}\nUser: {ctx.author}\nUserID: {ctx.author.id}\n\nError: {error}\nCommand: {command}",
+            color=Color.blurple(),
+        )
         etype = type(error)
         trace = error.__traceback__
         lines = traceback.format_exception(etype, error, trace)
         traceback_text = "".join(lines)
-        print(traceback_text)
+        
+        await channel.send(
+            embed=e,
+            file=File(filename="traceback.txt", fp=StringIO(f"{traceback_text}\n")),
+        )
+
+
+        # etype = type(error)
+        # trace = error.__traceback__
+        # lines = traceback.format_exception(etype, error, trace)
+        # traceback_text = "".join(lines)
+        # print(traceback_text)
 
 
 @bot.event
