@@ -171,6 +171,8 @@ class ReadyButton(ui.View):
             )
 
             if len(self.players_ready) == 10:
+            # CHECK
+            # if len(self.players_ready) == 2:
                 for member in game_members:
                     await self.bot.execute(
                         f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{game_id}'"
@@ -195,6 +197,7 @@ class ReadyButton(ui.View):
                         ),
                         red_role: PermissionOverwrite(send_messages=True),
                         blue_role: PermissionOverwrite(send_messages=True),
+                        self.bot.user: PermissionOverwrite(send_messages=True)
                     }
 
                     # Creating channels
