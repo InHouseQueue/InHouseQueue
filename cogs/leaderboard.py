@@ -12,7 +12,7 @@ class Leaderboard(Cog):
 
     @command()
     async def leaderboard(self, ctx):
-        user_data = await self.bot.fetch("SELECT * FROM points")
+        user_data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id}")
         user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
         embed = Embed(title=f"🏆 Leaderboard", color=Color.blurple())
