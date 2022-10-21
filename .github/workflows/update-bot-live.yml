@@ -13,10 +13,10 @@ jobs:
           uses: fifsky/ssh-action@master
           with:
             command: |
-              cd /root/${{ env.REPO_NAME }} || exit
+              cd /root/${{ env.REPO_NAME }}-live || exit
               DATE=$(date '+%Y-%m-%d-%H:%M:%S')
               sqlite3 main.sqlite ".backup m_database-${DATE}.sq3.bak"
-              mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}
+              mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}-live
             host: ${{ secrets.HOST }}
             user: root
             key: ${{ secrets.SSH_PRIVATE_KEY }}
