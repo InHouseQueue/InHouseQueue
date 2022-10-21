@@ -12,7 +12,8 @@ class Leaderboard(Cog):
 
     @command()
     async def leaderboard(self, ctx):
-        user_data = await self.bot.fetch("SELECT * FROM points")
+        user_data = await self.bot.fetch(f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id}")
+        user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
         user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
         embed = Embed(title=f"🏆 Leaderboard", color=Color.blurple())
