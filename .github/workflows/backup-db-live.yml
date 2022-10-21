@@ -1,4 +1,4 @@
-name: Back Up DB
+name: Back Up DB - Live
 on:
   workflow_dispatch:
 env:
@@ -7,7 +7,7 @@ jobs:
   backup-db:
     runs-on: ubuntu-latest
     steps:
-      - id: Backing up Database
+      - id: backing-up-db
         uses: fifsky/ssh-action@master
         with:
           command: |
