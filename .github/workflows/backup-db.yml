@@ -1,0 +1,20 @@
+name: Back Up DB
+on:
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+jobs:
+  backup-db:
+    runs-on: ubuntu-latest
+    steps:
+      - id: backing-up-db
+        uses: fifsky/ssh-action@master
+        with:
+          command: |
+            cd /root/${{ env.REPO_NAME }} || exit
+            DATE=$(date '+%Y-%m-%d-%H:%M:%S')
+            sqlite3 main.sqlite ".backup m_database-${DATE}.sq3.bak"
+            mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}
+          host: ${{ secrets.HOST }}
+          user: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}

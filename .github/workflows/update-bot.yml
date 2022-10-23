@@ -6,7 +6,23 @@ on:
 env:
     REPO_NAME: ${{ github.event.repository.name }}
 jobs:
+  backup-db:
+      runs-on: ubuntu-latest
+      steps:
+        - id: creating-systemctl-service
+          uses: fifsky/ssh-action@master
+          with:
+            command: |
+              cd ${{ env.REPO_NAME }} || exit
+              DATE=$(date '+%Y-%m-%d-%H:%M:%S')
+              sqlite3 main.sqlite ".backup m_database-${DATE}.sq3.bak"
+              mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}
+            host: ${{ secrets.HOST }}
+            user: root
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            
   deploy-via-sftp:
+    needs: backup-db
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,7 +36,7 @@ jobs:
           local_path: ./*
           remote_path: /root/${{ env.REPO_NAME }}/
           args: '-o ConnectTimeout=5'
-
+          
   restart-bot:
     needs: [deploy-via-sftp]
     runs-on: ubuntu-latest
