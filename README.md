@@ -20,7 +20,7 @@ You can either run the bot with docker or run the bot from source
 
 ## Running the bot with Docker - Available on Docker [hub:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue)
 1.  Pull the latest image `docker pull henrykoleoso/in-house-queue`
-2. Run the bot `docker run -e TOKEN=[discord-token] -d henrykoleoso/in-house-queue`
+2. Run the bot `docker run -v db:/app -e TOKEN=[discord-token] -d henrykoleoso/in-house-queue`
 3. Stop the bot `docker stop [containerid]`
 4. View the docker repository for specific tags/versions that are [available:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue) you can then pull a specific version/tag `docker pull henrykoleoso/in-house-queue:v1.0.2-beta`
 5. Details of what is included in the versions are on the [release](https://github.com/HenrySpartGlobal/InHouseQueue/releases) page.
