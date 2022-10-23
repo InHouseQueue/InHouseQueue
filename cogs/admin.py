@@ -1,5 +1,5 @@
 from core.embeds import error, success
-from disnake import Color, Embed, Member, OptionChoice, Role
+from disnake import Color, Embed, Member, OptionChoice, Role, Game
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
 from cogs.win import Win
@@ -37,6 +37,15 @@ class Admin(Cog):
     @slash_command(name="admin")
     async def admin_slash(self, ctx):
         pass
+
+    @admin_slash.sub_command(name='status')
+    async def admin_status(self, ctx, status):
+        await self.bot.change_presence(activity=Game(name=status))
+        await ctx.send(embed=success('Status changed successfully.'))
+    
+    @admin.command()
+    async def status(self, ctx, status):
+        await self.admin_status(ctx, status)
 
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):

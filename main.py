@@ -3,7 +3,7 @@ import os
 import traceback
 
 import aiosqlite
-from disnake import Intents, Embed, Color, File
+from disnake import Intents, Embed, Color, File, Game
 from disnake.ext import commands
 from dotenv import load_dotenv
 from io import StringIO
@@ -144,12 +144,23 @@ async def setuptable(bot):
         """
     )
 
+    await bot.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ready_ups(
+            game_id TEXT,
+            user_id INTEGER
+        )
+        """
+    )
+
 
 @bot.event
 async def on_ready():
     print("*********\nBot is Ready.\n*********")
     await setuptable(bot)
-
+    await bot.change_presence(
+        activity=Game(name="Playing Custom games")
+    )
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -159,8 +170,8 @@ async def on_command_error(ctx, error):
         await ctx.send(embed=embeds.error(str(error)))
     else:
         await bot.wait_until_ready()
-        channel = bot.get_channel(1032356383506575372) # Server Support Channel
-        # channel = bot.get_channel(1032359147833921616) # Testing Server Channel
+        # channel = bot.get_channel(1032356383506575372) # Server Support Channel
+        channel = bot.get_channel(1032359147833921616) # Testing Server Channel
 
         if isinstance(ctx, commands.Context):
             command = ctx.command
