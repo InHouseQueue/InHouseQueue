@@ -192,7 +192,7 @@ class ReadyButton(ui.View):
                 embed=await self.gen_embed(ready_ups),
             )
 
-            if len(self.players_ready) == 10:
+            if len(ready_ups) == 10:
             # CHECK
             # if len(ready_ups) == 2:
                 for member in game_members:
