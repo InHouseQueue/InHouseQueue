@@ -1,3 +1,4 @@
+
 import traceback
 import uuid
 from datetime import datetime, timedelta
@@ -12,7 +13,6 @@ class SpectateButton(ui.View):
     def __init__(self, bot):
         super().__init__(timeout=None)
         self.bot = bot
-        self.spectators = []
 
     async def process_button(self, button, inter):
         await inter.response.defer()
@@ -29,11 +29,6 @@ class SpectateButton(ui.View):
 
         if not data:
             return await inter.send(embed=error("This match is over."), ephemeral=True)
-
-        if inter.author.id in self.spectators:
-            return await inter.send(
-                embed=error("You are already spectating one team."), ephemeral=True
-            )
 
         members_data = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'"
@@ -64,15 +59,13 @@ class SpectateButton(ui.View):
         voice_overwrites = voice.overwrites
         voice_overwrites.update(
             {
-                inter.author: PermissionOverwrite(send_messages=True),
-                inter.author: PermissionOverwrite(connect=True),
+                inter.author: PermissionOverwrite(send_messages=True, connect=True, speak=False),
             }
         )
 
         await lobby.edit(overwrites=lobby_overwrites)
         await voice.edit(overwrites=voice_overwrites)
 
-        self.spectators.append(inter.author.id)
 
     @ui.button(label="Spectate Red", style=ButtonStyle.red, custom_id="specred")
     async def spec_red(self, button, inter):
@@ -84,19 +77,20 @@ class SpectateButton(ui.View):
 
 
 class ReadyButton(ui.View):
-    def __init__(self, bot, game_id, msg):
+    def __init__(self, bot, ):
         super().__init__(timeout=None)
         self.bot = bot
         self.time_of_execution = datetime.now()
-        self.players_ready = []
+
         self.data = None
-        self.game_id = game_id
-        self.msg = msg
+        self.msg = None
+        self.game_id = None
 
         self.disable_button.start()
 
-    async def gen_embed(self, inter):
-        embed = inter.message.embeds[0]
+    async def gen_embed(self, ready_ups):
+
+        embed = self.msg.embeds[0]
         embed.clear_fields()
         teams = ["blue", "red"]
 
@@ -116,7 +110,7 @@ class ReadyButton(ui.View):
             if team_data:
                 value_list = []
                 for data in team_data:
-                    if data[0] in self.players_ready:
+                    if data[0] in ready_ups:
                         value_list.append(
                             f":white_check_mark: <@{data[0]}> - `{data[1].capitalize()}`"
                         )
@@ -137,51 +131,82 @@ class ReadyButton(ui.View):
     @tasks.loop(seconds=1)
     async def disable_button(self):
         if (datetime.now() - self.time_of_execution).seconds >= 600:
-            try:
-                await self.msg.edit(
-                    "Game was cancelled as everyone was not ready.", view=None
-                )
-            except:
-                pass
+            if self.msg:
+                ready_ups = await self.bot.fetch(f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'")
+
+                ready_ups = [x[0] for x in ready_ups]
+                game_members = [member[0] for member in self.data]
+                players_removed = []
+
+                for user_id in game_members:
+                    if user_id not in ready_ups:
+                        await self.bot.execute(f"DELETE FROM game_member_data WHERE author_id = {user_id} and game_id = '{self.game_id}'")
+                        players_removed.append(user_id)
+
+                        user = self.bot.get_user(user_id)
+                        await user.send(embed=Embed(description=f"You were removed from the [queue]({self.msg.jump_url}) for not being ready on time.", color=Color.blurple()))
+
+                await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'")
+                
+                await self.msg.edit(embed=await QueueButtons.gen_embed(self, self.msg), view=QueueButtons(self.bot), content="Not all players were ready, Queue has been vacated.")
+                await self.msg.channel.send(content=", ".join(f"<@{x}>" for x in players_removed), embed=Embed(description='Mentioned players have been removed from the queue for not being ready on time.', color=Color.blurple()), delete_after=60.0)
+                
+                self.disable_button.stop()
+
+            else:
+                self.time_of_execution = datetime.now()
+                
 
     @ui.button(label="Ready Up!", style=ButtonStyle.green, custom_id="readyup")
     async def readyup(self, button, inter):
         if not inter.response.is_done():
             await inter.response.defer()
-        game_id = self.game_id
+
+        if not self.game_id:
+            self.game_id = inter.message.embeds[0].footer.text
+
+        if not self.msg:
+            self.msg = inter.message
 
         if not self.data:
             self.data = await self.bot.fetch(
-                f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'"
+                f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )
 
         game_members = [member[0] for member in self.data]
+        ready_ups = await self.bot.fetch(f"SELECT * FROM ready_ups WHERE game_id = '{self.game_id}'")
+        ready_ups = [x[1] for x in ready_ups]
 
         if inter.author.id in game_members:
-            if inter.author.id in self.players_ready:
+            if inter.author.id in ready_ups:
                 await inter.send(
                     embed=success("You are ready, we know."), ephemeral=True
                 )
                 return
 
-            self.players_ready.append(inter.author.id)
+            await self.bot.execute("INSERT INTO ready_ups(game_id, user_id) VALUES($1, $2)", self.game_id, inter.author.id)
+            ready_ups.append(inter.author.id)
+
             await inter.message.edit(
-                f"{len(self.players_ready)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=590))))}:t>",
-                embed=await self.gen_embed(inter),
+                f"{len(ready_ups)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=590))))}:t>",
+                embed=await self.gen_embed(ready_ups),
             )
 
-            if len(self.players_ready) == 10:
+            if len(ready_ups) == 10:
             # CHECK
-            # if len(self.players_ready) == 2:
+            # if len(ready_ups) == 2:
                 for member in game_members:
+                    # Remove member from all other queues
                     await self.bot.execute(
-                        f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{game_id}'"
+                        f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{self.game_id}'"
                     )
+                
+                await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'")
 
                 try:
                     # Creating roles
-                    red_role = await inter.guild.create_role(name=f"Red: {game_id}")
-                    blue_role = await inter.guild.create_role(name=f"Blue: {game_id}")
+                    red_role = await inter.guild.create_role(name=f"Red: {self.game_id}")
+                    blue_role = await inter.guild.create_role(name=f"Blue: {self.game_id}")
 
                     overwrites_red = {
                         inter.guild.default_role: PermissionOverwrite(connect=False),
@@ -204,17 +229,17 @@ class ReadyButton(ui.View):
 
                     # Creating channels
                     game_category = await inter.guild.create_category(
-                        name=f"Game: {game_id}", overwrites=mutual_overwrites
+                        name=f"Game: {self.game_id}", overwrites=mutual_overwrites
                     )
                     game_lobby = await game_category.create_text_channel(
-                        f"Lobby: {game_id}", overwrites=mutual_overwrites
+                        f"Lobby: {self.game_id}", overwrites=mutual_overwrites
                     )
 
                     voice_channel_red = await game_category.create_voice_channel(
-                        f"Red: {game_id}", overwrites=overwrites_red
+                        f"Red: {self.game_id}", overwrites=overwrites_red
                     )
                     voice_channel_blue = await game_category.create_voice_channel(
-                        f"Blue: {game_id}", overwrites=overwrites_blue
+                        f"Blue: {self.game_id}", overwrites=overwrites_blue
                     )
 
                 except:
@@ -244,7 +269,7 @@ class ReadyButton(ui.View):
 
                 await game_lobby.send(
                     content=f"{red_role.mention} {blue_role.mention}",
-                    embed=await self.gen_embed(inter),
+                    embed=await self.gen_embed(ready_ups),
                 )
                 await game_lobby.send(
                     embed=Embed(
@@ -256,7 +281,7 @@ class ReadyButton(ui.View):
 
                 await self.bot.execute(
                     f"INSERT INTO games(game_id, lobby_id, voice_red_id, voice_blue_id, red_role_id, blue_role_id, queuechannel_id, msg_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
-                    game_id,
+                    self.game_id,
                     game_lobby.id,
                     voice_channel_red.id,
                     voice_channel_blue.id,
@@ -278,10 +303,11 @@ class QueueButtons(ui.View):
     def __init__(self, bot):
         super().__init__(timeout=None)
         self.bot = bot
-        self.game_id = str(uuid.uuid4()).split("-")[0]
+        self.game_id = None
+        
 
-    async def gen_embed(self, inter) -> Embed:
-        embed = inter.message.embeds[0]
+    async def gen_embed(self, msg) -> Embed:
+        embed = msg.embeds[0]
         embed.clear_fields()
         teams = ["blue", "red"]
 
@@ -341,7 +367,7 @@ class QueueButtons(ui.View):
             self.game_id,
         )
 
-        embed = await self.gen_embed(inter)
+        embed = await self.gen_embed(inter.message)
 
         await inter.message.edit(view=self, embed=embed, attachments=[])
 
@@ -365,8 +391,9 @@ class QueueButtons(ui.View):
         if checks_passed == len(self.children) - 1:
         # CHECK
         # if checks_passed == 1:
+
             await inter.edit_original_message(
-                view=ReadyButton(self.bot, self.game_id, inter.message),
+                view=ReadyButton(self.bot),
                 content="0/10 Players are ready!",
             )
             member_data = await self.bot.fetch(
@@ -386,11 +413,13 @@ class QueueButtons(ui.View):
                 description=f"Game was found! Time to ready up!", color=Color.blurple()
             )
 
-            await inter.message.reply(mentions, embed=embed)
+            await inter.message.reply(mentions, embed=embed, delete_after=600.0)
             # await inter.message.reply("🔴 Red Team \n"+ '\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'red') + '\n\n🔵 Blue Team \n'+'\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'blue') + '\n\n' + f'Your Game was found. Time to ready up!')
 
     async def process_button(self, button, inter) -> None:
         await inter.response.defer()
+        if not self.game_id:
+            self.game_id = inter.message.embeds[0].footer.text
         if await self.has_participated(inter):
             return await inter.send(
                 embed=error("You are already a participant of this game."),
@@ -427,7 +456,7 @@ class QueueButtons(ui.View):
                 f"DELETE FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
             )
 
-            embed = await self.gen_embed(inter)
+            embed = await self.gen_embed(inter.message)
 
             for button in self.children:
                 if button.label == "Sign Off":
@@ -453,6 +482,34 @@ class QueueButtons(ui.View):
                 embed=error("You are not a participant of this game."), ephemeral=True
             )
 
+    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
+    async def switchteam(self, button, inter):
+        await inter.response.defer()
+        data = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
+        )
+        if data:
+            
+            check = await self.bot.fetchrow(
+                f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{self.game_id}' and author_id != {inter.author.id}"
+            )
+            if check:
+                return await inter.send("The other team position for this role is already occupied.", ephemeral=True)
+            
+            if data[2] == "blue":
+                team = "red"
+            else:
+                team = "blue"
+            
+            await self.bot.execute(f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2", self.game_id, inter.author.id)
+            await inter.edit_original_message(embed=await self.gen_embed(inter.message))
+            await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
+            
+        else:
+            await inter.send(
+                embed=error("You are not a part of this game."), ephemeral=True
+            )
+
 
 class Match(Cog):
     """
@@ -465,6 +522,7 @@ class Match(Cog):
     async def on_ready(self):
         self.bot.add_view(QueueButtons(self.bot))
         self.bot.add_view(SpectateButton(self.bot))
+        self.bot.add_view(ReadyButton(self.bot))
 
     @command(aliases=["inhouse", "play"])
     async def start(self, ctx):
@@ -493,6 +551,7 @@ class Match(Cog):
         else:
             embed.set_author(name=ctx.author.name)
         embed.set_image(file=File("assets/queue.png"))
+        embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
 
         await ctx.channel.send(embed=embed, view=QueueButtons(self.bot))
 
