@@ -16,6 +16,16 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 - Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the bot to your server
 
 # Getting started
+You can either run the bot with docker or run the bot from source
+
+## Running the bot with Docker - Available on Docker [hub:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue)
+1.  Pull the latest image `docker pull henrykoleoso/in-house-queue`
+2. Run the bot `docker run -v db:/app -e TOKEN=[discord-token] -d henrykoleoso/in-house-queue`
+3. Stop the bot `docker stop [containerid]`
+4. View the docker repository for specific tags/versions that are [available:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue) you can then pull a specific version/tag `docker pull henrykoleoso/in-house-queue:v1.0.2-beta`
+5. Details of what is included in the versions are on the [release](https://github.com/HenrySpartGlobal/InHouseQueue/releases) page.
+
+## Run from source
 ### Prerequisites
 `Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
 
@@ -44,10 +54,10 @@ Please see my Hosting Readme - https://github.com/HenrySpartGlobal/InHouseQueue/
 - `/setchannel` - Set a specific channel as the queue. Messages other than commands will be deleted after a short delay.
 - `/setwinnerlog` - All completed games will be logged via an embed in this channel. 
 - `/start` - Start a queue
-- `/win` - Initiate a vote once a game has been completed. The team first to 6 votes, will be confirmed as the winner.
+- `/win` - Initiate a vote once a game has been completed. The team first to 6 votes, will be confirmed as the winner. Can only be ran in the dedicated game lobby.
 - `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
 
-Note: `admin reset` Command executed immediately, but requires someone to rejoin the queue to refresh the Embed.
+Note: `admin reset` Executed immediately, but requires someone to rejoin the queue to refresh the Embed.
 ### Admin commands
 - **`/admin reset user [member]`** - Removes the member from all queues.
 ```
@@ -61,7 +71,7 @@ Note: `admin reset` Command executed immediately, but requires someone to rejoin
 ```
 /admin reset cancel @John
 ```
-- **`/admin change_winner [gameid] [team]`** - Change the winner of a game. 
+- **`/admin change_winner [gameid] [team]`** - Change the winner of a game. Game must have been decided and finished. 
 ```
 /admin change_winner 03134ff5 Red
 ```
@@ -78,11 +88,11 @@ When a match is initiated, 5 buttons appear that represent a role. Once each pos
 
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/match%20start.png)
 
-Players are required to ready up. The queue will have a minimum time to ready up. This is displayed as a time in everyones ** local timezone**, if all 10 players do not ready up in time, the queue is reset. 
+Players are required to ready up. The queue will have a minimum time to ready up. This is displayed as a time in everyones **local timezone**, if all 10 players do not ready up in time, the queue is reset. 
  
-Once all players are ready teams are split (no matchmaking yet!) and the match is started. A lobby text channel (suffixed with the `gameId`), 2 Spectator buttons, 2 voice channels (suffixed with the `gameId`) and one voice for each team are created by the bot.These are all private and can only be interacted with by participating players or spectators. Otherwise, it is public for the rest of the server to view.
+Once all players are ready teams are split (no matchmaking yet!) and the match is started. A lobby text channel (suffixed with the `gameId`), 2 Spectator buttons, 2 voice channels (suffixed with the `gameId`) and one voice for each team are created by the bot. These are all private and can only be interacted with by participating players or spectators. Otherwise, it is public for the rest of the server to view.
 
-The spectator buttons enable everyone else to join only 1 team's voice channel, however, once you have decided to spectate one team you may not move on to the other team. Players can then decide to stream their match on the discord voice channel for the spectators. 
+The spectator buttons enable everyone else to join only 1 team's voice channel. Once you have decided to spectate one team you may not move on to the other team. Players can then decide to stream their match on the discord voice channel for the spectators. 
 
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/ready%20up.png)
 

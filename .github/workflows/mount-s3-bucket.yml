@@ -1,0 +1,26 @@
+name: Mount S3 Bucket
+
+# Controls when the action will run.
+on:
+  # Allows running this workflow manually from the Actions tab
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+jobs:
+  create-mount:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mounting S3 bucket
+        uses: fifsky/ssh-action@master
+        with:
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install s3fs -y
+            echo ${{ secrets.AWS_ACCESS_KEY_ID_S3 }}:${{ secrets.AWS_SECRET_ACCESS_KEY_S3}} > ~/.passwd-s3fs
+            chmod 600 ~/.passwd-s3fs
+            mkdir ~/s3-bucket
+            s3fs henrykoleoso-backups ~/s3-bucket -o passwd_file=~/.passwd-s3fs
+
+          host: ${{ secrets.HOST }}
+          user: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
