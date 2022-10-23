@@ -40,6 +40,9 @@ class Admin(Cog):
 
     @admin_slash.sub_command(name='status')
     async def admin_status(self, ctx, status):
+    """
+        Change status of the bot.
+    """
         await self.bot.change_presence(activity=Game(name=status))
         await ctx.send(embed=success('Status changed successfully.'))
     
