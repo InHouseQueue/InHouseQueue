@@ -43,6 +43,8 @@ class Admin(Cog):
         """
             Change status of the bot.
         """
+        if not ctx.author.id == 135811207645888515:
+            return await ctx.send(embed=error("You cannot use this command.")
         await self.bot.change_presence(activity=Game(name=status))
         await ctx.send(embed=success('Status changed successfully.'))
     
