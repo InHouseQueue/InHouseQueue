@@ -4,8 +4,9 @@ from disnake.ext.commands import Cog, command, slash_command
 
 class Win(Cog):
     """
-        🏆;Win
+    🏆;Win
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.active_win_commands = []
@@ -185,7 +186,7 @@ class Win(Cog):
     @slash_command(name="win")
     async def win_slash(self, ctx):
         """
-            Start a vote to select the winning team.
+        Start a vote to select the winning team.
         """
         await ctx.response.defer()
         await self.process_win(ctx.channel, ctx.author)

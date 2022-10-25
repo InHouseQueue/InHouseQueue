@@ -7,8 +7,9 @@ from cogs.win import Win
 
 class Admin(Cog):
     """
-        🤖;Admin
+    🤖;Admin
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -37,18 +38,6 @@ class Admin(Cog):
     @slash_command(name="admin")
     async def admin_slash(self, ctx):
         pass
-
-    @admin_slash.sub_command(name='status')
-    async def admin_status(self, ctx, status):
-        """
-            Change status of the bot.
-        """
-        await self.bot.change_presence(activity=Game(name=status))
-        await ctx.send(embed=success('Status changed successfully.'))
-    
-    @admin.command()
-    async def status(self, ctx, status):
-        await self.admin_status(ctx, status)
 
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):
@@ -84,7 +73,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="user")
     async def user_slash(self, ctx, member: Member):
         """
-            Remove a user from all queues. Requires someone to rejoin the queue to refresh the Embed.
+        Remove a user from all queues. Requires someone to rejoin the queue to refresh the Embed.
         """
         await ctx.response.defer()
         await self.user(ctx, member)
@@ -105,7 +94,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="queue")
     async def queue_slash(self, ctx, game_id: str):
         """
-            Reset a queue. Requires someone to rejoin the queue to refresh the Embed.
+        Reset a queue. Requires someone to rejoin the queue to refresh the Embed.
         """
         await ctx.response.defer()
         await self.queue(ctx, game_id)
@@ -196,7 +185,7 @@ class Admin(Cog):
         team=Param(choices=[OptionChoice("Red", "red"), OptionChoice("Blue", "blue")]),
     ):
         """
-            Change the winner of a game.
+        Change the winner of a game.
         """
         await ctx.response.defer()
         await self.change_winner(ctx, game_id, team)
@@ -226,7 +215,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="winner")
     async def winner_slash(self, ctx, role: Role):
         """
-            Announce the winner of a game. Skips voting. The game must be in progress.
+        Announce the winner of a game. Skips voting. The game must be in progress.
         """
         await ctx.response.defer()
         await self.winner(ctx, role)
@@ -278,7 +267,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="cancel")
     async def cancel_slash(self, ctx, member: Member):
         """
-            Cancel the member's game.
+        Cancel the member's game.
         """
         await ctx.response.defer()
         await self.cancel(ctx, member)
