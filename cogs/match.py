@@ -379,7 +379,7 @@ class QueueButtons(ui.View):
     async def check_end(self, inter) -> None:
         checks_passed = 0
         for button in self.children:
-            if button.label == "Sign Off":
+            if button.label in ["Leave Queue", "Switch Team"]:
                 continue
 
             data = await self.bot.fetch(
@@ -459,7 +459,7 @@ class QueueButtons(ui.View):
             embed = await self.gen_embed(inter.message)
 
             for button in self.children:
-                if button.label == "Sign Off":
+                if button.label in ["Leave Queue", "Switch Team"]:
                     continue
 
                 data = await self.bot.fetch(
