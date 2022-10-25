@@ -170,8 +170,8 @@ async def on_command_error(ctx, error):
         await ctx.send(embed=embeds.error(str(error)))
     else:
         await bot.wait_until_ready()
-        # channel = bot.get_channel(1032356383506575372) # Server Support Channel
-        channel = bot.get_channel(1032359147833921616) # Testing Server Channel
+        channel = bot.get_channel(1032356383506575372) # Server Support Channel
+        # channel = bot.get_channel(1032359147833921616) # Testing Server Channel
 
         if isinstance(ctx, commands.Context):
             command = ctx.command
