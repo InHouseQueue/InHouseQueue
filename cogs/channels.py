@@ -5,8 +5,9 @@ from disnake.ext.commands import Cog, command, slash_command
 
 class ChannelCommands(Cog):
     """
-        ⚙️;Channel Setup
+    ⚙️;Channel Setup
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -43,19 +44,25 @@ class ChannelCommands(Cog):
         )
         if data:
             return await ctx.send(
-                embed=embeds.error(f"{channel.mention} is already setup as the queue channel.")
+                embed=embeds.error(
+                    f"{channel.mention} is already setup as the queue channel."
+                )
             )
 
         await self.bot.execute(
             "INSERT INTO queuechannels(channel_id) VALUES($1)", channel.id
         )
 
-        await ctx.send(embed=embeds.success(f"{channel.mention} was successfully set as queue channel."))
+        await ctx.send(
+            embed=embeds.success(
+                f"{channel.mention} was successfully set as queue channel."
+            )
+        )
 
     @slash_command(name="setchannel")
     async def setchannel_slash(self, ctx, channel: TextChannel):
         """
-            Set a channel to be used as the queue.
+        Set a channel to be used as the queue.
         """
         await ctx.response.defer()
         await self.setchannel(ctx, channel)
@@ -67,7 +74,9 @@ class ChannelCommands(Cog):
         )
         if data:
             return await ctx.send(
-                embed=embeds.error(f"{channel.mention} is already setup as the winner log channel.")
+                embed=embeds.error(
+                    f"{channel.mention} is already setup as the winner log channel."
+                )
             )
 
         await self.bot.execute(
@@ -76,12 +85,16 @@ class ChannelCommands(Cog):
             channel.id,
         )
 
-        await ctx.send(embed=embeds.success(f"{channel.mention} was successfully set as winner log channel."))
+        await ctx.send(
+            embed=embeds.success(
+                f"{channel.mention} was successfully set as winner log channel."
+            )
+        )
 
     @slash_command(name="setwinnerlog")
     async def setwinnerlog_slash(self, ctx, channel: TextChannel):
         """
-            Set a channel for winner log.
+        Set a channel for winner log.
         """
         await ctx.response.defer()
         await self.setwinnerlog(ctx, channel)

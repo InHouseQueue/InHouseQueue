@@ -1,4 +1,3 @@
-
 import traceback
 import uuid
 from datetime import datetime, timedelta
@@ -53,19 +52,22 @@ class SpectateButton(ui.View):
 
         lobby_overwrites = lobby.overwrites
         lobby_overwrites.update(
-            {inter.author: PermissionOverwrite(send_messages=True),}
+            {
+                inter.author: PermissionOverwrite(send_messages=True),
+            }
         )
 
         voice_overwrites = voice.overwrites
         voice_overwrites.update(
             {
-                inter.author: PermissionOverwrite(send_messages=True, connect=True, speak=False),
+                inter.author: PermissionOverwrite(
+                    send_messages=True, connect=True, speak=False
+                ),
             }
         )
 
         await lobby.edit(overwrites=lobby_overwrites)
         await voice.edit(overwrites=voice_overwrites)
-
 
     @ui.button(label="Spectate Red", style=ButtonStyle.red, custom_id="specred")
     async def spec_red(self, button, inter):
@@ -77,7 +79,10 @@ class SpectateButton(ui.View):
 
 
 class ReadyButton(ui.View):
-    def __init__(self, bot, ):
+    def __init__(
+        self,
+        bot,
+    ):
         super().__init__(timeout=None)
         self.bot = bot
         self.time_of_execution = datetime.now()
@@ -132,7 +137,9 @@ class ReadyButton(ui.View):
     async def disable_button(self):
         if (datetime.now() - self.time_of_execution).seconds >= 600:
             if self.msg:
-                ready_ups = await self.bot.fetch(f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'")
+                ready_ups = await self.bot.fetch(
+                    f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'"
+                )
 
                 ready_ups = [x[0] for x in ready_ups]
                 game_members = [member[0] for member in self.data]
@@ -140,22 +147,41 @@ class ReadyButton(ui.View):
 
                 for user_id in game_members:
                     if user_id not in ready_ups:
-                        await self.bot.execute(f"DELETE FROM game_member_data WHERE author_id = {user_id} and game_id = '{self.game_id}'")
+                        await self.bot.execute(
+                            f"DELETE FROM game_member_data WHERE author_id = {user_id} and game_id = '{self.game_id}'"
+                        )
                         players_removed.append(user_id)
 
                         user = self.bot.get_user(user_id)
-                        await user.send(embed=Embed(description=f"You were removed from the [queue]({self.msg.jump_url}) for not being ready on time.", color=Color.blurple()))
+                        await user.send(
+                            embed=Embed(
+                                description=f"You were removed from the [queue]({self.msg.jump_url}) for not being ready on time.",
+                                color=Color.blurple(),
+                            )
+                        )
 
-                await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'")
-                
-                await self.msg.edit(embed=await QueueButtons.gen_embed(self, self.msg), view=QueueButtons(self.bot), content="Not all players were ready, Queue has been vacated.")
-                await self.msg.channel.send(content=", ".join(f"<@{x}>" for x in players_removed), embed=Embed(description='Mentioned players have been removed from the queue for not being ready on time.', color=Color.blurple()), delete_after=60.0)
-                
+                await self.bot.execute(
+                    f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'"
+                )
+
+                await self.msg.edit(
+                    embed=await QueueButtons.gen_embed(self, self.msg),
+                    view=QueueButtons(self.bot),
+                    content="Not all players were ready, Queue has been vacated.",
+                )
+                await self.msg.channel.send(
+                    content=", ".join(f"<@{x}>" for x in players_removed),
+                    embed=Embed(
+                        description="Mentioned players have been removed from the queue for not being ready on time.",
+                        color=Color.blurple(),
+                    ),
+                    delete_after=60.0,
+                )
+
                 self.disable_button.stop()
 
             else:
                 self.time_of_execution = datetime.now()
-                
 
     @ui.button(label="Ready Up!", style=ButtonStyle.green, custom_id="readyup")
     async def readyup(self, button, inter):
@@ -174,7 +200,9 @@ class ReadyButton(ui.View):
             )
 
         game_members = [member[0] for member in self.data]
-        ready_ups = await self.bot.fetch(f"SELECT * FROM ready_ups WHERE game_id = '{self.game_id}'")
+        ready_ups = await self.bot.fetch(
+            f"SELECT * FROM ready_ups WHERE game_id = '{self.game_id}'"
+        )
         ready_ups = [x[1] for x in ready_ups]
 
         if inter.author.id in game_members:
@@ -184,7 +212,11 @@ class ReadyButton(ui.View):
                 )
                 return
 
-            await self.bot.execute("INSERT INTO ready_ups(game_id, user_id) VALUES($1, $2)", self.game_id, inter.author.id)
+            await self.bot.execute(
+                "INSERT INTO ready_ups(game_id, user_id) VALUES($1, $2)",
+                self.game_id,
+                inter.author.id,
+            )
             ready_ups.append(inter.author.id)
 
             await inter.message.edit(
@@ -192,31 +224,42 @@ class ReadyButton(ui.View):
                 embed=await self.gen_embed(ready_ups),
             )
 
-            if len(ready_ups) == 10:
             # CHECK
             # if len(ready_ups) == 2:
+            if len(ready_ups) == 10:
+
                 for member in game_members:
                     # Remove member from all other queues
                     await self.bot.execute(
                         f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{self.game_id}'"
                     )
-                
-                await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'")
+
+                await self.bot.execute(
+                    f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'"
+                )
 
                 try:
                     # Creating roles
-                    red_role = await inter.guild.create_role(name=f"Red: {self.game_id}")
-                    blue_role = await inter.guild.create_role(name=f"Blue: {self.game_id}")
+                    red_role = await inter.guild.create_role(
+                        name=f"Red: {self.game_id}"
+                    )
+                    blue_role = await inter.guild.create_role(
+                        name=f"Blue: {self.game_id}"
+                    )
 
                     overwrites_red = {
                         inter.guild.default_role: PermissionOverwrite(connect=False),
                         red_role: PermissionOverwrite(connect=True),
-                        self.bot.user: PermissionOverwrite(send_messages=True, manage_channels=True, connect=True),
+                        self.bot.user: PermissionOverwrite(
+                            send_messages=True, manage_channels=True, connect=True
+                        ),
                     }
                     overwrites_blue = {
                         inter.guild.default_role: PermissionOverwrite(connect=False),
                         blue_role: PermissionOverwrite(connect=True),
-                        self.bot.user: PermissionOverwrite(send_messages=True, manage_channels=True, connect=True),
+                        self.bot.user: PermissionOverwrite(
+                            send_messages=True, manage_channels=True, connect=True
+                        ),
                     }
                     mutual_overwrites = {
                         inter.guild.default_role: PermissionOverwrite(
@@ -224,7 +267,9 @@ class ReadyButton(ui.View):
                         ),
                         red_role: PermissionOverwrite(send_messages=True),
                         blue_role: PermissionOverwrite(send_messages=True),
-                        self.bot.user: PermissionOverwrite(send_messages=True, manage_channels=True),
+                        self.bot.user: PermissionOverwrite(
+                            send_messages=True, manage_channels=True
+                        ),
                     }
 
                     # Creating channels
@@ -257,7 +302,6 @@ class ReadyButton(ui.View):
                     view=SpectateButton(self.bot),
                 )
 
-                
                 for entry in self.data:
                     if entry[2] == "red":
                         member = inter.guild.get_member(entry[0])
@@ -304,7 +348,6 @@ class QueueButtons(ui.View):
         super().__init__(timeout=None)
         self.bot = bot
         self.game_id = None
-        
 
     async def gen_embed(self, msg) -> Embed:
         embed = msg.embeds[0]
@@ -379,7 +422,7 @@ class QueueButtons(ui.View):
     async def check_end(self, inter) -> None:
         checks_passed = 0
         for button in self.children:
-            if button.label == "Sign Off":
+            if button.label in ["Leave Queue", "Switch Team"]:
                 continue
 
             data = await self.bot.fetch(
@@ -388,9 +431,9 @@ class QueueButtons(ui.View):
             if len(data) == 2:
                 checks_passed += 1
 
-        if checks_passed == len(self.children) - 1:
         # CHECK
         # if checks_passed == 1:
+        if checks_passed == len(self.children) - 2:
 
             await inter.edit_original_message(
                 view=ReadyButton(self.bot),
@@ -459,7 +502,7 @@ class QueueButtons(ui.View):
             embed = await self.gen_embed(inter.message)
 
             for button in self.children:
-                if button.label == "Sign Off":
+                if button.label in ["Leave Queue", "Switch Team"]:
                     continue
 
                 data = await self.bot.fetch(
@@ -489,22 +532,29 @@ class QueueButtons(ui.View):
             f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
         )
         if data:
-            
+
             check = await self.bot.fetchrow(
                 f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{self.game_id}' and author_id != {inter.author.id}"
             )
             if check:
-                return await inter.send("The other team position for this role is already occupied.", ephemeral=True)
-            
+                return await inter.send(
+                    "The other team position for this role is already occupied.",
+                    ephemeral=True,
+                )
+
             if data[2] == "blue":
                 team = "red"
             else:
                 team = "blue"
-            
-            await self.bot.execute(f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2", self.game_id, inter.author.id)
+
+            await self.bot.execute(
+                f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2",
+                self.game_id,
+                inter.author.id,
+            )
             await inter.edit_original_message(embed=await self.gen_embed(inter.message))
             await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
-            
+
         else:
             await inter.send(
                 embed=error("You are not a part of this game."), ephemeral=True
@@ -513,8 +563,9 @@ class QueueButtons(ui.View):
 
 class Match(Cog):
     """
-        ⚔️;Matchmaking
+    ⚔️;Matchmaking
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -541,7 +592,9 @@ class Match(Cog):
             await ctx.send(embed=success("Game was started."))
 
         # If you change this - update /events.py L28 as well!
-        embed = Embed(title="Match Overview - SR Tournament Draft", color=Color.blurple())
+        embed = Embed(
+            title="Match Overview - SR Tournament Draft", color=Color.blurple()
+        )
         embed.add_field(name="🔵 Blue", value="No members yet")
         embed.add_field(name="🔴 Red", value="No members yet")
         if ctx.author.avatar:
@@ -558,7 +611,7 @@ class Match(Cog):
     @slash_command(name="start")
     async def start_slash(self, ctx):
         """
-            Start the inhouse event.
+        Start the inhouse event.
         """
         await self.start(ctx)
 
