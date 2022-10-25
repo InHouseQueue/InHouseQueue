@@ -37,7 +37,7 @@ class Help(Cog):
         labels = ["Home"]
         emojis = ["🏠"]
         for command in self.bot.slash_commands:
-            if command.cog.qualified_name in ["Help", "Events"]:
+            if command.cog.qualified_name in ["Help", "Events", "Dev"]:
                 continue
 
             description = command.body.description

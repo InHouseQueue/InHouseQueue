@@ -224,9 +224,10 @@ class ReadyButton(ui.View):
                 embed=await self.gen_embed(ready_ups),
             )
 
+            # CHECK
+            # if len(ready_ups) == 2:
             if len(ready_ups) == 10:
-                # CHECK
-                # if len(ready_ups) == 2:
+
                 for member in game_members:
                     # Remove member from all other queues
                     await self.bot.execute(
@@ -430,9 +431,9 @@ class QueueButtons(ui.View):
             if len(data) == 2:
                 checks_passed += 1
 
+        # CHECK
+        # if checks_passed == 1:
         if checks_passed == len(self.children) - 2:
-            # CHECK
-            # if checks_passed == 1:
 
             await inter.edit_original_message(
                 view=ReadyButton(self.bot),
