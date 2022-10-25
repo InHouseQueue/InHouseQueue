@@ -388,7 +388,7 @@ class QueueButtons(ui.View):
             if len(data) == 2:
                 checks_passed += 1
 
-        if checks_passed == len(self.children) - 1:
+        if checks_passed == len(self.children) - 2:
         # CHECK
         # if checks_passed == 1:
 
