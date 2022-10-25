@@ -38,18 +38,6 @@ class Admin(Cog):
     async def admin_slash(self, ctx):
         pass
 
-    @admin_slash.sub_command(name='status')
-    async def admin_status(self, ctx, status):
-        """
-            Change status of the bot.
-        """
-        await self.bot.change_presence(activity=Game(name=status))
-        await ctx.send(embed=success('Status changed successfully.'))
-    
-    @admin.command()
-    async def status(self, ctx, status):
-        await self.admin_status(ctx, status)
-
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):
         pass
