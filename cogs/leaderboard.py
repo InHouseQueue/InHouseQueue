@@ -5,14 +5,17 @@ from Paginator import CreatePaginator
 
 class Leaderboard(Cog):
     """
-        ⏫;Leaderboard
+    ⏫;Leaderboard
     """
+
     def __init__(self, bot):
         self.bot = bot
 
     @command()
     async def leaderboard(self, ctx):
-        user_data = await self.bot.fetch(f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id}")
+        user_data = await self.bot.fetch(
+            f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id}"
+        )
         user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
         user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
@@ -64,7 +67,7 @@ class Leaderboard(Cog):
     @slash_command(name="leaderboard")
     async def leaderboard_slash(self, ctx):
         """
-            See the leaderboard of winners.
+        See the leaderboard of winners.
         """
         await ctx.response.defer()
         await self.leaderboard(ctx)
