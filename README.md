@@ -3,7 +3,7 @@
 # In House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/queue.png)
 
-A Discord Bot designed to organise League of Legends In-house games. Inspired by the newly created Official [Champions Queue](https://championsqueue.lolesports.com/en-us/).
+A Discord Bot designed to organise In-house Custom games for compeititve 5v5 games. Inspired by the newly created Official [Champions Queue](https://championsqueue.lolesports.com/en-us/).
 
 Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
 
