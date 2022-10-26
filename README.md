@@ -16,7 +16,7 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 
 # Quick Start
 1. Invite the Bot to your server - [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot)
-2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are automatically deleted. Do not use this command on an exiting text channel for obvious reasons!
+2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are automatically deleted. Do not use this command on an existing text channel for obvious reasons!
 3. Create another channel, run `/setwinnerlog #channlename` we suggest you name this something like match-history. 
 4. That's it! Now when you are ready to play just run `/start` in your queue channel!
 
