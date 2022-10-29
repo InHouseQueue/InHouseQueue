@@ -130,3 +130,6 @@ dmypy.json
 
 # Database
 main.sqlite
+
+# Intellj IDE stuff
+.idea
