@@ -129,4 +129,8 @@ dmypy.json
 .pyre/
 
 # Database
+db/main.sqlite
 main.sqlite
+
+# Intellj IDE stuff
+.idea
