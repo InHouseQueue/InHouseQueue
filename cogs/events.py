@@ -123,7 +123,7 @@ class Events(Cog):
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
         await self.setuptable(self.bot)
-        await self.bot.change_presence(activity=Game(name="Playing Custom games"))
+        await self.bot.change_presence(activity=Game(name="Custom games"))
 
     @Cog.listener()
     async def on_command_error(self, ctx, error):

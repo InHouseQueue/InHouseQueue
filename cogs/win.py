@@ -112,7 +112,7 @@ class Win(Cog):
             embed = Embed(
                 title=f"Game concluded!",
                 description=f"Game **{game_data[0]}** was concluded!\n\nResult: **{winner} Team Won!**",
-                color=Color.blurple(),
+                color=Color.green(),
             )
             # await log_channel.send(
             #     f"!\n\n🔴 Red Team \n"+ '\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'red') + '\n\n🔵 Blue Team \n'+'\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'blue') + '\n\n' + f''
