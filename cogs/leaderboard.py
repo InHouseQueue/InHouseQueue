@@ -19,7 +19,7 @@ class Leaderboard(Cog):
         user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
         user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
-        embed = Embed(title=f"🏆 Leaderboard", color=Color.blurple())
+        embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
         if ctx.guild.icon:
             embed.set_thumbnail(url=ctx.guild.icon.url)
 
@@ -37,7 +37,7 @@ class Leaderboard(Cog):
 
             embeds[current_embed].add_field(
                 name=f"#{i+1}",
-                value=f"<@{data[1]}> [**{data[2]} Wins** | **{percentage}% Win Rate**]",
+                value=f"<@{data[1]}> **{data[2]} W** | **{percentage}% W/R**",
                 inline=False,
             )
 
