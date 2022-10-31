@@ -156,7 +156,7 @@ class ReadyButton(ui.View):
                         await user.send(
                             embed=Embed(
                                 description=f"You were removed from the [queue]({self.msg.jump_url}) for not being ready on time.",
-                                color=Color.blurple(),
+                                color=Color.red(),
                             )
                         )
 
@@ -318,7 +318,8 @@ class ReadyButton(ui.View):
                 await game_lobby.send(
                     embed=Embed(
                         title=":warning: Notice",
-                        description="To conclude the game, run `!win` or `/win`.",
+                        description=f"To conclude the game, run `!win` or `/win`."
+                                    f" **Optional:** Enter `{self.game_id}` as custom game name and password.",
                         color=Color.yellow(),
                     )
                 )
@@ -453,7 +454,7 @@ class QueueButtons(ui.View):
             )
 
             embed = Embed(
-                description=f"Game was found! Time to ready up!", color=Color.blurple()
+                description=f"Game was found! Time to ready up!", color=Color.green()
             )
 
             await inter.message.reply(mentions, embed=embed, delete_after=600.0)
@@ -593,7 +594,7 @@ class Match(Cog):
 
         # If you change this - update /events.py L28 as well!
         embed = Embed(
-            title="Match Overview - SR Tournament Draft", color=Color.blurple()
+            title="Match Overview - SR Tournament Draft", color=Color.red()
         )
         embed.add_field(name="🔵 Blue", value="No members yet")
         embed.add_field(name="🔴 Red", value="No members yet")
