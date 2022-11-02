@@ -1,13 +1,13 @@
 ![Discord Shield](https://discord.com/api/guilds/1005601917466058792/widget.png?style=shield) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/badge/version-v0.1.0-red.svg)](https://semver.org)
 
-# In House Queue
+# In-House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/queue.png)
 
-A Discord Bot designed to organise In-house Custom games for compeititve 5v5 games. Inspired by the newly created Official [Champions Queue](https://championsqueue.lolesports.com/en-us/).
+A Discord Bot designed to organise In-house Custom games for competitive 5v5 games. Inspired by the newly created Official [Champions Queue](https://championsqueue.lolesports.com/en-us/).
 
 Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
 
-**Support for more games are planned.**
+**Support for more games is planned.**
 
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
@@ -20,18 +20,18 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 3. Create another channel, run `/setwinnerlog #channlename` we suggest you name this something like match-history. 
 4. That's it! Now when you are ready to play just run `/start` in your queue channel!
 
-Instructions on how to run this bot from source and more details on the bot is available [here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/more-details.md)
+Instructions on how to run this bot from the source and more details on the bot are available [here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/more-details.md)
 
 
 # All Commands
 ### Queue commands
 *Supports both slash and prefix commands - default prefix is !*
 
-- `/help` - Displays the help Menu
+- `/help` - Displays the Help Menu
 - `/setchannel` - Set a specific channel as the queue. Messages other than commands will be deleted after a short delay.
 - `/setwinnerlog` - All completed games will be logged via an embed in this channel. 
 - `/start` - Start a queue
-- `/win` - Initiate a vote once a game has been completed. The team first to 6 votes, will be confirmed as the winner. Can only be ran in the dedicated game lobby.
+- `/win` - Initiate a vote once a game has been completed. The team first to 6 votes, will be confirmed as the winner. Can only be run in the dedicated game lobby.
 - `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
 
 ### Admin commands
@@ -45,15 +45,15 @@ Note: `admin reset ...` Executed immediately, but requires someone to rejoin the
 ```
 /admin reset queue 03134ff5
 ```
-- **`/admin cancel [member]`** - Cancels and voids the members, and parties of the lobbys, game.
+- **`/admin cancel [member]`** - Cancels and voids the members, and parties of the lobbies, and game.
 ```
 /admin reset cancel @John
 ```
-- **`/admin change_winner [gameid] [team]`** - Change the winner of a game. Game must have been decided and finished. 
+- **`/admin change_winner [gameid] [team]`** - Change the winner of a game. The game must have been decided and finished. 
 ```
 /admin change_winner 03134ff5 Red
 ```
-- **`/admin winner [role]`** - Immediately announce a winner without requiring a vote to confirm. This can only been done if the game is still in progress, otherwise use `admin change_winner`
+- **`/admin winner [role]`** - Immediately announce a winner without requiring a vote to confirm. This can only be done if the game is still in progress, otherwise use `admin change_winner`
 ```
 /admin winner @Red: 316d8cc7
 ```
