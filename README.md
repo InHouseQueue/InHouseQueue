@@ -1,13 +1,13 @@
 ![Discord Shield](https://discord.com/api/guilds/1005601917466058792/widget.png?style=shield) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/badge/version-v0.1.0-red.svg)](https://semver.org)
 
 # In-House Queue
-![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/queue.png)
+![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/welcome.png)
 
 A Discord Bot designed to organise In-house Custom games for competitive 5v5 games. Inspired by the newly created Official [Champions Queue](https://championsqueue.lolesports.com/en-us/).
 
 Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
 
-**Support for more games is planned.**
+**Currently, for League of Legends. Support for more games is on the way (Overwatch and Valorant).**
 
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
@@ -16,7 +16,7 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 
 # Quick Start
 1. Invite the Bot to your server - [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot)
-2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are automatically deleted. Do not use this command on an existing text channel for obvious reasons!
+2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are **automatically deleted**. Do not use this command on an existing text channel for obvious reasons!
 3. Create another channel, run `/setwinnerlog #channlename` we suggest you name this something like match-history. 
 4. That's it! Now when you are ready to play just run `/start` in your queue channel!
 
@@ -35,7 +35,7 @@ Instructions on how to run this bot from the source and more details on the bot 
 - `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
 
 ### Admin commands
-Note: `admin reset ...` Executed immediately, but requires someone to rejoin the queue to refresh the Embed.
+Note: `admin reset ...` Commands are executed immediately, but requires someone to rejoin the queue to refresh the Embed.
 
 - **`/admin reset user [member]`** - Removes the member from all queues.
 ```
@@ -45,7 +45,7 @@ Note: `admin reset ...` Executed immediately, but requires someone to rejoin the
 ```
 /admin reset queue 03134ff5
 ```
-- **`/admin cancel [member]`** - Cancels and voids the members, and parties of the lobbies, and game.
+- **`/admin cancel [member]`** - Cancels the entire queue for the member and everyone in the queue.
 ```
 /admin reset cancel @John
 ```
