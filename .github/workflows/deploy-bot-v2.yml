@@ -48,7 +48,7 @@ jobs:
         password: ${{ secrets.ROOT_PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd ${{ env.REPO_NAME }}/
+          cd ${{ env.REPO_NAME }}/db/
           touch .env
           echo "${{ secrets.env.BOT_TOKEN_TEST }}" > .env
           cat .env
