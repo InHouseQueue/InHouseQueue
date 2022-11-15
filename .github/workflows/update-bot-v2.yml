@@ -1,10 +1,11 @@
-name: Update Bot V2
+name: Update Bot V2 - Live
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 env:
     REPO_NAME: ${{ github.event.repository.name }}
+    LIVE_NAME: ${{ env.REPO_NAME }}-live
 jobs:
   pull-repo:
     name: pull latest repo
@@ -18,7 +19,7 @@ jobs:
         password: ${{ secrets.ROOT_PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd ${{ env.REPO_NAME }}
+          cd ${{ env.LIVE_NAME }}
           git pull
   restart-bot:
     name: restart bot
@@ -32,4 +33,4 @@ jobs:
         username: ${{ secrets.ROOT_USERNAME }}
         password: ${{ secrets.ROOT_PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: sudo systemctl start ${{ env.REPO_NAME }}-watcher.service
+        script: sudo systemctl start ${{ env.LIVE_NAME }}-watcher.service
