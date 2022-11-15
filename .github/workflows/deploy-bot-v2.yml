@@ -50,7 +50,7 @@ jobs:
         script: |
           cd ${{ env.REPO_NAME }}
           touch .env
-          echo ${{ secrets.env.BOT_TOKEN_TEST }} > .env
+          echo ${{ secrets.BOT_TOKEN_TEST }} > .env
           cat .env
           echo $?
   create-systemctl-service:
