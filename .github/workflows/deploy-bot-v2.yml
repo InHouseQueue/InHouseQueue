@@ -48,9 +48,9 @@ jobs:
         password: ${{ secrets.ROOT_PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd ${{ env.REPO_NAME }}/db/
+          cd ${{ env.REPO_NAME }}
           touch .env
-          echo "${{ secrets.env.BOT_TOKEN_TEST }}" > .env
+          echo ${{ secrets.env.BOT_TOKEN_TEST }} > .env
           cat .env
           echo $?
   create-systemctl-service:
