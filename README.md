@@ -22,8 +22,8 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 
 Instructions on how to run this bot from the source and more details on the bot are available [here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
 
-# HOST THE BOT YOURSELF
-### I encourage you to just [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the bot to your server, but if you want to make some changes and host it yourself feel free.
+## HOST THE BOT YOURSELF
+I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the bot to your server, but if you want to make some changes and host it yourself feel free.
 View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md) 
 
 # All Commands
