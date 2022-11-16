@@ -20,8 +20,11 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 3. Create another channel, run `/setwinnerlog #channlename` we suggest you name this something like match-history. 
 4. That's it! Now when you are ready to play just run `/start` in your queue channel!
 
-Instructions on how to run this bot from the source and more details on the bot are available [here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/more-details.md)
+Instructions on how to run this bot from the source and more details on the bot are available [here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
 
+# HOST THE BOT YOURSELF
+### I encourage you to just [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the bot to your server, but if you want to make some changes and host it yourself feel free.
+View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md) 
 
 # All Commands
 ### Queue commands
@@ -61,7 +64,7 @@ Note: `admin reset ...` Commands are executed immediately, but requires someone 
 Note: Make use of the discord slash command feature - running these commands will be much easier!
 
 # Contributing
-Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 # License
 This project is licensed under the MIT License - see the LICENSE.md file for details
