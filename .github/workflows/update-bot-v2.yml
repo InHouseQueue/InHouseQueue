@@ -1,7 +1,7 @@
 name: Update Bot V2 - Live
 on:
   push:
-    branches: [ main ]
+    branches: [ live ]
   workflow_dispatch:
 env:
     REPO_NAME: ${{ github.event.repository.name }}
