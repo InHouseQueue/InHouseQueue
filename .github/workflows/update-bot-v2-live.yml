@@ -25,6 +25,7 @@ jobs:
           mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.LIVE_NAME }}
   pull-repo:
     name: pull latest repo
+    needs: backup-db
     runs-on: ubuntu-latest
     steps:
     - name: Clone Repo
