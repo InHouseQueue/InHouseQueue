@@ -18,10 +18,10 @@ jobs:
         password: ${{ secrets.ROOT_PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd /root/${{ env.REPO_NAME }}-live/db || exit
+          cd /root/${{ env.REPO_NAME }}/db || exit
           DATE=$(date '+%Y-%m-%d-%H:%M:%S')
           sqlite3 main.sqlite ".backup m_database-${DATE}.sq3.bak"
-          mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}-live
+          mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}
   pull-repo:
     name: pull latest repo
     runs-on: ubuntu-latest
