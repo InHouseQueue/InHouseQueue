@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 env:
     REPO_NAME: ${{ github.event.repository.name }}
-    LIVE_NAME: ${{ env.REPO_NAME }}-live
+    LIVE_NAME: ${{ github.event.repository.name }}-live
 jobs:
   pull-repo:
     name: pull latest repo
