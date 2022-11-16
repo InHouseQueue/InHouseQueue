@@ -1,4 +1,4 @@
-# How to host this on a server - Docker
+# Host the bot yourself - Docker
 
 ## Running the bot with Docker - Available on Docker [hub:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue)
 ### Prerequisites
@@ -15,8 +15,10 @@
 **IMPORTANT:**
 `-v db:/app/db` creates a named volume. It is called `db` (feel free to change this if you like). This volume is attached to the docker container, and it contains the `main.sqlite` which is your DATABASE. It has all the important data about your server, leaderboard, set channels, wins and so on. Keep it safe and don't forget to [attach](https://www.geeksforgeeks.org/mounting-a-volume-inside-docker-container/) it when you pull a new image!
 
-# How to host this on a server - VPS (Ubuntu with SystemD )
-I've made it very easy to deploy this bot in a [CI/CD](https://www.redhat.com/en/topics/devops/what-is-ci-cd) fashion. Systemd controls the Bot and will automatically restart the bot if you merge into your main branch.
+# Host the bot yourself - VPS (Systemd)
+I've made it very easy to deploy this bot in a [CI/CD](https://www.redhat.com/en/topics/devops/what-is-ci-cd) fashion. Systemd controls the Bot and will automatically restart the bot if you merge into your main branch. 
+
+Follow along and your bot will be up in 20 minutes!
 
 *Note: When the bot restarts all queues will be reset. Although the bot restarts almost instantly, it's still recommended to restart at low traffic times!*
 
