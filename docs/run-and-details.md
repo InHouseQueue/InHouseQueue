@@ -1,13 +1,3 @@
-## Running the bot with Docker - Available on Docker [hub:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue)
-1.  Pull the latest image `docker pull henrykoleoso/in-house-queue`
-2. Run the bot `docker run -v db:/app/db -e TOKEN=[discord-token] -d henrykoleoso/in-house-queue`
-3. Stop the bot `docker stop [containerid]`
-4. View the docker repository for specific tags/versions that are [available:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue) you can then pull a specific version/tag `docker pull henrykoleoso/in-house-queue:v1.0.2-beta`
-5. Details of what is included in the versions are on the [release](https://github.com/HenrySpartGlobal/InHouseQueue/releases) page.
-
-IMPORTANT:
-`-v db:/app/db` creates a named volume. It is called `db` (feel free to change this if you like). This volume is attached to the docker container, and it contains the `main.sqlite` which is your DATABASE. It has all the important data about your server, leaderboard, set channels, wins and so on. Keep it safe and don't forget to attach it when you pull a new image!
-
 ## Run from source
 ### Prerequisites
 `Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
@@ -21,13 +11,15 @@ git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
 ```.env
 TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
 ```
-3. Run the bot
+3. Edit the `cogs/dev.py` file and replace the IDs with your DiscordId(s) and GuildId(s)
+
+4. Run the bot
 ```
 python3 main.py
 ```
 
 ## Hosting
-Please see my Hosting Readme - https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/HOSTING.md 
+Please see my Hosting Readme - https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md 
 
 # How does it work?
 When a match is initiated, 5 buttons appear that represent a role. Once each position has 2 players, all participating players are tagged to announce that a game has been found. All games are given an ID which can be used for various things.

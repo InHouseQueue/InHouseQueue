@@ -5,9 +5,28 @@ on:
   workflow_dispatch:
 env:
     REPO_NAME: ${{ github.event.repository.name }}
+    REPO_OWNER: ${{ github.repository_owner }}
 jobs:
+  backup-db:
+    name: Backup DB
+    runs-on: ubuntu-latest
+    steps:
+    - name: Backup DB
+      uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.ROOT_USERNAME }}
+        password: ${{ secrets.ROOT_PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cat ${{ env.REPO_OWNER }}
+          cd /root/${{ env.REPO_NAME }}/db || exit
+          DATE=$(date '+%Y-%m-%d-%H:%M:%S')
+          sqlite3 main.sqlite ".backup m_database-${DATE}.sq3.bak"
+          mv m_database-${DATE}.sq3.bak /root/s3-bucket/${{ env.REPO_NAME }}
   pull-repo:
     name: pull latest repo
+    needs: backup-db
     runs-on: ubuntu-latest
     steps:
     - name: Clone Repo

@@ -318,8 +318,10 @@ class ReadyButton(ui.View):
                 await game_lobby.send(
                     embed=Embed(
                         title=":warning: Notice",
-                        description=f"To conclude the game, run `!win` or `/win`."
-                                    f" **Optional:** Enter `{self.game_id}` as custom game name and password.",
+                        description=f"To conclude the game, run `!win` or `/win`.\n "
+                                    f"**6** votes **MUST** be cast.\n"
+                                    f"Only lobby **members** votes will count.\n \n"
+                                    f"**Optional:** Enter `{self.game_id}` as custom game name and password.",
                         color=Color.yellow(),
                     )
                 )
