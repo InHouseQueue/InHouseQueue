@@ -28,6 +28,15 @@ class Win(Cog):
             f"SELECT * FROM game_member_data WHERE game_id = '{game_data[0]}'"
         )
 
+        mentions = (
+                f"🔴 Red Team: "
+                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
+                + "\n🔵 Blue Team: "
+                + ", ".join(
+            f"<@{data[0]}>" for data in member_data if data[2] == "blue"
+            )
+        )
+
         if (
             not author.id in [member[0] for member in member_data]
             and not author.guild_permissions.administrator
@@ -47,6 +56,7 @@ class Win(Cog):
             msg = await channel.send("Which team won? (6 Votes required)")
             await msg.add_reaction("🔵")
             await msg.add_reaction("🔴")
+            await channel.send(mentions)
             self.active_win_commands.append(channel.id)
 
             while True:
@@ -99,15 +109,6 @@ class Win(Cog):
         )
         if log_channel_id:
             log_channel = self.bot.get_channel(log_channel_id[0])
-
-            mentions = (
-                f"🔴 Red Team: "
-                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
-                + "\n🔵 Blue Team: "
-                + ", ".join(
-                    f"<@{data[0]}>" for data in member_data if data[2] == "blue"
-                )
-            )
 
             embed = Embed(
                 title=f"Game concluded!",
