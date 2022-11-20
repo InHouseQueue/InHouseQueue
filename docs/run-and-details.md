@@ -1,23 +1,3 @@
-## Run from source
-### Prerequisites
-`Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
-
-## Running the Bot locally 
-1. Clone or Download this repository:
-```bash
-git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
-```
-2. Create a `.env` file in the root directory and paste in your Discord Bot [Token](https://discord.com/developers/applications)
-```.env
-TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
-```
-3. Edit the `cogs/dev.py` file and replace the IDs with your DiscordId(s) and GuildId(s)
-
-4. Run the bot
-```
-python3 main.py
-```
-
 ## Hosting
 Please see my Hosting Readme - https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md 
 
