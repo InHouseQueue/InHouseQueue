@@ -42,7 +42,7 @@ TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
 ```
 python3 main.py
 ```
-5. Now set up the Bot with the steps in [Discord server setup](https://github.com/HenrySpartGlobal/InHouseQueue/edit/main/README.md#discord-server-setup)
+5. Now set up the Bot with the steps in [Discord server setup](https://github.com/HenrySpartGlobal/InHouseQueue#discord-server-setup)
 
 
 ## HOST THE BOT YOURSELF
