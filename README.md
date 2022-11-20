@@ -14,13 +14,36 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 - Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the bot out yourself!
 - Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the bot to your server
 
-# Quick Start
+# Discord Server setup
 1. Invite the Bot to your server - [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot)
 2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are **automatically deleted**. Do not use this command on an existing text channel for obvious reasons!
 3. Create another channel, run `/setwinnerlog #channlename` we suggest you name this something like match-history. 
 4. That's it! Now when you are ready to play just run `/start` in your queue channel!
 
-Instructions on how to run this bot from the source and more details on the bot are available [here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
+## Step by Step bot user flow
+[Here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
+
+# Installation
+## Running locally
+### Prerequisites
+`Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
+
+1. Clone or Download this repository:
+```bash
+git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
+```
+2. Create a `.env` file in the root directory and paste in your Discord Bot [Token](https://discord.com/developers/applications)
+```.env
+TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
+```
+3. Optional: Edit the `cogs/dev.py` file and replace the IDs with your DiscordId(s) and GuildId(s)
+
+4. Run the bot
+```
+python3 main.py
+```
+5. Now set up the Bot with the steps in [Discord server setup](https://github.com/HenrySpartGlobal/InHouseQueue/edit/main/README.md#discord-server-setup)
+
 
 ## HOST THE BOT YOURSELF
 I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the bot to your server, but if you want to make some changes and host it yourself feel free.
