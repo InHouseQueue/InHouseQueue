@@ -314,6 +314,7 @@ class ReadyButton(ui.View):
                 await game_lobby.send(
                     content=f"{red_role.mention} {blue_role.mention}",
                     embed=await self.gen_embed(ready_ups),
+                    view=SpectateButton(self.bot)
                 )
                 await game_lobby.send(
                     embed=Embed(
