@@ -70,20 +70,28 @@ class ChannelCommands(Cog):
     @command()
     async def setwinnerlog(self, ctx, channel: TextChannel):
         data = await self.bot.fetchrow(
-            f"SELECT * FROM winner_log_channel WHERE channel_id = {channel.id}"
+            f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}"
         )
         if data:
-            return await ctx.send(
-                embed=embeds.error(
-                    f"{channel.mention} is already setup as the winner log channel."
+            if data[0] == channel.id:
+                return await ctx.send(
+                    embed=embeds.error(
+                        f"{channel.mention} is already setup as the winner log channel."
+                    )
                 )
+
+            await self.bot.execute(
+                "UPDATE winner_log_channel SET channel_id = $1 WHERE guild_id = $2",
+                channel.id,
+                ctx.guild.id
             )
 
-        await self.bot.execute(
-            "INSERT INTO winner_log_channel(guild_id, channel_id) VALUES($1, $2)",
-            ctx.guild.id,
-            channel.id,
-        )
+        else:
+            await self.bot.execute(
+                "INSERT INTO winner_log_channel(guild_id, channel_id) VALUES($1, $2)",
+                ctx.guild.id,
+                channel.id,
+            )
 
         await ctx.send(
             embed=embeds.success(
