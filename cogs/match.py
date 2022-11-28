@@ -135,7 +135,7 @@ class ReadyButton(ui.View):
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
-        if (datetime.now() - self.time_of_execution).seconds >= 20:
+        if (datetime.now() - self.time_of_execution).seconds >= 600:
             if self.msg:
                 ready_ups = await self.bot.fetch(
                     f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'"
