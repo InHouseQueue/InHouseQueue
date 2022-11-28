@@ -135,7 +135,7 @@ class ReadyButton(ui.View):
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
-        if (datetime.now() - self.time_of_execution).seconds >= 600:
+        if (datetime.now() - self.time_of_execution).seconds >= 20:
             if self.msg:
                 ready_ups = await self.bot.fetch(
                     f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'"
@@ -436,8 +436,8 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        # if checks_passed == 1:
-        if checks_passed == len(self.children) - 2:
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 2:
 
             await inter.edit_original_message(
                 view=ReadyButton(self.bot),
@@ -467,6 +467,26 @@ class QueueButtons(ui.View):
         await inter.response.defer()
         if not self.game_id:
             self.game_id = inter.message.embeds[0].footer.text
+
+        game_members = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+        )
+        disabled_buttons = []
+        for member in game_members:
+            data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE role = '{member[1]}' and game_id = '{self.game_id}'"
+            )
+            if len(data) == 2:
+                for b in self.children:
+                    if b.label.lower() == member[1]:
+                        disabled_buttons.append(b.label.lower())
+                        b.disabled = True
+                        b.style = ButtonStyle.grey
+        
+        await inter.message.edit(view=self, attachments=[])
+        if button.label.lower() in disabled_buttons:
+            return await inter.send(embed=error("This role is booked, please choose another."), ephemeral=True)
+        
         if await self.has_participated(inter):
             return await inter.send(
                 embed=error("You are already a participant of this game."),
@@ -572,6 +592,31 @@ class Match(Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.start_queue.start()
+
+    @tasks.loop(seconds=5)
+    async def start_queue(self):
+        await self.bot.wait_until_ready()
+
+        try:
+            # May start before bot is ready, if tables are not ready, this may cause error
+            channels = await self.bot.fetch("SELECT * FROM queuechannels")
+        except:
+            channels = []
+
+        for channel in channels:
+            channel = self.bot.get_channel(channel[0])
+            data = await self.bot.fetch(
+                f"SELECT game_id FROM games WHERE queuechannel_id = {channel.id}"
+            )
+            if not data:
+                continue
+            async for msg in channel.history(limit=200):
+                if msg.embeds:
+                    if msg.embeds[0].footer:
+                        if data[-1][0] == msg.embeds[0].footer.text:
+                            await self.start(channel)
+                        break
 
     @Cog.listener()
     async def on_ready(self):
@@ -579,21 +624,17 @@ class Match(Cog):
         self.bot.add_view(SpectateButton(self.bot))
         self.bot.add_view(ReadyButton(self.bot))
 
-    @command(aliases=["inhouse", "play"])
-    async def start(self, ctx):
+    async def start(self, channel):
 
         data = await self.bot.fetchrow(
-            f"SELECT * FROM queuechannels WHERE channel_id = {ctx.channel.id}"
+            f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
         )
         if not data:
-            return await ctx.send(
+            return await channel.send(
                 embed=error(
-                    f"{ctx.channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+                    f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
                 )
             )
-
-        if not isinstance(ctx, context.Context):
-            await ctx.send(embed=success("Game was started."))
 
         # If you change this - update /events.py L28 as well!
         embed = Embed(
@@ -601,22 +642,21 @@ class Match(Cog):
         )
         embed.add_field(name="🔵 Blue", value="No members yet")
         embed.add_field(name="🔴 Red", value="No members yet")
-        if ctx.author.avatar:
-            embed.set_author(
-                name="Initiated by " + ctx.author.name, icon_url=ctx.author.avatar.url
-            )
-        else:
-            embed.set_author(name=ctx.author.name)
         embed.set_image(file=File("assets/queue.png"))
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
 
-        await ctx.channel.send(embed=embed, view=QueueButtons(self.bot))
+        await channel.send(embed=embed, view=QueueButtons(self.bot))
+
+    @command(aliases=["inhouse", "play"], name="start")
+    async def start_prefix(self, ctx):
+        await self.start(ctx.channel)
 
     @slash_command(name="start")
     async def start_slash(self, ctx):
         """
         Start the inhouse event.
         """
+        await ctx.send("Game was started!")
         await self.start(ctx)
 
 
