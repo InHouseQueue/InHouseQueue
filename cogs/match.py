@@ -436,8 +436,8 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        if checks_passed == 1:
-        # if checks_passed == len(self.children) - 2:
+        # if checks_passed == 1:
+        if checks_passed == len(self.children) - 2:
 
             await inter.edit_original_message(
                 view=ReadyButton(self.bot),
