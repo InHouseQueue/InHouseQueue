@@ -657,7 +657,7 @@ class Match(Cog):
         Start the inhouse event.
         """
         await ctx.send("Game was started!")
-        await self.start(ctx)
+        await self.start(ctx.channel)
 
 
 def setup(bot):
