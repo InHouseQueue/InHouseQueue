@@ -56,7 +56,7 @@ class Admin(Cog):
         await self.bot.execute(f"DELETE FROM points WHERE guild_id = {ctx.guild.id}")
         await ctx.send(embed=success("Successfully removed all previous records of leaderboard."))
 
-    @reset_slash.sub_command()
+    @reset_slash.sub_command(name="leaderboard")
     async def leaderboard_slash(self, ctx):
         """
         Reset your server's leaderboard.

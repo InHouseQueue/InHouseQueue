@@ -606,6 +606,8 @@ class Match(Cog):
 
         for channel in channels:
             channel = self.bot.get_channel(channel[0])
+            if not channel:
+                continue
             data = await self.bot.fetch(
                 f"SELECT game_id FROM games WHERE queuechannel_id = {channel.id}"
             )
