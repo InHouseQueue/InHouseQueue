@@ -1,6 +1,7 @@
 from disnake import Color, Embed
 from disnake.ext.commands import Cog, command, slash_command
 from Paginator import CreatePaginator
+from core.embeds import error
 
 
 class Leaderboard(Cog):
@@ -16,6 +17,8 @@ class Leaderboard(Cog):
         user_data = await self.bot.fetch(
             f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id}"
         )
+        if not user_data:
+            return await ctx.send(embed=error("There are no records to display."))
         user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
         user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 

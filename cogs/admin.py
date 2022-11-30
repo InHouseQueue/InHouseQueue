@@ -47,6 +47,23 @@ class Admin(Cog):
     async def reset(self, ctx):
         pass
 
+    @reset.command(aliases=['lb'])
+    async def leaderboard(self, ctx):
+        data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} ")
+        if not data:
+            return await ctx.send(embed=error("There are no records to be deleted."))
+        
+        await self.bot.execute(f"DELETE FROM points WHERE guild_id = {ctx.guild.id}")
+        await ctx.send(embed=success("Successfully removed all previous records of leaderboard."))
+
+    @reset_slash.sub_command(name="leaderboard")
+    async def leaderboard_slash(self, ctx):
+        """
+        Reset your server's leaderboard.
+        """
+        await ctx.response.defer()
+        await self.leaderboard(ctx)
+
     @reset.command()
     async def user(self, ctx, member: Member):
         member_data = await self.bot.fetchrow(
@@ -271,6 +288,7 @@ class Admin(Cog):
         """
         await ctx.response.defer()
         await self.cancel(ctx, member)
+
 
 
 def setup(bot):
