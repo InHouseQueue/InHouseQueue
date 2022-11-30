@@ -1,6 +1,7 @@
 from core.embeds import error, success
-from disnake import Color, Embed, Member, OptionChoice, Role, Game
+from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
+from disnake.ext import tasks
 
 from cogs.win import Win
 
@@ -12,6 +13,7 @@ class Admin(Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.persistent_lb.start()
 
     async def cog_check(self, ctx: Context) -> bool:
         if ctx.author.guild_permissions.administrator:
@@ -30,6 +32,24 @@ class Admin(Cog):
             embed=error("You need **administrator** permissions to use this command.")
         )
         return False
+
+    @tasks.loop(seconds=5)
+    async def persistent_lb(self):
+        await self.bot.wait_until_ready()
+
+        data = await self.bot.fetch(f"SELECT * FROM persistent_lb")
+        for entry in data:
+            channel = self.bot.get_channel(entry[1])
+            if not channel:
+                continue
+            msg = self.bot.get_message(entry[2])
+            if not msg:
+                msg = await channel.fetch_message(entry[2])
+                if not msg:
+                    continue
+            if msg:
+                embed = await self.leaderboard_persistent(channel)
+                await msg.edit(embed=embed)
 
     @group()
     async def admin(self, ctx):
@@ -289,6 +309,74 @@ class Admin(Cog):
         await ctx.response.defer()
         await self.cancel(ctx, member)
 
+    async def leaderboard_persistent(self, channel):
+        user_data = await self.bot.fetch(
+            f"SELECT * FROM mmr_rating"
+        )
+        if not user_data:
+            return False
+        user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+
+        embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
+        if channel.guild.icon:
+            embed.set_thumbnail(url=channel.guild.icon.url)
+
+
+        async def add_field(data) -> None:
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]}")
+            if user_data:
+                wins = user_data[2]
+                losses = user_data[3]
+            else:
+                wins = 0
+                losses = 0
+            total = wins + losses
+            if not total:
+                total = 1
+
+            percentage = round((wins / total) * 100, 2)
+
+            skill = round(float(data[2]) - (2 * float(data[3])), 2)
+            embed.add_field(
+                name=f"#{i + 1}",
+                value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - **{int(skill*100)}** MMR",
+                inline=False,
+            )
+
+        for i, data in enumerate(user_data):
+
+            if i <= 9:
+                await add_field(data)
+
+        return embed
+
+    @admin_slash.sub_command(name="persistent_leaderboard")
+    async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
+        embed = await self.leaderboard_persistent(channel)
+        msg = await channel.send(embed=embed)
+        if not msg:
+            return await ctx.send(embed=error("There are no records to display in the leaderboard, try playing a match first."))
+        data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id}")
+        if data:
+            await self.bot.execute(
+                f"UPDATE persistent_lb SET channel_id = $1, msg_id = $2 WHERE guild_id = $3",
+                channel.id,
+                msg.id,
+                ctx.guild.id
+            )
+        else:
+            await self.bot.execute(
+                f"INSERT INTO persistent_lb(guild_id, channel_id, msg_id) VALUES($1, $2, $3)",
+                ctx.guild.id,
+                channel.id, 
+                msg.id
+            )
+        
+        m = await ctx.send(embed=success("Persistent leaderboard activated successfully."))
+        try:
+            await m.pin()
+        except:
+            pass
 
 
 def setup(bot):

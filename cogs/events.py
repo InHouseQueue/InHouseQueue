@@ -119,6 +119,48 @@ class Events(Cog):
             """
         )
 
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS persistent_lb(
+                guild_id INTEGER,
+                channel_id INTEGER,
+                msg_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mmr_rating(
+                guild_id INTEGER,
+                user_id INTEGER,
+                mu TEXT,
+                sigma TEXT
+            )
+            """
+        )
+
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mvp_voting(
+                guild_id INTEGER,
+                user_id INTEGER,
+                game_id TEXT,
+                time TEXT
+            )
+            """
+        )
+
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mvp_points(
+                guild_id INTEGER,
+                user_id INTEGER,
+                votes INTEGER
+            )
+            """
+        )
+
     @Cog.listener()
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
@@ -138,7 +180,7 @@ class Events(Cog):
 
             if self.bot.user.id == 1018498965022445638:  # Testing bot ID
                 channel = self.bot.get_channel(
-                    1032359147833921616
+                    1045254299430694912
                 )  # Testing Server Channel
             else:
                 channel = self.bot.get_channel(
@@ -168,6 +210,41 @@ class Events(Cog):
     @Cog.listener()
     async def on_slash_command_error(self, ctx, error):
         await self.on_command_error(ctx, error)
+
+    @Cog.listener()
+    async def on_message(self, msg):
+        if msg.author.bot or msg.guild:
+            return
+
+        data = await self.bot.fetch("SELECT * FROM mvp_voting")
+        for entry in data:
+            if msg.author.id == entry[1]:
+                if msg.content.isnumeric():
+                    if int(msg.content) > 10:
+                        return await msg.channel.send(embed=embeds.error("There are only 10 summoners to vote."))
+                    all_members = await self.bot.fetch(f"SELECT * FROM members_history WHERE game_id = '{entry[2]}'")
+                    for i, member in enumerate(all_members):
+                        if i+1 == int(msg.content):
+                            if member[0] == msg.author.id:
+                                return await msg.channel.send(embed=embeds.error("You cannot vote for yourself."))
+                            mvp_data = await self.bot.fetchrow(f"SELECT * FROM mvp_points WHERE user_id = {member[0]}")
+                            if mvp_data:
+                                await self.bot.execute(
+                                    f"UPDATE mvp_points SET votes = $1 WHERE guild_id = {mvp_data[0]} and user_id = {mvp_data[1]} ",
+                                    mvp_data[2] + 1
+                                )
+                            else:
+                                await self.bot.execute(
+                                    "INSERT INTO mvp_points(guild_id, user_id, votes) VALUES($1, $2, $3)",
+                                    entry[0],
+                                    entry[1],
+                                    1
+                                )
+                            await self.bot.execute(
+                                f"DELETE FROM mvp_voting WHERE user_id = {msg.author.id} and guild_id = {entry[0]}"
+                            )
+                            await msg.channel.send(embed=embeds.success("Thank you for voting."))
+
 
 
 def setup(bot):
