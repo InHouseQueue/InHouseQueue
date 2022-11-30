@@ -626,7 +626,7 @@ class Match(Cog):
         self.bot.add_view(SpectateButton(self.bot))
         self.bot.add_view(ReadyButton(self.bot))
 
-    async def start(self, channel):
+    async def start(self, channel, author=None):
 
         data = await self.bot.fetchrow(
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
@@ -646,12 +646,18 @@ class Match(Cog):
         embed.add_field(name="🔴 Red", value="No members yet")
         embed.set_image(file=File("assets/queue.png"))
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
+        if author:
+            if author.avatar:
+                embed.set_author(name=f"Initiated by {author.name}", icon_url=author.avatar.url)
+            else:
+                embed.set_author(name=f"Initiated by {author.name}")
+            
 
         await channel.send(embed=embed, view=QueueButtons(self.bot))
 
     @command(aliases=["inhouse", "play"], name="start")
     async def start_prefix(self, ctx):
-        await self.start(ctx.channel)
+        await self.start(ctx.channel, ctx.author)
 
     @slash_command(name="start")
     async def start_slash(self, ctx):
@@ -659,7 +665,7 @@ class Match(Cog):
         Start the inhouse event.
         """
         await ctx.send("Game was started!")
-        await self.start(ctx.channel)
+        await self.start(ctx.channel, ctx.author)
 
 
 def setup(bot):
