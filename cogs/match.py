@@ -592,31 +592,31 @@ class Match(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.start_queue.start()
-
-    @tasks.loop(seconds=5)
-    async def start_queue(self):
-        await self.bot.wait_until_ready()
-
-        try:
-            # May start before bot is ready, if tables are not ready, this may cause error
-            channels = await self.bot.fetch("SELECT * FROM queuechannels")
-        except:
-            channels = []
-
-        for channel in channels:
-            channel = self.bot.get_channel(channel[0])
-            data = await self.bot.fetch(
-                f"SELECT game_id FROM games WHERE queuechannel_id = {channel.id}"
-            )
-            if not data:
-                continue
-            async for msg in channel.history(limit=200):
-                if msg.embeds:
-                    if msg.embeds[0].footer:
-                        if data[-1][0] == msg.embeds[0].footer.text:
-                            await self.start(channel)
-                        break
+    #     self.start_queue.start()
+    #
+    # @tasks.loop(seconds=5)
+    # async def start_queue(self):
+    #     await self.bot.wait_until_ready()
+    #
+    #     try:
+    #         # May start before bot is ready, if tables are not ready, this may cause error
+    #         channels = await self.bot.fetch("SELECT * FROM queuechannels")
+    #     except:
+    #         channels = []
+    #
+    #     for channel in channels:
+    #         channel = self.bot.get_channel(channel[0])
+    #         data = await self.bot.fetch(
+    #             f"SELECT game_id FROM games WHERE queuechannel_id = {channel.id}"
+    #         )
+    #         if not data:
+    #             continue
+    #         async for msg in channel.history(limit=200):
+    #             if msg.embeds:
+    #                 if msg.embeds[0].footer:
+    #                     if data[-1][0] == msg.embeds[0].footer.text:
+    #                         await self.start(channel)
+    #                     break
 
     @Cog.listener()
     async def on_ready(self):
