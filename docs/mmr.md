@@ -1,5 +1,5 @@
 # True Skill
-The MMR system on In-House Bot uses [TrueSKill](https://en.wikipedia.org/wiki/TrueSkill) a skilled-based matchmaking ranking system developed by Microsoft for use with video game matchmaking on Xbox Live.
+The MMR system on In-House Bot uses [TrueSkill](https://en.wikipedia.org/wiki/TrueSkill) a skilled-based matchmaking ranking system developed by Microsoft for use with video game matchmaking on Xbox Live.
 
 # How it works - TrueSkill for In-House Queue bot 
 The TrueSkill system works on two basic values, your uncertainty value (sigma) and your actual skill (mu). I will refer to them as sigma and mu from now on.
