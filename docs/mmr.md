@@ -4,16 +4,13 @@ The MMR system on In-House Bot uses [TrueSkill](https://en.wikipedia.org/wiki/Tr
 # How it works - TrueSkill for In-House Queue bot 
 The TrueSkill system works on two fundamental values, your uncertainty value (Sigma) and your actual skill (mu). I will refer to them as Sigma and mu from now on.
 
-Your Sigma is basically how the game accounts for luck; it is the numerical representation of your skill. Play consistently for a low sigma or inconsistently for a high sigma. High Sigma = drastic variance in MMR gain and loss. So a high sigma is not necessarily a good thing. Everyone will have a reasonably high sigma at the start. Your mu is the actual representation of your skill. Win games to raise it, lose games to lower it. 
+Firstly, the bot will take every player's current MMR and attempt to create a win ratio as close to 50%, for both teams, as possible. Once the game is over, the amount of MMR you receive is not fixed. As well as gaining MMR when you win, the amount of MMR you have compared to the enemy team will determine how much you gain or lose. Your MMR gain will be lower if your team has a higher average MMR. The same goes for losing a game. 
+
+Alongside the MMR value, there is what I'll call the "confidence" value. This is how confident the bot is that you're current MMR is your TrueSkill. Initially, it has no idea, so you will gain or lose quite a drastic amount while it gathers data on you. In League of Legends terms, when you have 0 games played, the bot can only assume your rank is between Bronze - Challenger. Once you have 30-40 games played, the bot will be considerably more confident in your MMR, so your gains and losses will be more stable. 
 
 The mathematical relation of mu and Sigma is (mu) - k(Sigma), where k is a constant assigned by the developers of TrueSkill. Your MMR is higher than the number you see, but the bot does not give you the benefit of the doubt.
 
 In 5v5 Games like League of Legends, Overwatch and Valorant - It would take around 50-60 games to get an accurate read on your TrueSkill.
-
-## Example
-If a team of five 5000+ MMR players goes up against a mixed group of 2600-2100 players, the expectation is that the 5000+ MMR players will win. If this happens, their MMR scores will only go up by a relatively small amount. The other team will only go down by a small amount because the expected outcome of the game doesn't tell us anything new about the skill of the players on each team. Suppose the higher MMR players lose, on the other hand. In that case, the system will take this surprising result into account. It will award the lower MMR team a more significant gain (since they are likely to be better than their current MMR would have suggested). Of course, the higher MMR team will lose more MMR.
-
-The second factor is how confident the algorithm is about each player's skill. Suppose a player has played a lot of games. In that case, the system has a high certainty of their actual MMR. The MMR gains and losses after each match will be much lower than those of players who have only played a few games. If the player is playing inconsistently, i.e. winning games, they should be losing and losing games, they should be winning. Their MMR gain and loss will also be drastic.
 
 The bottom line is that any player's MMR is not necessarily a measure of their skill but more of their likelihood to win. And yes, of course, a high probability of winning can be an indicator of high personal skill, but this is in no way guaranteed (team diff/losers queue).
 
