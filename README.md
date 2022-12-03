@@ -11,14 +11,14 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
-- Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the bot out yourself!
-- Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the bot to your server
+- Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the Bot out yourself!
+- Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the Bot to your server
 
 # Discord Server setup
 1. Invite the Bot to your server - [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot)
-2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are **automatically deleted**. Do not use this command on an existing text channel for obvious reasons!
-3. Create another channel, run `/setwinnerlog #channlename` we suggest you name this something like match-history. 
-4. That's it! Now when you are ready to play just run `/start` in your queue channel!
+2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are **deleted**. Do not use this command on an existing text channel for obvious reasons!
+3. Create another channel, run `/setwinnerlog #channlename`. We suggest you name this something like match-history. 
+4. That's it! Now when you are ready to play, just run `/start` in your queue channel!
 
 ## Step by Step bot user flow
 [Here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
@@ -38,7 +38,7 @@ TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
 ```
 3. Optional: Edit the `cogs/dev.py` file and replace the IDs with your DiscordId(s) and GuildId(s)
 
-4. Run the bot
+4. Run the Bot
 ```
 python3 main.py
 ```
@@ -46,7 +46,7 @@ python3 main.py
 
 
 ## HOST THE BOT YOURSELF
-I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the bot to your server, but if you want to make some changes and host it yourself feel free.
+I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the Bot to your server, but if you want to make some changes and host it yourself feel free.
 View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md) 
 
 # All Commands
@@ -57,11 +57,11 @@ View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/ma
 - `/setchannel` - Set a specific channel as the queue. Messages other than commands will be deleted after a short delay.
 - `/setwinnerlog` - All completed games will be logged via an embed in this channel. 
 - `/start` - Start a queue
-- `/win` - Initiate a vote once a game has been completed. The team first to 6 votes, will be confirmed as the winner. Can only be run in the dedicated game lobby.
+- `/win` - Initiate a vote once a game has been completed. The team, first to 6 votes, will be confirmed as the winner. It can only be run in the dedicated game lobby.
 - `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
 
 ### Admin commands
-Note: `admin reset ...` Commands are executed immediately, but requires someone to rejoin the queue to refresh the Embed.
+Note: `admin reset ...` Commands are executed immediately but require someone to rejoin the queue to refresh the Embed.
 
 - **`/admin reset user [member]`** - Removes the member from all queues.
 ```
@@ -84,7 +84,7 @@ Note: `admin reset ...` Commands are executed immediately, but requires someone 
 /admin winner @Red: 316d8cc7
 ```
 
-Note: Make use of the discord slash command feature - running these commands will be much easier!
+Note: Use the discord slash command feature - running these commands will be much easier!
 
 # Contributing
 Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
