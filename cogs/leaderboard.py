@@ -19,12 +19,12 @@ class Leaderboard(Cog):
 
         if type == 'mmr':
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mmr_rating"
+                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id}"
             )
             user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
         else:
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mvp_points"
+                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id}"
             )
             user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
