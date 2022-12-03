@@ -1,6 +1,5 @@
 from disnake import Color, Embed
 from disnake.ext.commands import Cog, command, slash_command
-from trueskill import Rating, backends, rate
 
 
 class Win(Cog):
@@ -105,77 +104,21 @@ class Win(Cog):
         lobby = self.bot.get_channel(game_data[1])
         await lobby.delete()
 
-        member_data = await self.bot.fetch(
-            f"SELECT * FROM game_member_data WHERE game_id = '{game_data[0]}'"
-        )
-
-        mentions = (
-                f"🔴 Red Team: "
-                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
-                + "\n🔵 Blue Team: "
-                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "blue")
-        )
-
-        winning_team_str = ""
-        losing_team_str = ""
-        winner_team_rating = []
-        losing_team_rating = []
-        for member_entry in member_data:
-            rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]}")
-           
-
-            if member_entry[2] == winner.lower():
-                winner_team_rating.append(
-                    {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
-                )
-                winning_team_str += f"• <@{member_entry[0]}> \n"
-            else:
-                losing_team_rating.append(
-                    {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
-                )
-                losing_team_str += f"• <@{member_entry[0]}> \n"
-
-        backends.choose_backend("mpmath")
-        updated_rating = rate(
-            [[x['rating'] for x in winner_team_rating], [x['rating'] for x in losing_team_rating]],
-            ranks=[0, 1]
-        )
-
-        for i, new_rating in enumerate(updated_rating[0]):
-            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']}")
-            await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
-                str(new_rating.mu),
-                str(new_rating.sigma),
-                counter[0] + 1,
-                winner_team_rating[i]['user_id']
-            )
-
-        for i, new_rating in enumerate(updated_rating[1]):
-            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']}")
-            await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
-                str(new_rating.mu),
-                str(new_rating.sigma),
-                counter[0] + 1,
-                losing_team_rating[i]['user_id'],
-            )
-        
-        embed = Embed(
-            title=f"Game concluded!",
-            description=f"Game **{game_data[0]}** was concluded!",
-            color=Color.blurple(),
-        )
-        embed.add_field(name="Winning Team", value=winning_team_str)
-        embed.add_field(name="Losing Team", value=losing_team_str)
-
         log_channel_id = await self.bot.fetchrow(
             f"SELECT * FROM winner_log_channel WHERE guild_id = {channel.guild.id}"
         )
         if log_channel_id:
             log_channel = self.bot.get_channel(log_channel_id[0])
-            if log_channel:
-                await log_channel.send(mentions, embed=embed)
+
+            embed = Embed(
+                title=f"Game concluded!",
+                description=f"Game **{game_data[0]}** was concluded!\n\nResult: **{winner} Team Won!**",
+                color=Color.green(),
+            )
+            # await log_channel.send(
+            #     f"!\n\n🔴 Red Team \n"+ '\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'red') + '\n\n🔵 Blue Team \n'+'\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'blue') + '\n\n' + f''
+            # )
+            await log_channel.send(mentions, embed=embed)
 
         await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_data[0]}'")
         await self.bot.execute(
@@ -186,25 +129,6 @@ class Win(Cog):
             user_data = await self.bot.fetchrow(
                 f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {channel.guild.id}"
             )
-            await self.bot.execute(
-                f"INSERT INTO mvp_voting(guild_id, user_id, game_id) VALUES($1, $2, $3)",
-                channel.guild.id,
-                member_entry[0],
-                member_entry[3]
-            )
-            user = self.bot.get_user(member_entry[0])
-            try:
-                await user.send(
-                    embed=Embed(
-                        title=":trophy: Vote for MVP",
-                        description="Pick your MVP by responding with a number (1-10). \n"
-                                    + '\n'.join([f"**{i + 1}.** {'🔵' if x[2] == 'blue' else '🔴'} <@{x[0]}>" for i, x in enumerate(member_data)]),
-                        color=Color.blurple()
-                    )
-                )
-
-            except:
-                pass
 
             if member_entry[2] == winner.lower():
                 await self.bot.execute(
