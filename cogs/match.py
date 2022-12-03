@@ -613,7 +613,7 @@ class QueueButtons(ui.View):
     async def third_button(self, button, inter):
         await self.process_button(button, inter)
 
-    @ui.button(label="Bot", style=ButtonStyle.green, custom_id="queue:fourth")
+    @ui.button(label="ADC", style=ButtonStyle.green, custom_id="queue:fourth")
     async def fourth_button(self, button, inter):
         await self.process_button(button, inter)
 
