@@ -6,6 +6,8 @@ from core.embeds import error, success
 from disnake import ButtonStyle, Color, Embed, File, PermissionOverwrite, ui
 from disnake.ext import tasks
 from disnake.ext.commands import Cog, command, context, slash_command
+from trueskill import Rating, quality
+import itertools
 
 
 class SpectateButton(ui.View):
@@ -227,12 +229,18 @@ class ReadyButton(ui.View):
             # CHECK
             # if len(ready_ups) == 2:
             if len(ready_ups) == 10:
+                preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
+                if preference:
+                    preference = preference[1]
+                else:
+                    preference = 1
 
-                for member in game_members:
-                    # Remove member from all other queues
-                    await self.bot.execute(
-                        f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{self.game_id}'"
-                    )
+                if preference == 1:
+                    for member in game_members:
+                        # Remove member from all other queues
+                        await self.bot.execute(
+                            f"DELETE FROM game_member_data WHERE author_id = {member} and game_id != '{self.game_id}'"
+                        )
 
                 await self.bot.execute(
                     f"DELETE FROM ready_ups WHERE game_id = '{self.game_id}'"
@@ -340,6 +348,7 @@ class ReadyButton(ui.View):
                 )
 
                 self.disable_button.cancel()
+                await Match.start(self, inter.channel)
 
         else:
             await inter.send(
@@ -391,7 +400,33 @@ class QueueButtons(ui.View):
             return True
         return False
 
+    async def in_ongoing_game(self, inter) -> bool:
+        data = await self.bot.fetch(f"SELECT * FROM games")
+        for entry in data:
+            user_roles = [x.id for x in inter.author.roles]
+            if entry[4] in user_roles or entry[5] in user_roles:
+                return True
+
+        return False
+
     async def add_participant(self, inter, button) -> None:
+        preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
+        if preference:
+            preference = preference[1]
+        else:
+            preference = 1
+        
+        if preference == 2:
+            in_other_games = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id != '{self.game_id}'"
+            )
+            if in_other_games:
+                return await inter.send(
+                    embed=error(f"You cannot be a part of multiple queues."),
+                    ephemeral=True,
+                )
+
+
         label = button.label.lower()
         team = "blue"
 
@@ -437,36 +472,106 @@ class QueueButtons(ui.View):
 
         # CHECK
         # if checks_passed == 1:
-        if checks_passed == len(self.children) - 2:
-
-            await inter.edit_original_message(
-                view=ReadyButton(self.bot),
-                content="0/10 Players are ready!",
-            )
+        if checks_passed == len(self.children) - 1:
             member_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )
 
+            # CHECK
+            # roles_occupation = {
+            #     "TOP": [],
+            #     "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+            #     "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
+            #     "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+            #     "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+            # }
+            roles_occupation = {
+                "TOP": [],
+                "JUNGLE": [],
+                "MID": [],
+                "ADC": [],
+                "SUPPORT": []
+            }
+
+            for data in member_data:
+                member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]}")
+                if member_rating:
+                    mu = float(member_rating[2])
+                    sigma = float(member_rating[3])
+                    rating = Rating(mu, sigma)
+
+                else:
+                    rating = Rating()
+                    await self.bot.execute(
+                        f"INSERT INTO mmr_rating(guild_id, user_id, mu, sigma, counter) VALUES($1, $2, $3, $4, $5)",
+                        inter.guild.id,
+                        data[0],
+                        rating.mu,
+                        rating.sigma,
+                        0
+                    )
+
+                roles_occupation[data[1].upper()].append({'user_id': data[0], 'rating': rating})
+
+            all_occupations = [*roles_occupation.values()]
+
+            unique_combinations = list(itertools.product(*all_occupations))
+            team_data = []
+            qualities = []
+            for pair in unique_combinations:
+                players_in_pair = [x['user_id'] for x in list(pair)]
+                t2 = []
+                for x in roles_occupation:
+                    for val in roles_occupation[x]:
+                        if val['user_id'] not in players_in_pair:
+                            t2.append(val)
+
+                qua = quality([[x['rating'] for x in list(pair)], [x['rating'] for x in t2]])
+                qualities.append(qua)
+                team_data.append({'quality': qua, 'teams': [list(pair), t2]})
+
+            closet_quality = qualities[min(range(len(qualities)), key=lambda i: abs(qualities[i] - 50))]
+            for entry in team_data:
+                if entry['quality'] == closet_quality:
+                    final_teams = entry['teams']
+
             mentions = (
-                f"🔴 Red Team: "
-                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
-                + "\n🔵 Blue Team: "
-                + ", ".join(
-                    f"<@{data[0]}>" for data in member_data if data[2] == "blue"
-                )
+                    f"🔴 Red Team: "
+                    + ", ".join(f"<@{data['user_id']}>" for data in final_teams[0])
+                    + "\n🔵 Blue Team: "
+                    + ", ".join(
+                        f"<@{data['user_id']}>" for data in final_teams[1]
+                    )
+            )
+            for i, team_entries in enumerate(final_teams):
+                if i:
+                    team = 'blue'
+                else:
+                    team = 'red'
+                for entry in team_entries:
+                    await self.bot.execute("UPDATE game_member_data SET team = $1 WHERE author_id = $2", team,
+                                           entry['user_id'])
+
+            self.msg = inter.message
+            await inter.edit_original_message(
+                view=ReadyButton(self.bot),
+                content="0/10 Players are ready!",
+                embed=await ReadyButton.gen_embed(self, [])
             )
 
             embed = Embed(
-                description=f"Game was found! Time to ready up!", color=Color.green()
+                description=f"Game was found! Time to ready up!", color=Color.blurple()
             )
 
-            await inter.message.reply(mentions, embed=embed, delete_after=600.0)
-            # await inter.message.reply("🔴 Red Team \n"+ '\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'red') + '\n\n🔵 Blue Team \n'+'\n'.join(f"<@{data[0]}>" for data in member_data if data[2] == 'blue') + '\n\n' + f'Your Game was found. Time to ready up!')
+            await inter.message.reply(mentions, embed=embed, delete_after=300.0)
 
     async def process_button(self, button, inter) -> None:
         await inter.response.defer()
         if not self.game_id:
             self.game_id = inter.message.embeds[0].footer.text
+        
+        if await self.in_ongoing_game(inter):
+            return await inter.send(embed=error("You are already in an ongoing game."), ephemeral=True)
 
         game_members = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
@@ -518,6 +623,8 @@ class QueueButtons(ui.View):
 
     @ui.button(label="Leave Queue", style=ButtonStyle.red, custom_id="queue:signoff")
     async def sign_off(self, button, inter):
+        if not self.game_id:
+            self.game_id = inter.message.embeds[0].footer.text
         if await self.has_participated(inter):
             await self.bot.execute(
                 f"DELETE FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
@@ -549,40 +656,40 @@ class QueueButtons(ui.View):
                 embed=error("You are not a participant of this game."), ephemeral=True
             )
 
-    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
-    async def switchteam(self, button, inter):
-        await inter.response.defer()
-        data = await self.bot.fetchrow(
-            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
-        )
-        if data:
+    # @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
+    # async def switchteam(self, button, inter):
+    #     await inter.response.defer()
+    #     data = await self.bot.fetchrow(
+    #         f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
+    #     )
+    #     if data:
 
-            check = await self.bot.fetchrow(
-                f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{self.game_id}' and author_id != {inter.author.id}"
-            )
-            if check:
-                return await inter.send(
-                    "The other team position for this role is already occupied.",
-                    ephemeral=True,
-                )
+    #         check = await self.bot.fetchrow(
+    #             f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{self.game_id}' and author_id != {inter.author.id}"
+    #         )
+    #         if check:
+    #             return await inter.send(
+    #                 "The other team position for this role is already occupied.",
+    #                 ephemeral=True,
+    #             )
 
-            if data[2] == "blue":
-                team = "red"
-            else:
-                team = "blue"
+    #         if data[2] == "blue":
+    #             team = "red"
+    #         else:
+    #             team = "blue"
 
-            await self.bot.execute(
-                f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2",
-                self.game_id,
-                inter.author.id,
-            )
-            await inter.edit_original_message(embed=await self.gen_embed(inter.message))
-            await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
+    #         await self.bot.execute(
+    #             f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2",
+    #             self.game_id,
+    #             inter.author.id,
+    #         )
+    #         await inter.edit_original_message(embed=await self.gen_embed(inter.message))
+    #         await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
 
-        else:
-            await inter.send(
-                embed=error("You are not a part of this game."), ephemeral=True
-            )
+    #     else:
+    #         await inter.send(
+    #             embed=error("You are not a part of this game."), ephemeral=True
+    #         )
 
 
 class Match(Cog):
@@ -592,33 +699,6 @@ class Match(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.start_queue.start()
-
-    @tasks.loop(seconds=5)
-    async def start_queue(self):
-        await self.bot.wait_until_ready()
-
-        try:
-            # May start before bot is ready, if tables are not ready, this may cause error
-            channels = await self.bot.fetch("SELECT * FROM queuechannels")
-        except:
-            channels = []
-
-        for channel in channels:
-            channel = self.bot.get_channel(channel[0])
-            if not channel:
-                continue
-            data = await self.bot.fetch(
-                f"SELECT game_id FROM games WHERE queuechannel_id = {channel.id}"
-            )
-            if not data:
-                continue
-            async for msg in channel.history(limit=200):
-                if msg.embeds:
-                    if msg.embeds[0].footer:
-                        if data[-1][0] == msg.embeds[0].footer.text:
-                            await self.start(channel)
-                        break
 
     @Cog.listener()
     async def on_ready(self):
@@ -626,7 +706,7 @@ class Match(Cog):
         self.bot.add_view(SpectateButton(self.bot))
         self.bot.add_view(ReadyButton(self.bot))
 
-    async def start(self, channel):
+    async def start(self, channel, author=None):
 
         data = await self.bot.fetchrow(
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
@@ -646,12 +726,18 @@ class Match(Cog):
         embed.add_field(name="🔴 Red", value="No members yet")
         embed.set_image(url="https://media.discordapp.net/attachments/1003340610897457162/1047988008353288282/queue.png")
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
+        if author:
+            if author.avatar:
+                embed.set_author(name=f"Initiated by {author.name}", icon_url=author.avatar.url)
+            else:
+                embed.set_author(name=f"Initiated by {author.name}")
+            
 
         await channel.send(embed=embed, view=QueueButtons(self.bot))
 
     @command(aliases=["inhouse", "play"], name="start")
     async def start_prefix(self, ctx):
-        await self.start(ctx.channel)
+        await self.start(ctx.channel, ctx.author)
 
     @slash_command(name="start")
     async def start_slash(self, ctx):
@@ -659,7 +745,7 @@ class Match(Cog):
         Start the inhouse event.
         """
         await ctx.send("Game was started!")
-        await self.start(ctx.channel)
+        await self.start(ctx.channel, ctx.author)
 
 
 def setup(bot):
