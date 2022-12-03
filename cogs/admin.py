@@ -367,7 +367,7 @@ class Admin(Cog):
 
         return embed
 
-    @admin_slash.sub_command(name="persistent_leaderboard")
+    @admin_slash.sub_command(name="top_ten")
     async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
         """
         Create persistent leaderboard in a channel which automatically updates itself.
