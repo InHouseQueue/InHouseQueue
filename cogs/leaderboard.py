@@ -16,11 +16,7 @@ class Leaderboard(Cog):
     async def leaderboard(self, ctx, type="mmr"):
         if not type.lower() in ['mmr', 'mvp']:
             return await ctx.send(embed=error("Leaderboard type can either be `mmr` or `mvp`."))
-        # user_data = await self.bot.fetch(
-        #     f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id}"
-        # )
-        # user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
-        # user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
+
         if type == 'mmr':
             user_data = await self.bot.fetch(
                 f"SELECT * FROM mmr_rating"
@@ -31,7 +27,6 @@ class Leaderboard(Cog):
                 f"SELECT * FROM mvp_points"
             )
             user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
-        # user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
         if not user_data:
             return await ctx.send(embed=error("No entries to present."))
@@ -66,9 +61,14 @@ class Leaderboard(Cog):
                 )
             else:
                 skill = round(float(data[2]) - (2 * float(data[3])), 2)
+                if data[4] >= 10:
+                    display_mmr = f"**{int(skill*100)}** MMR"
+                else:
+                    display_mmr = f"**{data[4]}/10** Games Played"
+                
                 embeds[current_embed].add_field(
                     name=f"#{i + 1}",
-                    value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - **{int(skill*100)}** MMR",
+                    value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - {display_mmr}",
                     inline=False,
                 )
 

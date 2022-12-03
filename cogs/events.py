@@ -135,7 +135,8 @@ class Events(Cog):
                 guild_id INTEGER,
                 user_id INTEGER,
                 mu TEXT,
-                sigma TEXT
+                sigma TEXT,
+                counter INTEGER
             )
             """
         )
@@ -157,6 +158,15 @@ class Events(Cog):
                 guild_id INTEGER,
                 user_id INTEGER,
                 votes INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS queue_preference(
+                guild_id INTEGER,
+                preference INTEGER
             )
             """
         )

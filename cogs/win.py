@@ -142,19 +142,23 @@ class Win(Cog):
         )
 
         for i, new_rating in enumerate(updated_rating[0]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']}")
             await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2 WHERE user_id = $3",
+                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
                 str(new_rating.mu),
                 str(new_rating.sigma),
+                counter[0] + 1,
                 winner_team_rating[i]['user_id']
             )
 
         for i, new_rating in enumerate(updated_rating[1]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']}")
             await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2 WHERE user_id = $3",
+                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
                 str(new_rating.mu),
                 str(new_rating.sigma),
-                losing_team_rating[i]['user_id']
+                counter[0] + 1,
+                losing_team_rating[i]['user_id'],
             )
         
         embed = Embed(

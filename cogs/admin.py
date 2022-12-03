@@ -67,6 +67,23 @@ class Admin(Cog):
     async def reset(self, ctx):
         pass
 
+    @admin_slash.sub_command()
+    async def queue_preference(self, ctx, preference = Param(choices=[OptionChoice("Multiple queue but not multiple games", "1"), OptionChoice("One queue at a time", "2")])):
+        """
+        Change queue's behavior
+        """
+        preference_data = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {ctx.guild.id}")
+        if preference_data:
+            await self.bot.execute("UPDATE queue_preference SET preference = $1 WHERE guild_id = $2", int(preference), ctx.guild.id)
+        else:
+            await self.bot.execute(
+                f"INSERT INTO queue_preference(guild_id, preference) VALUES($1, $2)",
+                ctx.guild.id,
+                int(preference)
+            )
+        
+        await ctx.send(embed=success("Preference updated successfully."))
+
     @reset.command(aliases=['lb'])
     async def leaderboard(self, ctx):
         data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} ")
@@ -311,11 +328,13 @@ class Admin(Cog):
 
     async def leaderboard_persistent(self, channel):
         user_data = await self.bot.fetch(
-            f"SELECT * FROM mmr_rating"
+            f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
         )
         if not user_data:
-            return False
-        user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+            return await channel.send(embed=error("There are no records to display."))
+        user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
+        user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
+        # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
 
         embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
         if channel.guild.icon:
@@ -323,23 +342,21 @@ class Admin(Cog):
 
 
         async def add_field(data) -> None:
-            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]}")
-            if user_data:
-                wins = user_data[2]
-                losses = user_data[3]
+            mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]}")
+            if mmr_data:
+                skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
             else:
-                wins = 0
-                losses = 0
-            total = wins + losses
-            if not total:
-                total = 1
+                skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
 
-            percentage = round((wins / total) * 100, 2)
+        
+            if mmr_data[4] >= 10:
+                display_mmr = f"**{int(skill*100)}** MMR"
+            else:
+                display_mmr = f"**{mmr_data[4]}/10** Games Played"
 
-            skill = round(float(data[2]) - (2 * float(data[3])), 2)
             embed.add_field(
                 name=f"#{i + 1}",
-                value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - **{int(skill*100)}** MMR",
+                value=f"<@{data[1]}> - **{data[2]}** Wins - **{round(data[4]*100, 2)}%** WR - {display_mmr}",
                 inline=False,
             )
 
@@ -352,6 +369,9 @@ class Admin(Cog):
 
     @admin_slash.sub_command(name="persistent_leaderboard")
     async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
+        """
+        Create persistent leaderboard in a channel which automatically updates itself.
+        """
         embed = await self.leaderboard_persistent(channel)
         msg = await channel.send(embed=embed)
         if not msg:
