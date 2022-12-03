@@ -68,9 +68,9 @@ class Admin(Cog):
         pass
 
     @admin_slash.sub_command()
-    async def queue_preference(self, ctx, preference = Param(choices=[OptionChoice("Multiple queue but not multiple games", "1"), OptionChoice("One queue at a time", "2")])):
+    async def queue_preference(self, ctx, preference = Param(choices=[OptionChoice("Multi Queue", "1"), OptionChoice("Single Queue", "2")])):
         """
-        Change queue's behavior
+        Decide if players can be in multiple queues
         """
         preference_data = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {ctx.guild.id}")
         if preference_data:
