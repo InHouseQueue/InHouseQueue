@@ -190,7 +190,7 @@ class Events(Cog):
 
             if self.bot.user.id == 1018498965022445638:  # Testing bot ID
                 channel = self.bot.get_channel(
-                    1045254299430694912
+                    1032359147833921616
                 )  # Testing Server Channel
             else:
                 channel = self.bot.get_channel(
