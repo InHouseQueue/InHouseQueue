@@ -198,7 +198,7 @@ class Win(Cog):
                     embed=Embed(
                         title=":trophy: Vote for MVP",
                         description="Pick your MVP by responding with a number (1-10). \n"
-                                    + '\n'.join([f"**{i + 1}.** <@{x[0]}>" for i, x in enumerate(member_data)]),
+                                    + '\n'.join([f"**{i + 1}.** {'🔵' if x[2] == 'blue' else '🔴'} <@{x[0]}>" for i, x in enumerate(member_data)]),
                         color=Color.blurple()
                     )
                 )

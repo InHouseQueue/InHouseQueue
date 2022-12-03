@@ -247,7 +247,7 @@ class Events(Cog):
                                 await self.bot.execute(
                                     "INSERT INTO mvp_points(guild_id, user_id, votes) VALUES($1, $2, $3)",
                                     entry[0],
-                                    entry[1],
+                                    member[0],
                                     1
                                 )
                             await self.bot.execute(
