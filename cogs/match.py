@@ -137,7 +137,7 @@ class ReadyButton(ui.View):
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
-        if (datetime.now() - self.time_of_execution).seconds >= 600:
+        if (datetime.now() - self.time_of_execution).seconds >= 300:
             if self.msg:
                 ready_ups = await self.bot.fetch(
                     f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'"
@@ -222,7 +222,7 @@ class ReadyButton(ui.View):
             ready_ups.append(inter.author.id)
 
             await inter.message.edit(
-                f"{len(ready_ups)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=590))))}:t>",
+                f"{len(ready_ups)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=290))))}:t>",
                 embed=await self.gen_embed(ready_ups),
             )
 
