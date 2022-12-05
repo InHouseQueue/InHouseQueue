@@ -59,9 +59,12 @@ View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/ma
 - `/start` - Start a queue
 - `/win` - Initiate a vote once a game has been completed. The team, first to 6 votes, will be confirmed as the winner. It can only be run in the dedicated game lobby.
 - `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
+Other options `/leaderboard mvp` `leaderboard mmr` - Show leaderboard of MMR or MVP 
 
 ### Admin commands
-Note: `admin reset ...` Commands are executed immediately but require someone to rejoin the queue to refresh the Embed.
+Note: `admin reset user` and `/admin reset queue` Commands are executed immediately but require someone to rejoin the queue to refresh the Embed.
+
+- **`/admin reset leaderboard`** - Resets all wins, losses and games played.
 
 - **`/admin reset user [member]`** - Removes the member from all queues.
 ```
@@ -82,6 +85,13 @@ Note: `admin reset ...` Commands are executed immediately but require someone to
 - **`/admin winner [role]`** - Immediately announce a winner without requiring a vote to confirm. This can only be done if the game is still in progress, otherwise use `admin change_winner`
 ```
 /admin winner @Red: 316d8cc7
+```
+
+**`/admin queue_preference [options]`** - Allow or disallow players to queue in multiple queues simultaneously. 
+
+Example: 
+```
+/admin queue_preference Single Queue
 ```
 
 Note: Use the discord slash command feature - running these commands will be much easier!
