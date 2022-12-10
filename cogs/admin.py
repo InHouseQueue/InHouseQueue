@@ -4,6 +4,7 @@ from disnake.ext.commands import Cog, Context, Param, group, slash_command
 from disnake.ext import tasks
 
 from cogs.win import Win
+from cogs.match import QueueButtons
 
 
 class Admin(Cog):
@@ -103,26 +104,30 @@ class Admin(Cog):
 
     @reset.command()
     async def user(self, ctx, member: Member):
-        member_data = await self.bot.fetchrow(
+        member_data = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE author_id = ? ", member.id
         )
-        if member_data:
+        for entry in member_data:
             game_data = await self.bot.fetchrow(
-                "SELECT * FROM games WHERE game_id = ? ", member_data[3]
+                "SELECT * FROM games WHERE game_id = ? ", entry[3]
             )
             if not game_data:
                 await self.bot.execute(
                     "DELETE FROM game_member_data WHERE author_id = ? ", member.id
                 )
-                await ctx.send(
-                    embed=success(f"{member.mention} was removed from all queues.")
+                await self.bot.execute(
+                    f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}'",
                 )
-            else:
-                await ctx.send(
-                    embed=error(f"{member.mention}'s game is already ongoing.")
-                )
-        else:
-            await ctx.send(embed=error(f"{member.mention} is not in any queues."))
+                msg = self.bot.get_message(entry[4])
+                if not msg:
+                    channel = self.bot.get_channel(entry[5])
+                    msg = await channel.fetch_message(entry[4])
+                
+                if msg.components[0].children[0].label == "Ready Up!":
+                    self.game_id = entry[3]
+                    await msg.edit(view=QueueButtons(self.bot), embed = await QueueButtons.gen_embed(self, msg))
+
+        await ctx.send(embed=success(f"{member.mention} was removed from all active queues."))
 
     @reset_slash.sub_command(name="user")
     async def user_slash(self, ctx, member: Member):

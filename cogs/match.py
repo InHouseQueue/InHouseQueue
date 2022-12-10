@@ -227,8 +227,8 @@ class ReadyButton(ui.View):
             )
 
             # CHECK
-            # if len(ready_ups) == 2:
-            if len(ready_ups) == 10:
+            if len(ready_ups) == 2:
+            # if len(ready_ups) == 10:
                 preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
                 if preference:
                     preference = preference[1]
@@ -442,11 +442,13 @@ class QueueButtons(ui.View):
                     button.style = ButtonStyle.grey
 
         await self.bot.execute(
-            "INSERT INTO game_member_data(author_id, role, team, game_id) VALUES($1, $2, $3, $4)",
+            "INSERT INTO game_member_data(author_id, role, team, game_id, queue_id, channel_id) VALUES($1, $2, $3, $4, $5, $6)",
             inter.author.id,
             label,
             team,
             self.game_id,
+            inter.message.id,
+            inter.channel.id
         )
 
         embed = await self.gen_embed(inter.message)
@@ -471,27 +473,27 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        # if checks_passed == 1:
-        if checks_passed == len(self.children) - 1:
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 1:
             member_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )
 
             # CHECK
-            # roles_occupation = {
-            #     "TOP": [],
-            #     "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-            #     "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
-            #     "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-            #     "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-            # }
             roles_occupation = {
                 "TOP": [],
-                "JUNGLE": [],
-                "MID": [],
-                "ADC": [],
-                "SUPPORT": []
+                "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
+                "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
             }
+            # roles_occupation = {
+            #     "TOP": [],
+            #     "JUNGLE": [],
+            #     "MID": [],
+            #     "ADC": [],
+            #     "SUPPORT": []
+            # }
 
             for data in member_data:
                 member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]}")
