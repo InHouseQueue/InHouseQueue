@@ -74,7 +74,9 @@ class Events(Cog):
                 author_id INTEGER,
                 role TEXT,
                 team TEXT,
-                game_id TEXT
+                game_id TEXT,
+                queue_id INTEGER,
+                channel_id INTEGER
             )
             """
         )
