@@ -123,9 +123,10 @@ class Admin(Cog):
                     channel = self.bot.get_channel(entry[5])
                     msg = await channel.fetch_message(entry[4])
                 
-                if msg.components[0].children[0].label == "Ready Up!":
-                    self.game_id = entry[3]
-                    await msg.edit(view=QueueButtons(self.bot), embed = await QueueButtons.gen_embed(self, msg))
+                if msg:
+                    if msg.components[0].children[0].label == "Ready Up!":
+                        self.game_id = entry[3]
+                        await msg.edit(view=QueueButtons(self.bot), embed = await QueueButtons.gen_embed(self, msg))
 
         await ctx.send(embed=success(f"{member.mention} was removed from all active queues."))
 
