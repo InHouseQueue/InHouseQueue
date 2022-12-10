@@ -122,7 +122,7 @@ class Admin(Cog):
                 if not msg:
                     channel = self.bot.get_channel(entry[5])
                     msg = await channel.fetch_message(entry[4])
-                
+
                 if msg:
                     if msg.components[0].children[0].label == "Ready Up!":
                         self.game_id = entry[3]
