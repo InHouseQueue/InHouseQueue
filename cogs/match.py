@@ -8,6 +8,7 @@ from disnake.ext import tasks
 from disnake.ext.commands import Cog, command, context, slash_command
 from trueskill import Rating, quality
 import itertools
+import asyncio
 
 
 class SpectateButton(ui.View):
@@ -363,6 +364,7 @@ class QueueButtons(ui.View):
         super().__init__(timeout=None)
         self.bot = bot
         self.game_id = None
+        self.cooldown = None
 
     async def gen_embed(self, msg) -> Embed:
         embed = msg.embeds[0]
@@ -571,12 +573,21 @@ class QueueButtons(ui.View):
 
     async def process_button(self, button, inter) -> None:
         await inter.response.defer()
+        if not self.cooldown:
+            self.cooldown = datetime.utcnow() + timedelta(seconds=1.5)
+        else:
+            if self.cooldown <= datetime.utcnow():
+                self.cooldown = datetime.now() + timedelta(seconds=1.5)
+            else:
+                await asyncio.sleep((datetime.utcnow() - self.cooldown).seconds)
+
+
         if not self.game_id:
             self.game_id = inter.message.embeds[0].footer.text
         
         if await self.in_ongoing_game(inter):
             return await inter.send(embed=error("You are already in an ongoing game."), ephemeral=True)
-
+        
         game_members = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
@@ -595,7 +606,7 @@ class QueueButtons(ui.View):
         await inter.message.edit(view=self, attachments=[])
         if button.label.lower() in disabled_buttons:
             return await inter.send(embed=error("This role is booked, please choose another."), ephemeral=True)
-        
+
         if await self.has_participated(inter):
             return await inter.send(
                 embed=error("You are already a participant of this game."),
