@@ -99,7 +99,6 @@ class Admin(Cog):
         """
         Reset your server's leaderboard.
         """
-        await ctx.response.defer()
         await self.leaderboard(ctx)
 
     @reset.command()
@@ -135,7 +134,6 @@ class Admin(Cog):
         """
         Remove a user from all queues. Requires someone to rejoin the queue to refresh the Embed.
         """
-        await ctx.response.defer()
         await self.user(ctx, member)
 
     @reset.command()
@@ -156,7 +154,6 @@ class Admin(Cog):
         """
         Reset a queue. Requires someone to rejoin the queue to refresh the Embed.
         """
-        await ctx.response.defer()
         await self.queue(ctx, game_id)
 
     @admin.command()
@@ -247,7 +244,6 @@ class Admin(Cog):
         """
         Change the winner of a game.
         """
-        await ctx.response.defer()
         await self.change_winner(ctx, game_id, team)
 
     @admin.command()
@@ -277,7 +273,6 @@ class Admin(Cog):
         """
         Announce the winner of a game. Skips voting. The game must be in progress.
         """
-        await ctx.response.defer()
         await self.winner(ctx, role)
 
     @admin.group()
@@ -329,7 +324,6 @@ class Admin(Cog):
         """
         Cancel the member's game.
         """
-        await ctx.response.defer()
         await self.cancel(ctx, member)
 
     async def leaderboard_persistent(self, channel):
@@ -418,6 +412,25 @@ class Admin(Cog):
         Delete records of a game.
         """
         await self.void(ctx, game_id)
+
+    @admin_slash.sub_command(name="switch_team")
+    async def switch_team(self, ctx, preference = Param(
+        choices=[
+            OptionChoice('Enabled', '1'),
+            OptionChoice('Disabled', '0')
+        ]
+    )):
+        """
+        Set queue switch team preference.
+        """
+        if not int(preference):
+            await self.bot.execute(f"DELETE FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
+        else:
+            await self.bot.execute(
+                f"INSERT INTO switch_team_preference(guild_id) VALUES($1)",
+                ctx.guild.id
+            )
+        await ctx.send(embed=success(f"Switch team preference changed successfully."))
 
 
 def setup(bot):

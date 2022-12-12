@@ -69,7 +69,6 @@ class Help(Cog):
 
     @slash_command(name="help", description="See all available features.")
     async def help_slash(self, ctx):
-        await ctx.response.defer()
         await self.help_menu(ctx)
 
     @command()

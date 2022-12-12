@@ -478,85 +478,102 @@ class QueueButtons(ui.View):
 
         # CHECK
         if checks_passed == 1:
-        # if checks_passed == len(self.children) - 1:
-            member_data = await self.bot.fetch(
-                f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
-            )
+        # if checks_passed == len(self.children) - 2:
 
-            # CHECK
-            roles_occupation = {
-                "TOP": [],
-                "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
-                "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-            }
-            # roles_occupation = {
-            #     "TOP": [],
-            #     "JUNGLE": [],
-            #     "MID": [],
-            #     "ADC": [],
-            #     "SUPPORT": []
-            # }
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+            if not st_pref:
+                member_data = await self.bot.fetch(
+                    f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+                )
 
-            for data in member_data:
-                member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]}")
-                if member_rating:
-                    mu = float(member_rating[2])
-                    sigma = float(member_rating[3])
-                    rating = Rating(mu, sigma)
+                # CHECK
+                roles_occupation = {
+                    "TOP": [],
+                    "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                    "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
+                    "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                    "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+                }
+                # roles_occupation = {
+                #     "TOP": [],
+                #     "JUNGLE": [],
+                #     "MID": [],
+                #     "ADC": [],
+                #     "SUPPORT": []
+                # }
 
-                else:
-                    rating = Rating()
-                    await self.bot.execute(
-                        f"INSERT INTO mmr_rating(guild_id, user_id, mu, sigma, counter) VALUES($1, $2, $3, $4, $5)",
-                        inter.guild.id,
-                        data[0],
-                        rating.mu,
-                        rating.sigma,
-                        0
-                    )
+                for data in member_data:
+                    member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]}")
+                    if member_rating:
+                        mu = float(member_rating[2])
+                        sigma = float(member_rating[3])
+                        rating = Rating(mu, sigma)
 
-                roles_occupation[data[1].upper()].append({'user_id': data[0], 'rating': rating})
+                    else:
+                        rating = Rating()
+                        await self.bot.execute(
+                            f"INSERT INTO mmr_rating(guild_id, user_id, mu, sigma, counter) VALUES($1, $2, $3, $4, $5)",
+                            inter.guild.id,
+                            data[0],
+                            rating.mu,
+                            rating.sigma,
+                            0
+                        )
 
-            all_occupations = [*roles_occupation.values()]
+                    roles_occupation[data[1].upper()].append({'user_id': data[0], 'rating': rating})
 
-            unique_combinations = list(itertools.product(*all_occupations))
-            team_data = []
-            qualities = []
-            for pair in unique_combinations:
-                players_in_pair = [x['user_id'] for x in list(pair)]
-                t2 = []
-                for x in roles_occupation:
-                    for val in roles_occupation[x]:
-                        if val['user_id'] not in players_in_pair:
-                            t2.append(val)
+                all_occupations = [*roles_occupation.values()]
 
-                qua = quality([[x['rating'] for x in list(pair)], [x['rating'] for x in t2]])
-                qualities.append(qua)
-                team_data.append({'quality': qua, 'teams': [list(pair), t2]})
+                unique_combinations = list(itertools.product(*all_occupations))
+                team_data = []
+                qualities = []
+                for pair in unique_combinations:
+                    players_in_pair = [x['user_id'] for x in list(pair)]
+                    t2 = []
+                    for x in roles_occupation:
+                        for val in roles_occupation[x]:
+                            if val['user_id'] not in players_in_pair:
+                                t2.append(val)
 
-            closet_quality = qualities[min(range(len(qualities)), key=lambda i: abs(qualities[i] - 50))]
-            for entry in team_data:
-                if entry['quality'] == closet_quality:
-                    final_teams = entry['teams']
+                    qua = quality([[x['rating'] for x in list(pair)], [x['rating'] for x in t2]])
+                    qualities.append(qua)
+                    team_data.append({'quality': qua, 'teams': [list(pair), t2]})
 
-            mentions = (
+                closet_quality = qualities[min(range(len(qualities)), key=lambda i: abs(qualities[i] - 50))]
+                for entry in team_data:
+                    if entry['quality'] == closet_quality:
+                        final_teams = entry['teams']
+                
+                mentions = (
                     f"🔴 Red Team: "
                     + ", ".join(f"<@{data['user_id']}>" for data in final_teams[0])
                     + "\n🔵 Blue Team: "
                     + ", ".join(
                         f"<@{data['user_id']}>" for data in final_teams[1]
                     )
-            )
-            for i, team_entries in enumerate(final_teams):
-                if i:
-                    team = 'blue'
-                else:
-                    team = 'red'
-                for entry in team_entries:
-                    await self.bot.execute("UPDATE game_member_data SET team = $1 WHERE author_id = $2", team,
-                                           entry['user_id'])
+                )
+                for i, team_entries in enumerate(final_teams):
+                    if i:
+                        team = 'blue'
+                    else:
+                        team = 'red'
+                    for entry in team_entries:
+                        await self.bot.execute("UPDATE game_member_data SET team = $1 WHERE author_id = $2", team,
+                                            entry['user_id'])
+
+            else:
+                member_data = await self.bot.fetch(
+                    f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+                )
+
+                mentions = (
+                    f"🔴 Red Team: "
+                    + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
+                    + "\n🔵 Blue Team: "
+                    + ", ".join(
+                        f"<@{data[0]}>" for data in member_data if data[2] == "blue"
+                    )
+                )
 
             self.msg = inter.message
             await inter.edit_original_message(
@@ -671,40 +688,44 @@ class QueueButtons(ui.View):
                 embed=error("You are not a participant of this game."), ephemeral=True
             )
 
-    # @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
-    # async def switchteam(self, button, inter):
-    #     await inter.response.defer()
-    #     data = await self.bot.fetchrow(
-    #         f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
-    #     )
-    #     if data:
+    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
+    async def switchteam(self, button, inter):
+        await inter.response.defer()
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+        if not st_pref:
+            return await inter.send(embed=error("Switch teams is not available with MMR system enabled."), ephemeral=True)
+        
+        data = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
+        )
+        if data:
 
-    #         check = await self.bot.fetchrow(
-    #             f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{self.game_id}' and author_id != {inter.author.id}"
-    #         )
-    #         if check:
-    #             return await inter.send(
-    #                 "The other team position for this role is already occupied.",
-    #                 ephemeral=True,
-    #             )
+            check = await self.bot.fetchrow(
+                f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{self.game_id}' and author_id != {inter.author.id}"
+            )
+            if check:
+                return await inter.send(
+                    "The other team position for this role is already occupied.",
+                    ephemeral=True,
+                )
 
-    #         if data[2] == "blue":
-    #             team = "red"
-    #         else:
-    #             team = "blue"
+            if data[2] == "blue":
+                team = "red"
+            else:
+                team = "blue"
 
-    #         await self.bot.execute(
-    #             f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2",
-    #             self.game_id,
-    #             inter.author.id,
-    #         )
-    #         await inter.edit_original_message(embed=await self.gen_embed(inter.message))
-    #         await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
+            await self.bot.execute(
+                f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2",
+                self.game_id,
+                inter.author.id,
+            )
+            await inter.edit_original_message(embed=await self.gen_embed(inter.message))
+            await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
 
-    #     else:
-    #         await inter.send(
-    #             embed=error("You are not a part of this game."), ephemeral=True
-    #         )
+        else:
+            await inter.send(
+                embed=error("You are not a part of this game."), ephemeral=True
+            )
 
 
 class Match(Cog):

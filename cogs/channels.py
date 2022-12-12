@@ -64,7 +64,6 @@ class ChannelCommands(Cog):
         """
         Set a channel to be used as the queue.
         """
-        await ctx.response.defer()
         await self.setchannel(ctx, channel)
 
     @command()
@@ -104,7 +103,6 @@ class ChannelCommands(Cog):
         """
         Set a channel for winner log.
         """
-        await ctx.response.defer()
         await self.setwinnerlog(ctx, channel)
 
 

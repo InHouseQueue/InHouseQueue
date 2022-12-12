@@ -171,7 +171,6 @@ class Leaderboard(Cog):
         """
         Check your rank in the server.
         """
-        await ctx.response.defer()
         await self.rank(ctx, type)
 
 
