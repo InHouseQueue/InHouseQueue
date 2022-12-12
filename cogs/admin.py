@@ -403,6 +403,21 @@ class Admin(Cog):
             await m.pin()
         except:
             pass
+    
+    @admin.command()
+    async def void(self, ctx, game_id):
+        await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_id}'")
+        await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{game_id}'")
+        await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{game_id}'")
+
+        await ctx.send(embed=success(f"All records for Game **{game_id}** were deleted."))
+
+    @admin_slash.sub_command(name="void")
+    async def void_slash(self, ctx, game_id):
+        """
+        Delete records of a game.
+        """
+        await self.void(ctx, game_id)
 
 
 def setup(bot):
