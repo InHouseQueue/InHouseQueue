@@ -1,5 +1,5 @@
-from core import embeds
-from disnake import TextChannel
+from core import embeds, buttons
+from disnake import TextChannel, Embed, Color
 from disnake.ext.commands import Cog, command, slash_command
 
 
@@ -39,6 +39,18 @@ class ChannelCommands(Cog):
 
     @command(aliases=["channel"])
     async def setchannel(self, ctx, channel: TextChannel):
+        view = buttons.ConfirmationButtons(ctx.author.id)
+        await ctx.send(
+            embed=Embed(title=":warning: Notice", description=f"Messages in {channel.mention} will automatically be deleted to keep the queue channel clean, do you want to proceed?", color=Color.yellow()),
+            view=view,
+        )
+        await view.wait()
+        if view.value is None:
+           return
+        elif view.value:
+            pass
+        else:
+            return await ctx.send(embed=embeds.success("Process aborted."))
         data = await self.bot.fetchrow(
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
         )
