@@ -4,6 +4,9 @@ from disnake.ext.commands import *
 import re
 
 class OP_GG(Cog):
+    """
+    🔗;OP.GG
+    """
     def __init__(self, bot):
         self.bot = bot
 
