@@ -57,7 +57,7 @@ class OP_GG(Cog):
             pattern2 = re.compile("ign: ", re.IGNORECASE)
             nick = pattern2.sub("", nick)
 
-            nicknames.append(str(nick))
+            nicknames.append(str(nick).replace(' ', '%20'))
 
         for i, nick in enumerate(nicknames):
             if not i == 0:

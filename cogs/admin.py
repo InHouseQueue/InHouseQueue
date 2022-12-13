@@ -400,9 +400,35 @@ class Admin(Cog):
     
     @admin.command()
     async def void(self, ctx, game_id):
+        game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
+        if not game_data:
+            return await ctx.send(embed=error("Game not found."))
+        
         await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_id}'")
         await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{game_id}'")
         await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{game_id}'")
+
+        try:
+            for category in ctx.guild.categories:
+                if category.name == f"Game: {game_data[0]}":
+                    await category.delete()
+
+            red_channel = self.bot.get_channel(game_data[2])
+            await red_channel.delete()
+
+            blue_channel = self.bot.get_channel(game_data[3])
+            await blue_channel.delete()
+
+            red_role = ctx.guild.get_role(game_data[4])
+            await red_role.delete()
+
+            blue_role = ctx.guild.get_role(game_data[5])
+            await blue_role.delete()
+
+            lobby = self.bot.get_channel(game_data[1])
+            await lobby.delete()
+        except:
+            await ctx.send(embed=error("Unable to delete game channels and roles, please remove them manually."))
 
         await ctx.send(embed=success(f"All records for Game **{game_id}** were deleted."))
 
@@ -413,24 +439,26 @@ class Admin(Cog):
         """
         await self.void(ctx, game_id)
 
-    @admin_slash.sub_command(name="switch_team")
-    async def switch_team(self, ctx, preference = Param(
+    @admin_slash.sub_command(name="sbmm")
+    async def sbmm(self, ctx, preference = Param(
         choices=[
             OptionChoice('Enabled', '1'),
             OptionChoice('Disabled', '0')
         ]
     )):
         """
-        Set queue switch team preference.
+        Enable/Disable skill based match making.
         """
-        if not int(preference):
+        if int(preference):
             await self.bot.execute(f"DELETE FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
+            
         else:
             await self.bot.execute(
                 f"INSERT INTO switch_team_preference(guild_id) VALUES($1)",
                 ctx.guild.id
             )
-        await ctx.send(embed=success(f"Switch team preference changed successfully."))
+            
+        await ctx.send(embed=success(f"SBMM preference changed successfully."))
 
 
 def setup(bot):
