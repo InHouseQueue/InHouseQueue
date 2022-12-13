@@ -111,6 +111,7 @@ class Admin(Cog):
                 "SELECT * FROM games WHERE game_id = ? ", entry[3]
             )
             if not game_data:
+                print("Test")
                 await self.bot.execute(
                     "DELETE FROM game_member_data WHERE author_id = ? ", member.id
                 )
@@ -138,6 +139,10 @@ class Admin(Cog):
 
     @reset.command()
     async def queue(self, ctx, game_id):
+        game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
+        if game_data:
+            return await ctx.send(embed=error("You cannot reset an ongoing game."))
+
         member_data = await self.bot.fetchrow(
             "SELECT * FROM game_member_data WHERE game_id = ?", game_id
         )
