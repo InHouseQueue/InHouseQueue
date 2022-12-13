@@ -139,8 +139,16 @@ class ReadyButton(ui.View):
     @tasks.loop(seconds=1)
     async def disable_button(self):
         if self.msg:
+            # Update the stored message and stop timer if ready up phase was removed
+            msg = self.bot.get_message(self.msg.id)
+            if not msg:
+                msg = await self.msg.channel.fetch_message(self.msg.id)
+                if msg:
+                    self.msg = msg
+
             if not self.msg.components[0].children[0].label == "Ready Up!":
-                return self.disable_button.stop()
+                self.disable_button.stop()
+                return
         if (datetime.now() - self.time_of_execution).seconds >= 300:
             if self.msg:
                 ready_ups = await self.bot.fetch(
