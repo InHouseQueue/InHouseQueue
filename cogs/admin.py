@@ -111,7 +111,6 @@ class Admin(Cog):
                 "SELECT * FROM games WHERE game_id = ? ", entry[3]
             )
             if not game_data:
-                print("Test")
                 await self.bot.execute(
                     "DELETE FROM game_member_data WHERE author_id = ? ", member.id
                 )
