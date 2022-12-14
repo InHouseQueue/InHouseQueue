@@ -74,7 +74,11 @@ intents.members = True
 bot = MyBot(intents=intents, command_prefix=PREFIX)
 bot.remove_command("help")
 
-
+@bot.before_slash_command_invoke
+async def before_invoke_slash(inter):
+    if not inter.response.is_done():
+        await inter.response.defer()
+        
 # Load all cogs
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py"):

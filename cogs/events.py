@@ -74,7 +74,9 @@ class Events(Cog):
                 author_id INTEGER,
                 role TEXT,
                 team TEXT,
-                game_id TEXT
+                game_id TEXT,
+                queue_id INTEGER,
+                channel_id INTEGER
             )
             """
         )
@@ -171,6 +173,14 @@ class Events(Cog):
             """
         )
 
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS switch_team_preference(
+                guild_id INTEGER
+            )
+            """
+        )
+
     @Cog.listener()
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
@@ -190,7 +200,7 @@ class Events(Cog):
 
             if self.bot.user.id == 1018498965022445638:  # Testing bot ID
                 channel = self.bot.get_channel(
-                    1032359147833921616
+                    1045254299430694912
                 )  # Testing Server Channel
             else:
                 channel = self.bot.get_channel(
