@@ -102,6 +102,78 @@ class Leaderboard(Cog):
         """
         await self.leaderboard(ctx, type)
 
+    @command()
+    async def rank(self, ctx, type):
+        if type.lower() not in ['mvp', 'mmr']:
+            return await ctx.send(embed=error("Rank type can either be `mmr` or `mvp`."))
+
+        if type == 'mmr':
+            user_data = await self.bot.fetch(
+                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id}"
+            )
+            user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+        else:
+            user_data = await self.bot.fetch(
+                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id}"
+            )
+            user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
+
+        if not user_data:
+            return await ctx.send(embed=error(f"No entries to present {type} rank from."))
+        
+        if ctx.author.id not in [x[1] for x in user_data]:
+            return await ctx.send(embed=error("You are not yet ranked."))
+        
+        embed = Embed(title=f"⏫ Rank of {ctx.author.name}", color=ctx.author.color)
+        if ctx.author.avatar:
+            embed.set_thumbnail(url=ctx.author.avatar.url)
+        async def add_field(data) -> None:
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]}")
+            if user_data:
+                wins = user_data[2]
+                losses = user_data[3]
+            else:
+                wins = 0
+                losses = 0
+            total = wins + losses
+            if not total:
+                total = 1
+
+            percentage = round((wins / total) * 100, 2)
+
+            if type == 'mvp':
+                embed.add_field(
+                    name=f"#{i+1}",
+                    value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - **{data[2]}x** MVP",
+                    inline=False,
+                )
+            else:
+                skill = round(float(data[2]) - (2 * float(data[3])), 2)
+                if data[4] >= 10:
+                    display_mmr = f"**{int(skill*100)}** MMR"
+                else:
+                    display_mmr = f"**{data[4]}/10** Games Played"
+                
+                embed.add_field(
+                    name=f"#{i + 1}",
+                    value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - {display_mmr}",
+                    inline=False,
+                )
+
+        for i, data in enumerate(user_data):
+            if data[1] == ctx.author.id:
+                await add_field(data)
+                await ctx.send(embed=embed)
+                break
+
+    @slash_command(name="rank")
+    async def rank_slash(self, ctx, type = Param(choices=[OptionChoice('MMR', 'mmr'), OptionChoice('MVP', 'mvp')])):
+        """
+        Check your rank in the server.
+        """
+        await self.rank(ctx, type)
+
+
 
 def setup(bot):
     bot.add_cog(Leaderboard(bot))

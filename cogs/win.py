@@ -116,51 +116,57 @@ class Win(Cog):
                 + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "blue")
         )
 
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
         winning_team_str = ""
         losing_team_str = ""
-        winner_team_rating = []
-        losing_team_rating = []
-        for member_entry in member_data:
-            rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]}")
-           
+        if not st_pref:
+            winner_team_rating = []
+            losing_team_rating = []
+            for member_entry in member_data:
+                rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]}")
 
-            if member_entry[2] == winner.lower():
-                winner_team_rating.append(
-                    {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
-                )
-                winning_team_str += f"• <@{member_entry[0]}> \n"
-            else:
-                losing_team_rating.append(
-                    {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
-                )
-                losing_team_str += f"• <@{member_entry[0]}> \n"
+                if member_entry[2] == winner.lower():
+                    winner_team_rating.append(
+                        {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
+                    )
+                    winning_team_str += f"• <@{member_entry[0]}> \n"
+                else:
+                    losing_team_rating.append(
+                        {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
+                    )
+                    losing_team_str += f"• <@{member_entry[0]}> \n"
 
-        backends.choose_backend("mpmath")
-        updated_rating = rate(
-            [[x['rating'] for x in winner_team_rating], [x['rating'] for x in losing_team_rating]],
-            ranks=[0, 1]
-        )
-
-        for i, new_rating in enumerate(updated_rating[0]):
-            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']}")
-            await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
-                str(new_rating.mu),
-                str(new_rating.sigma),
-                counter[0] + 1,
-                winner_team_rating[i]['user_id']
+            backends.choose_backend("mpmath")
+            updated_rating = rate(
+                [[x['rating'] for x in winner_team_rating], [x['rating'] for x in losing_team_rating]],
+                ranks=[0, 1]
             )
 
-        for i, new_rating in enumerate(updated_rating[1]):
-            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']}")
-            await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
-                str(new_rating.mu),
-                str(new_rating.sigma),
-                counter[0] + 1,
-                losing_team_rating[i]['user_id'],
-            )
-        
+            for i, new_rating in enumerate(updated_rating[0]):
+                counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']}")
+                await self.bot.execute(
+                    "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
+                    str(new_rating.mu),
+                    str(new_rating.sigma),
+                    counter[0] + 1,
+                    winner_team_rating[i]['user_id']
+                )
+
+            for i, new_rating in enumerate(updated_rating[1]):
+                counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']}")
+                await self.bot.execute(
+                    "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
+                    str(new_rating.mu),
+                    str(new_rating.sigma),
+                    counter[0] + 1,
+                    losing_team_rating[i]['user_id'],
+                )
+        else:
+            for member_entry in member_data:
+                if member_entry[2] == winner.lower():
+                    winning_team_str += f"• <@{member_entry[0]}> \n"
+                else:
+                    losing_team_str += f"• <@{member_entry[0]}> \n"
         embed = Embed(
             title=f"Game concluded!",
             description=f"Game **{game_data[0]}** was concluded!",
@@ -265,7 +271,6 @@ class Win(Cog):
         """
         Start a vote to select the winning team.
         """
-        await ctx.response.defer()
         await self.process_win(ctx.channel, ctx.author)
 
 
