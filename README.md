@@ -72,19 +72,19 @@ Note: `admin reset user` and `/admin reset queue` Commands are executed immediat
 
 - **`/admin reset leaderboard`** - Resets all wins, losses and games played.
 
-- **`/admin reset user [member]`** - Removes the member from all queues.
+- **`/admin reset user [member]`** - Removes the member from all queues. Can remove someone from ready up phase early.
 ```
 /admin reset user @John
 ```
-- **`/admin reset queue [gameid]`** - Reset an ongoing queue
+- **`/admin reset queue [gameid]`** - Remove all members from the queue. 
 ```
 /admin reset queue 03134ff5
 ```
-- **`/admin cancel [member]`** - Cancels the entire queue for the member and everyone in the queue.
+- **`/admin cancel [member]`** - Cancels the entire game. Game must be in progress.
 ```
 /admin reset cancel @John
 ```
-- **`/admin void [gameid]`** - Purges all data relating to this game id. Used as a last resort in the rare event of players being unable to queue because they are in an existing game.
+- **`/admin void [gameid]`** - Purges all data relating to this game id. Used as a last resort in the rare bug of players being unable to queue because they are in an existing game.
 ```
 /admin reset cancel @John
 ```
@@ -104,7 +104,7 @@ Example:
 /admin queue_preference Single Queue
 ```
 
-**`/admin sbmm [options]`** - Enable or Disable MMR. If disabled players can decide on teams. If enabled, the bot will use the custom MMR to create balanced teams. 
+**`/admin sbmm [options]`** - Enable or Disable MMR. If disabled players can decide on teams. If enabled, the bot will use custom MMR to create balanced teams. 
 
 Example: 
 ```
