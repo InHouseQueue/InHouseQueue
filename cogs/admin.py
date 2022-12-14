@@ -71,7 +71,7 @@ class Admin(Cog):
     @admin_slash.sub_command()
     async def queue_preference(self, ctx, preference = Param(choices=[OptionChoice("Multi Queue", "1"), OptionChoice("Single Queue", "2")])):
         """
-        Decide if players can be in multiple queues
+        Decide if players can be in multiple queues at once
         """
         preference_data = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {ctx.guild.id}")
         if preference_data:
@@ -132,7 +132,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="user")
     async def user_slash(self, ctx, member: Member):
         """
-        Remove a user from all queues. Requires someone to rejoin the queue to refresh the Embed.
+        Remove a user from all queues. Rejoin the queue to refresh the Embed.
         """
         await self.user(ctx, member)
 
@@ -140,7 +140,7 @@ class Admin(Cog):
     async def queue(self, ctx, game_id):
         game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
         if game_data:
-            return await ctx.send(embed=error("You cannot reset an ongoing game."))
+            return await ctx.send(embed=error("You cannot reset an ongoing game. To cancel an ongoing game, please use `/admin cancel [member]`"))
 
         member_data = await self.bot.fetchrow(
             "SELECT * FROM game_member_data WHERE game_id = ?", game_id
@@ -156,7 +156,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="queue")
     async def queue_slash(self, ctx, game_id: str):
         """
-        Reset a queue. Requires someone to rejoin the queue to refresh the Embed.
+        Reset a queue. Rejoin the queue to refresh the Embed.
         """
         await self.queue(ctx, game_id)
 
@@ -246,7 +246,7 @@ class Admin(Cog):
         team=Param(choices=[OptionChoice("Red", "red"), OptionChoice("Blue", "blue")]),
     ):
         """
-        Change the winner of a game.
+        Change the winner of a finished game.
         """
         await self.change_winner(ctx, game_id, team)
 
@@ -374,7 +374,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="top_ten")
     async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
         """
-        Create persistent leaderboard in a channel which automatically updates itself.
+        Create dynamic Top 10 leaderboard
         """
         embed = await self.leaderboard_persistent(channel)
         msg = await channel.send(embed=embed)
@@ -439,7 +439,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="void")
     async def void_slash(self, ctx, game_id):
         """
-        Delete records of a game.
+        Purge all records of a game. Use with care.
         """
         await self.void(ctx, game_id)
 
@@ -451,7 +451,7 @@ class Admin(Cog):
         ]
     )):
         """
-        Enable/Disable skill based match making.
+        Enable/Disable SkillBased match making.
         """
         if int(preference):
             await self.bot.execute(f"DELETE FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
