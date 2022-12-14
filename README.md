@@ -58,8 +58,14 @@ View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/ma
 - `/setwinnerlog` - All completed games will be logged via an embed in this channel. 
 - `/start` - Start a queue
 - `/win` - Initiate a vote once a game has been completed. The team, first to 6 votes, will be confirmed as the winner. It can only be run in the dedicated game lobby.
-- `/leaderboard` - Displays the leaderboard. `Wins / Win rate %` 
-Other options `/leaderboard mvp` `leaderboard mmr` - Show leaderboard of MMR or MVP 
+- `/leaderboard` - Displays the leaderboard. `Wins / Win rate %`
+Other options
+- `/leaderboard mvp` `leaderboard mmr` - Show leaderboard of MMR or MVP 
+- `/rank` - Display your own rank
+
+**League of Legends only**
+- /opgg [gameid] [blue/red] [region] - Multi op.gg Link of Red or Blue team. Discord nickname must match your IGN. Valid formats `IGN: Faker` / `Faker`
+
 
 ### Admin commands
 Note: `admin reset user` and `/admin reset queue` Commands are executed immediately but require someone to rejoin the queue to refresh the Embed.
@@ -78,6 +84,10 @@ Note: `admin reset user` and `/admin reset queue` Commands are executed immediat
 ```
 /admin reset cancel @John
 ```
+- **`/admin void [gameid]`** - Purges all data relating to this game id. Used as a last resort in the rare event of players being unable to queue because they are in an existing game.
+```
+/admin reset cancel @John
+```
 - **`/admin change_winner [gameid] [team]`** - Change the winner of a game. The game must have been decided and finished. 
 ```
 /admin change_winner 03134ff5 Red
@@ -92,6 +102,13 @@ Note: `admin reset user` and `/admin reset queue` Commands are executed immediat
 Example: 
 ```
 /admin queue_preference Single Queue
+```
+
+**`/admin sbmm [options]`** - Enable or Disable MMR. If disabled players can decide on teams. If enabled, the bot will use the custom MMR to create balanced teams. 
+
+Example: 
+```
+/admin sbmm Enabled
 ```
 
 Note: Use the discord slash command feature - running these commands will be much easier!
