@@ -64,7 +64,7 @@ Other options
 - `/rank` - Display your own rank
 
 **League of Legends only**
-- /opgg [gameid] [blue/red] [region] - Multi op.gg Link of Red or Blue team. Discord nickname must match your IGN. Valid formats `IGN: Faker` / `Faker`
+- `/opgg` [gameid] [blue/red] [region] - Multi op.gg Link of Red or Blue team. Discord nickname must match your IGN. Valid formats `IGN: Faker` / `Faker`
 
 
 ### Admin commands
