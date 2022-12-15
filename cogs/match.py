@@ -766,6 +766,15 @@ class Match(Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(self.send_new_queues())
+
+    async def send_new_queues(self):
+        await self.bot.wait_until_ready()
+        channels = await self.bot.fetch("SELECT * FROM queuechannels")
+        for channel in channels:
+            channel = self.bot.get_channel(channel[0])
+            if channel:
+                await self.start(channel)
 
     @Cog.listener()
     async def on_ready(self):
