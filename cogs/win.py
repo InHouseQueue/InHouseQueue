@@ -182,6 +182,7 @@ class Win(Cog):
             log_channel = self.bot.get_channel(log_channel_id[0])
             if log_channel:
                 await log_channel.send(mentions, embed=embed)
+                await msg.delete()
 
         await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_data[0]}'")
         await self.bot.execute(
