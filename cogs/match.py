@@ -139,7 +139,7 @@ class ReadyButton(ui.View):
     @tasks.loop(seconds=1)
     async def disable_button(self):
         await self.bot.wait_until_ready()
-        
+
         if self.msg:
             # Update the stored message and stop timer if ready up phase was removed
             msg = self.bot.get_message(self.msg.id)
@@ -153,6 +153,7 @@ class ReadyButton(ui.View):
             if not self.msg.components[0].children[0].label == "Ready Up!":
                 self.disable_button.stop()
                 return
+
         if (datetime.now() - self.time_of_execution).seconds >= 300:
             if self.msg:
                 ready_ups = await self.bot.fetch(
@@ -766,11 +767,21 @@ class Match(Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def send_new_queues(self):
+        await self.bot.wait_until_ready()
+        channels = await self.bot.fetch("SELECT * FROM queuechannels")
+        for channel in channels:
+            channel = self.bot.get_channel(channel[0])
+            if channel:
+                await self.start(channel)
+
     @Cog.listener()
     async def on_ready(self):
         self.bot.add_view(QueueButtons(self.bot))
         self.bot.add_view(SpectateButton(self.bot))
         self.bot.add_view(ReadyButton(self.bot))
+
+        await self.send_new_queues()
 
     async def start(self, channel, author=None):
 
