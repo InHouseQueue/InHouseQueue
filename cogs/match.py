@@ -3,9 +3,9 @@ import uuid
 from datetime import datetime, timedelta
 
 from core.embeds import error, success
-from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui
+from disnake import ButtonStyle, Color, Embed, File, PermissionOverwrite, ui
 from disnake.ext import tasks
-from disnake.ext.commands import Cog, command, slash_command
+from disnake.ext.commands import Cog, command, context, slash_command
 from trueskill import Rating, quality
 import itertools
 import asyncio
