@@ -766,7 +766,6 @@ class Match(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(self.send_new_queues())
 
     async def send_new_queues(self):
         await self.bot.wait_until_ready()
@@ -781,6 +780,8 @@ class Match(Cog):
         self.bot.add_view(QueueButtons(self.bot))
         self.bot.add_view(SpectateButton(self.bot))
         self.bot.add_view(ReadyButton(self.bot))
+
+        await self.send_new_queues()
 
     async def start(self, channel, author=None):
 
