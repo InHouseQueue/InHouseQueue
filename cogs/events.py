@@ -198,8 +198,8 @@ class Events(Cog):
     async def on_slash_command_error(self, ctx, error):
         await self.on_command_error(ctx, error)
 
-    @Cog.listener()
-    async def on_message(self, msg):
+    @Cog.listener('on_message')
+    async def delete_queue_messages(self, msg):
         data = await self.bot.fetch("SELECT * FROM queuechannels")
         if not data:
             return
@@ -224,12 +224,17 @@ class Events(Cog):
                     not embed.description
                     == "Mentioned players have been removed from the queue for not being ready on time."
                 )
+                and (
+                    not embed.title == ":warning: NOTICE"
+                )
             ):
                 try:
                     await msg.delete()
                 except:
                     pass
-        
+
+    @Cog.listener()
+    async def on_message(self, msg):
         if msg.guild:
             return
             
