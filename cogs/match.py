@@ -785,6 +785,7 @@ class Match(Cog):
                 except:
                     pass
 
+
     @Cog.listener()
     async def on_ready(self):
         self.bot.add_view(QueueButtons(self.bot))
