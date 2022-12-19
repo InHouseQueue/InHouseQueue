@@ -773,14 +773,17 @@ class Match(Cog):
         for channel in channels:
             channel = self.bot.get_channel(channel[0])
             if channel:
-                await channel.send(
-                    embed=Embed(
-                        title=":warning: NOTICE",
-                        description="The Bot has been updated for maintenance. Queues before this message are now invalid. Please create a new queue with `/start` or queue up in the queue sent after this message.",
-                        color=Color.yellow()
+                try:
+                    await channel.send(
+                        embed=Embed(
+                            title=":warning: NOTICE",
+                            description="The Bot has been updated for maintenance. Queues before this message are now invalid. Please create a new queue with `/start` or queue up in the queue sent after this message.",
+                            color=Color.yellow()
+                        )
                     )
-                )
-                await self.start(channel)
+                    await self.start(channel)
+                except:
+                    pass
 
     @Cog.listener()
     async def on_ready(self):
@@ -828,7 +831,10 @@ class Match(Cog):
         """
         Start the inhouse event.
         """
-        await ctx.send("Game was started!")
+        try:
+            await ctx.send("Game was started!")
+        except:
+            pass
         await self.start(ctx.channel, ctx.author)
 
 
