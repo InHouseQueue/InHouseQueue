@@ -773,6 +773,13 @@ class Match(Cog):
         for channel in channels:
             channel = self.bot.get_channel(channel[0])
             if channel:
+                await channel.send(
+                    embed=Embed(
+                        title=":warning: NOTICE",
+                        description="The Bot has been updated for maintenance. Queues before this message are now invalid. Please create a new queue with `/start` or queue up in the queue sent after this message.",
+                        color=Color.yellow()
+                    )
+                )
                 await self.start(channel)
 
     @Cog.listener()
