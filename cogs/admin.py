@@ -156,7 +156,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="queue")
     async def queue_slash(self, ctx, game_id: str):
         """
-        Reset a queue. Rejoin the queue to refresh the Embed.
+        Remove everyone from a queue. Rejoin the queue to refresh the Embed.
         """
         await self.queue(ctx, game_id)
 
@@ -374,7 +374,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="top_ten")
     async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
         """
-        Create dynamic Top 10 leaderboard
+        Create a Dynamic Top 10 leaderboard
         """
         embed = await self.leaderboard_persistent(channel)
         msg = await channel.send(embed=embed)

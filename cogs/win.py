@@ -54,7 +54,7 @@ class Win(Cog):
             else:
                 blue = 6
         else:
-            msg = await channel.send("Which team won? (6 Votes required)")
+            msg = await channel.send("Which team won? (6 Votes, excluding the bot, required)")
             await msg.add_reaction("🔵")
             await msg.add_reaction("🔴")
             await channel.send(mentions)
