@@ -346,21 +346,23 @@ class Admin(Cog):
 
 
         async def add_field(data) -> None:
-            mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]}")
-            if mmr_data:
-                skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
+            if not st_pref:
+                mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]}")
+                if mmr_data:
+                    skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
+                    if mmr_data[4] >= 10:
+                        display_mmr = f"- **{int(skill*100)}** MMR"
+                    else:
+                        display_mmr = f"- **{mmr_data[4]}/10** Games Played"
+                else:
+                    display_mmr = f"- **0/10** Games Played"
             else:
-                skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
-
-        
-            if mmr_data[4] >= 10:
-                display_mmr = f"**{int(skill*100)}** MMR"
-            else:
-                display_mmr = f"**{mmr_data[4]}/10** Games Played"
+                display_mmr = ""
 
             embed.add_field(
                 name=f"#{i + 1}",
-                value=f"<@{data[1]}> - **{data[2]}** Wins - **{round(data[4]*100, 2)}%** WR - {display_mmr}",
+                value=f"<@{data[1]}> - **{data[2]}** Wins - **{round(data[4]*100, 2)}%** WR {display_mmr}",
                 inline=False,
             )
 
