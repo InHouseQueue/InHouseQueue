@@ -89,15 +89,17 @@ class Admin(Cog):
     async def leaderboard(self, ctx):
         data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} ")
         if not data:
-            return await ctx.send(embed=error("There are no records to be deleted."))
-        
+            return await ctx.send(embed=error("There are no records to be deleted"))
+
+        await self.bot.execute(f"DELETE FROM mvp_points WHERE guild_id = {ctx.guild.id}")
         await self.bot.execute(f"DELETE FROM points WHERE guild_id = {ctx.guild.id}")
-        await ctx.send(embed=success("Successfully removed all previous records of leaderboard."))
+        await self.bot.execute(f"DELETE FROM mmr_rating WHERE guild_id = {ctx.guild.id}")
+        await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
 
     @reset_slash.sub_command(name="leaderboard")
     async def leaderboard_slash(self, ctx):
         """
-        Reset your server's leaderboard.
+        Reset your entire servers Wins, Losses, MMR and MVP votes back to 0.
         """
         await self.leaderboard(ctx)
 
@@ -156,7 +158,7 @@ class Admin(Cog):
     @reset_slash.sub_command(name="queue")
     async def queue_slash(self, ctx, game_id: str):
         """
-        Reset a queue. Rejoin the queue to refresh the Embed.
+        Remove everyone from a queue. Rejoin the queue to refresh the Embed.
         """
         await self.queue(ctx, game_id)
 
@@ -376,7 +378,7 @@ class Admin(Cog):
     @admin_slash.sub_command(name="top_ten")
     async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
         """
-        Create dynamic Top 10 leaderboard
+        Create a Dynamic Top 10 leaderboard
         """
         embed = await self.leaderboard_persistent(channel)
         msg = await channel.send(embed=embed)

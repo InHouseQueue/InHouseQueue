@@ -98,7 +98,7 @@ class Leaderboard(Cog):
     @slash_command(name="leaderboard")
     async def leaderboard_slash(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
         """
-        See the leaderboard of winners.
+        View the leaderboard.
         """
         await self.leaderboard(ctx, type)
 
@@ -122,7 +122,7 @@ class Leaderboard(Cog):
             return await ctx.send(embed=error(f"No entries to present {type} rank from."))
         
         if ctx.author.id not in [x[1] for x in user_data]:
-            return await ctx.send(embed=error("You are not yet ranked."))
+            return await ctx.send(embed=error("You have not played a game yet, or have not received any MVP votes."))
         
         embed = Embed(title=f"⏫ Rank of {ctx.author.name}", color=ctx.author.color)
         if ctx.author.avatar:

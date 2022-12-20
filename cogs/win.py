@@ -54,7 +54,7 @@ class Win(Cog):
             else:
                 blue = 6
         else:
-            msg = await channel.send("Which team won? (6 Votes required)")
+            msg = await channel.send("Which team won? (6 Votes, excluding the bot, required)")
             await msg.add_reaction("🔵")
             await msg.add_reaction("🔴")
             await channel.send(mentions)
@@ -182,6 +182,7 @@ class Win(Cog):
             log_channel = self.bot.get_channel(log_channel_id[0])
             if log_channel:
                 await log_channel.send(mentions, embed=embed)
+                await msg.delete()
 
         await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_data[0]}'")
         await self.bot.execute(

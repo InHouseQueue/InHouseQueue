@@ -251,15 +251,15 @@ class Events(Cog):
             else:
                 embed = msg.embeds[0]
             if (
-                (not embed.title == "Match Overview - SR Tournament Draft")
-                and (not embed.description == "Game was found! Time to ready up!")
-                and (
+                    (not embed.title == "Match Overview - SR Tournament Draft")
+                    and (not embed.description == "Game was found! Time to ready up!")
+                    and (
                     not embed.description
-                    == "Mentioned players have been removed from the queue for not being ready on time."
-                )
-                and (
+                        == "Mentioned players have been removed from the queue for not being ready on time."
+            )
+                    and (
                     not embed.title == ":warning: NOTICE"
-                )
+            )
             ):
                 try:
                     await msg.delete()
@@ -268,9 +268,9 @@ class Events(Cog):
 
     @Cog.listener()
     async def on_message(self, msg):
-        if msg.guild:
+        if msg.author.bot or msg.guild:
             return
-            
+
         data = await self.bot.fetch("SELECT * FROM mvp_voting")
         for entry in data:
             if msg.author.id == entry[1]:
