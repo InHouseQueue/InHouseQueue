@@ -113,7 +113,7 @@ class ChannelCommands(Cog):
     @slash_command(name="setwinnerlog")
     async def setwinnerlog_slash(self, ctx, channel: TextChannel):
         """
-        Set a channel for winner log.
+        Set a channel to send the game results.
         """
         await self.setwinnerlog(ctx, channel)
 

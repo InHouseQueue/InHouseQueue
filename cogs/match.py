@@ -648,7 +648,7 @@ class QueueButtons(ui.View):
         
         await inter.message.edit(view=self, attachments=[])
         if button.label.lower() in disabled_buttons:
-            return await inter.send(embed=error("This role is booked, please choose another."), ephemeral=True)
+            return await inter.send(embed=error("This role is taken, please choose another."), ephemeral=True)
 
         if await self.has_participated(inter):
             return await inter.send(
@@ -724,7 +724,7 @@ class QueueButtons(ui.View):
                     if not button.disabled:
                         button.disabled = True
                         await inter.message.edit(view=self)
-            return await inter.send(embed=error("Switch teams is not available with SBMM system enabled."), ephemeral=True)
+            return await inter.send(embed=error("Switch teams is not available with SBMM enabled. If you wish to disable it, run: `/admin sbmm Disable`"), ephemeral=True)
         
         data = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
@@ -751,7 +751,7 @@ class QueueButtons(ui.View):
                 inter.author.id,
             )
             await inter.edit_original_message(embed=await self.gen_embed(inter.message))
-            await inter.send(f"You were assigned to **{team} team**.", ephemeral=True)
+            await inter.send(f"You were assigned to **{team.capitalize()} team**.", ephemeral=True)
 
         else:
             await inter.send(
@@ -777,7 +777,7 @@ class Match(Cog):
                     await channel.send(
                         embed=Embed(
                             title=":warning: NOTICE",
-                            description="The Bot has been updated for maintenance. Queues before this message are now invalid. Please create a new queue with `/start` or queue up in the queue sent after this message.",
+                            description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message.",
                             color=Color.yellow()
                         )
                     )
@@ -830,7 +830,7 @@ class Match(Cog):
     @slash_command(name="start")
     async def start_slash(self, ctx):
         """
-        Start the inhouse event.
+        Start a InHouse queue.
         """
         try:
             await ctx.send("Game was started!")
