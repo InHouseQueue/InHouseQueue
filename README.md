@@ -50,68 +50,7 @@ I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1
 View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md) 
 
 # All Commands
-### Queue commands
-*Supports both slash and prefix commands - default prefix is !*
-
-- `/help` - Displays the Help Menu
-- `/setchannel` - Set a specific channel as the queue. Messages other than commands will be deleted after a short delay.
-- `/setwinnerlog` - All completed games will be logged via an embed in this channel. 
-- `/start` - Start a queue
-- `/win` - Initiate a vote once a game has been completed. The team, first to 6 votes, will be confirmed as the winner. It can only be run in the dedicated game lobby.
-- `/leaderboard` - Displays the leaderboard. `Wins / Win rate %`
-Other options
-- `/leaderboard mvp` `leaderboard mmr` - Show leaderboard of MMR or MVP 
-- `/rank` - Display your own rank
-
-**League of Legends only**
-- `/opgg` [gameid] [blue/red] [region] - Multi op.gg Link of Red or Blue team. Discord nickname must match your IGN. Valid formats `IGN: Faker` / `Faker`
-
-
-### Admin commands
-Note: `admin reset user` and `/admin reset queue` Commands are executed immediately but require someone to rejoin the queue to refresh the Embed.
-
-- **`/admin reset leaderboard`** - Resets all wins, losses and games played.
-
-- **`/admin reset user [member]`** - Removes the member from all queues.
-```
-/admin reset user @John
-```
-- **`/admin reset queue [gameid]`** - Reset an ongoing queue
-```
-/admin reset queue 03134ff5
-```
-- **`/admin cancel [member]`** - Cancels the entire queue for the member and everyone in the queue.
-```
-/admin reset cancel @John
-```
-- **`/admin void [gameid]`** - Purges all data relating to this game id. Used as a last resort in the rare event of players being unable to queue because they are in an existing game.
-```
-/admin reset cancel @John
-```
-- **`/admin change_winner [gameid] [team]`** - Change the winner of a game. The game must have been decided and finished. 
-```
-/admin change_winner 03134ff5 Red
-```
-- **`/admin winner [role]`** - Immediately announce a winner without requiring a vote to confirm. This can only be done if the game is still in progress, otherwise use `admin change_winner`
-```
-/admin winner @Red: 316d8cc7
-```
-
-**`/admin queue_preference [options]`** - Allow or disallow players to queue in multiple queues simultaneously. 
-
-Example: 
-```
-/admin queue_preference Single Queue
-```
-
-**`/admin sbmm [options]`** - Enable or Disable MMR. If disabled players can decide on teams. If enabled, the bot will use the custom MMR to create balanced teams. 
-
-Example: 
-```
-/admin sbmm Enabled
-```
-
-Note: Use the discord slash command feature - running these commands will be much easier!
+Available at: https://www.inhousequeue.xyz/command
 
 # Contributing
 Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
