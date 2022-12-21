@@ -40,7 +40,7 @@ class Leaderboard(Cog):
         vals = 1
 
         async def add_field(data, current_embed) -> None:
-            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]}")
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id}")
             if user_data:
                 wins = user_data[2]
                 losses = user_data[3]

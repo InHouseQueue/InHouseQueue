@@ -123,7 +123,7 @@ class Win(Cog):
             winner_team_rating = []
             losing_team_rating = []
             for member_entry in member_data:
-                rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]}")
+                rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]} and guild_id = {channel.guild.id}")
 
                 if member_entry[2] == winner.lower():
                     winner_team_rating.append(
@@ -143,23 +143,25 @@ class Win(Cog):
             )
 
             for i, new_rating in enumerate(updated_rating[0]):
-                counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']}")
+                counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']} and guild_id = {channel.guild.id}")
                 await self.bot.execute(
-                    "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
+                    "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
                     str(new_rating.mu),
                     str(new_rating.sigma),
                     counter[0] + 1,
-                    winner_team_rating[i]['user_id']
+                    winner_team_rating[i]['user_id'],
+                    channel.guild.id
                 )
 
             for i, new_rating in enumerate(updated_rating[1]):
-                counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']}")
+                counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']} and guild_id = {channel.guild.id}")
                 await self.bot.execute(
-                    "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4",
+                    "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
                     str(new_rating.mu),
                     str(new_rating.sigma),
                     counter[0] + 1,
                     losing_team_rating[i]['user_id'],
+                    channel.guild.id
                 )
         else:
             for member_entry in member_data:
