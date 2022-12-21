@@ -529,7 +529,7 @@ class QueueButtons(ui.View):
                 }
 
                 for data in member_data:
-                    member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]}")
+                    member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id}")
                     if member_rating:
                         mu = float(member_rating[2])
                         sigma = float(member_rating[3])
