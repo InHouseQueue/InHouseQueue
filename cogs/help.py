@@ -29,7 +29,7 @@ class Help(Cog):
     async def help_menu(self, ctx):
         main = Embed(
             title="📔 Help Menu",
-            description=f"• Prefix is `!`\n• Both prefix and slash commands are available. \n • Commands available at: https://www.inhousequeue.xyz/commands ",
+            description=f"• Prefix is `!`\n• Both prefix and slash commands are available. \n • Set-up guide & all commands: https://www.inhousequeue.xyz/commands ",
             color=Color.blurple(),
         )
 
