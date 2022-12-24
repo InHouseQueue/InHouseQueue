@@ -87,7 +87,7 @@ class ChannelCommands(Cog):
             if data[0] == channel.id:
                 return await ctx.send(
                     embed=embeds.error(
-                        f"{channel.mention} is already setup as the winner log channel."
+                        f"{channel.mention} is already setup as the match-history channel."
                     )
                 )
 
@@ -106,7 +106,7 @@ class ChannelCommands(Cog):
 
         await ctx.send(
             embed=embeds.success(
-                f"{channel.mention} was successfully set as winner log channel."
+                f"{channel.mention} was successfully set as match-history channel."
             )
         )
 
