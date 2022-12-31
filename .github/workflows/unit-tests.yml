@@ -19,6 +19,7 @@ jobs:
         pip3 install mocker
         pip3 install pytest-asyncio
         pip3 install pytest
+        python3 -m pip install -U disnake==2.7.0
 
     - name: Run pytest tests
       run: |
