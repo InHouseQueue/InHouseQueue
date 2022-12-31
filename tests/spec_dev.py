@@ -81,7 +81,6 @@ async def test_dev_status(mocker):
     mock_ctx = mocker.Mock()
     mock_bot = mocker.AsyncMock()
     mock_guild = mocker.Mock()
-
     mock_guild.id = 123
 
     # Set attributes on mock objects
