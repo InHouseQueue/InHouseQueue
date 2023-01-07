@@ -53,4 +53,5 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /root/${{ env.REPO_NAME }}
-            docker-compose up -d --build
+            docker build -t in-house-queue:latest .
+            docker-compose up -d

@@ -6,7 +6,7 @@ services:
       context: .
       args:
         - VERSION=v1.4.2-beta
-    image: in-house-queue:${VERSION}
+    image: in-house-queue
     env_file:
       - .env
     volumes:
