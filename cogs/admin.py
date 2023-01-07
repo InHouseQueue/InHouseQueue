@@ -91,9 +91,9 @@ class Admin(Cog):
         if not data:
             return await ctx.send(embed=error("There are no records to be deleted"))
 
-        await self.bot.execute(f"DELETE FROM mvp_points WHERE guild_id = {ctx.guild.id}")
-        await self.bot.execute(f"DELETE FROM points WHERE guild_id = {ctx.guild.id}")
-        await self.bot.execute(f"DELETE FROM mmr_rating WHERE guild_id = {ctx.guild.id}")
+        await self.bot.execute(f"UPDATE mvp_points SET votes = 0 WHERE guild_id = {ctx.guild.id}")
+        await self.bot.execute(f"UPDATE points SET wins = 0, losses = 0 WHERE guild_id = {ctx.guild.id}")
+        await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id}")
         await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
 
     @reset_slash.sub_command(name="leaderboard")
