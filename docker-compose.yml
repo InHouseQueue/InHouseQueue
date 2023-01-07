@@ -2,10 +2,7 @@ version: '3.7'
 
 services:
   bot:
-    build:
-      context: .
-      args:
-        - VERSION=v1.4.2-beta
+    build: .
     image: in-house-queue
     env_file:
       - .env
