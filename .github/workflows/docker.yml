@@ -53,6 +53,4 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /root/${{ env.REPO_NAME }}
-            docker-compose -f docker-compose.yml build --build-arg version=${{ env.VERSION }}
-            docker build -t in-house-queue:latest .
-            docker-compose up -d
+            docker-compose up -d --build-arg TAG=latest
