@@ -53,4 +53,4 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /root/${{ env.REPO_NAME }}
-            docker-compose up -d --build-arg TAG=latest
+            docker-compose up -d --build
