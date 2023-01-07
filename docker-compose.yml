@@ -17,13 +17,12 @@ services:
       BACKUP_CRON_EXPRESSION: "* * * * *"
       BACKUP_RETENTION_DAYS: "7"
       AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
-      AWS_ACCESS_KEY_ID: ${AWS_S3_BUCKET_NAME}
-      AWS_SECRET_ACCESS_KEY: ${AWS_S3_BUCKET_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_S3_PATH: ${AWS_S3_PATH}
     volumes:
       - inhouse-db:/backup/inhouse-db-backup:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${HOME}/s3-bucket:/archive
 
 volumes:
   inhouse-db:
