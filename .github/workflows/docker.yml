@@ -39,8 +39,8 @@ jobs:
             cat .env
             echo $?
 
-  build:
-    name: Build Docker Image
+  push:
+    name: Push to docker registry
     needs: [clone,add-bot-token]
     runs-on: ubuntu-latest
     steps:
@@ -54,4 +54,21 @@ jobs:
           script: |
             cd /root/${{ env.REPO_NAME }}
             git pull
-            docker-compose up -d --build
+            docker-compose build --tag henrykoleoso/in-house-queue:latest
+            docker push henrykoleoso/in-house-queue:latest
+
+  build:
+  name: Build and run
+  needs: [clone,add-bot-token,push]
+  runs-on: ubuntu-latest
+  steps:
+    - name: Build Docker Image
+      uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+      with:
+        host: ${{ secrets.HOST_TEST }}
+        username: ${{ secrets.ROOT_USERNAME }}
+        password: ${{ secrets.PASSWORD_TEST }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd /root/${{ env.REPO_NAME }}
+          docker-compose up -d --build
