@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  bot:
+    build:
+      context: .
+      args:
+        - VERSION=v1.4.2-beta
+    image: in-house-queue:${VERSION}
+    env_file:
+      - .env
+    volumes:
+      - inhouse-db:/app/db
+
+  backup:
+    image: offen/docker-volume-backup:v2
+    environment:
+      BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S.tar.gz
+      BACKUP_PRUNING_PREFIX: backup-
+      BACKUP_CRON_EXPRESSION: "* * * * *"
+    volumes:
+      - inhouse-db:/backup/inhouse-db-backup:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /root/s3-bucket/${ENV}:/archive
+
+volumes:
+  inhouse-db:

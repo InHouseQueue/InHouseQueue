@@ -1,0 +1,58 @@
+name: Deploy Bot with Docker
+on:
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  REPO_OWNER: ${{ github.repository_owner }}
+jobs:
+  clone:
+    name: Clone Repo to server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone Repo
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.USERNAME_TEST }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/
+            git clone git@github.com:${{env.REPO_OWNER}}/${{ env.REPO_NAME }}.git
+            pwd
+
+  add-bot-token:
+    needs: clone
+    runs-on: ubuntu-latest
+    steps:
+      - name: adding bot token for ${{ env.REPO_NAME }} bot
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ env.REPO_NAME }}
+            touch .env
+            echo "${{ secrets.TEST_ENV }}" > .env
+            cat .env
+            echo $?
+
+  build:
+    name: Build Docker Image
+    needs: [clone,add-bot-token]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/${{ env.REPO_NAME }}
+            docker-compose -f docker-compose.yml build --build-arg version=${{ env.VERSION }}
+            docker build -t in-house-queue:latest .
+            docker-compose up -d
