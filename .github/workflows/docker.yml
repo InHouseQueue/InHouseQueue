@@ -54,7 +54,8 @@ jobs:
           script: |
             cd /root/${{ env.REPO_NAME }}
             git pull
-            docker-compose build --tag henrykoleoso/in-house-queue:latest
+            docker-compose build
+            docker tag in-house-queue henrykoleoso/in-house-queue:latest
             docker push henrykoleoso/in-house-queue:latest
 
   build:
@@ -71,4 +72,4 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           cd /root/${{ env.REPO_NAME }}
-          docker-compose up -d --build
+          docker-compose up -d
