@@ -8,7 +8,7 @@ jobs:
   clone:
     name: Clone Repo to server
     runs-on: ubuntu-latest
-    environments: Staging
+    environment: Staging
     steps:
       - name: Clone Repo
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
@@ -25,7 +25,7 @@ jobs:
   add-bot-token:
     needs: clone
     runs-on: ubuntu-latest
-    environments: Staging
+    environment: Staging
     steps:
       - name: adding bot token for ${{ env.REPO_NAME }} bot
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
@@ -45,7 +45,7 @@ jobs:
     name: Push to docker registry
     needs: [clone,add-bot-token]
     runs-on: ubuntu-latest
-    environments: Staging
+    environment: Staging
     steps:
       - name: Build Docker Image
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
@@ -65,7 +65,7 @@ jobs:
     name: Build and run
     needs: [clone,add-bot-token,push]
     runs-on: ubuntu-latest
-    environments: Staging
+    environment: Staging
     steps:
       - name: Build Docker Image
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
