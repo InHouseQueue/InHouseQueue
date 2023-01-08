@@ -2,7 +2,7 @@ name: Run pytest tests
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   test:
@@ -19,8 +19,10 @@ jobs:
         pip3 install mocker
         pip3 install pytest-asyncio
         pip3 install pytest
+        python3 -m pip install -U disnake==2.7.0
 
-    - name: Run pytest tests
+    - name: Run Unit tests
       run: |
-        python3 -m pytest tests/*
+        python3 -m pytest tests/spec_dev.py
+        python3 -m pytest tests/spec_embeds.py
 
