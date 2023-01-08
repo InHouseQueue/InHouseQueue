@@ -24,23 +24,23 @@ else
 fi
 
 # Copy the tar file from the source directory to the destination directory
-cp $src_dir/$file_name $dst_dir
+cp $src_dir/$file_name $dst_dir || { echo "Error copying tar file. Exiting script."; exit 1; }
 
 # Extract the tar file in the destination directory
-tar -xvzf $dst_dir/$file_name -C $dst_dir
+tar -xvzf $dst_dir/$file_name -C $dst_dir || { echo "Error extracting tar file. Exiting script."; exit 1; }
 
 # Change to the correct compose directory
-cd $compose_dir || exit
+cd $compose_dir || { echo "Error changing to compose directory. Exiting script."; exit 1; }
 
 # Run "docker-compose down" in the compose directory
-docker-compose down
+docker-compose down || { echo "Error running docker-compose down. Exiting script."; exit 1; }
 
 # Remove the volume
-docker volume rm $volume_name
+docker volume rm $volume_name || { echo "Error removing volume. Exiting script."; exit 1; }
 
 # Run the cp command to copy main.sqlite to the volume
-docker run --rm -it -v $volume_name:/$volume_name -v $dst_dir/backup/inhouse-db-backup:/archive:ro alpine cp /archive/main.sqlite /$volume_name
+docker run --rm -it -v $volume_name:/$volume_name -v $dst_dir/backup/inhouse-db-backup:/archive:ro alpine cp /archive/main.sqlite /$volume_name || { echo "Error running cp command. Exiting script."; exit 1; }
 
 # Remove the "backup" directory and tar file from the destination directory
-rm -r $dst_dir/backup
-rm $dst_dir/$file_name
+rm -r $dst_dir/backup || { echo "Error running rm command. Exiting script."; exit 1; }
+rm $dst_dir/$file_name || { echo "Error running rm command. Exiting script."; exit 1; }
