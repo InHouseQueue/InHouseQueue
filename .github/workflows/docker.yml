@@ -24,6 +24,7 @@ jobs:
   add-bot-token:
     needs: clone
     runs-on: ubuntu-latest
+    environments: staging
     steps:
       - name: adding bot token for ${{ env.REPO_NAME }} bot
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
@@ -35,7 +36,7 @@ jobs:
           script: |
             cd ${{ env.REPO_NAME }}
             touch .env
-            echo "${{ secrets.TEST_ENV }}" > .env
+            echo "${{ secrets.BOT_TOKEN }}" > .env
             cat .env
             echo $?
 
