@@ -50,7 +50,7 @@ I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1
 View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md) 
 
 # All Commands
-Available at: https://www.inhousequeue.xyz/command
+Available at: https://www.inhousequeue.xyz/commands
 
 # Contributing
 Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.

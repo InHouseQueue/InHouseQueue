@@ -1,0 +1,81 @@
+name: Deploy Bot with Docker to Staging
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  REPO_OWNER: ${{ github.repository_owner }}
+jobs:
+  clone:
+    name: Clone Repo
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - name: Clone Repo
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.USERNAME_TEST }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/
+            git clone git@github.com:${{env.REPO_OWNER}}/${{ env.REPO_NAME }}.git
+            pwd
+
+  add-bot-env:
+    name: Add env file
+    needs: clone
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - name: Adding env file for ${{ env.REPO_NAME }} bot
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ env.REPO_NAME }}
+            touch .env
+            echo "${{ secrets.BOT_TOKEN }}" > .env
+            echo $?
+
+  push:
+    name: Push to docker registry
+    needs: [clone,add-bot-env]
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/${{ env.REPO_NAME }}
+            git pull
+            docker-compose build
+            docker tag in-house-queue henrykoleoso/in-house-queue:latest
+            docker push henrykoleoso/in-house-queue:latest
+
+  build:
+    name: Build and run
+    needs: [clone,add-bot-env,push]
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/${{ env.REPO_NAME }}
+            docker-compose up -d

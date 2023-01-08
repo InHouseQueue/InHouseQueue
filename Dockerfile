@@ -1,4 +1,4 @@
-FROM gorialis/discord.py
+FROM python:3.9-slim-buster
 
 WORKDIR /app
 

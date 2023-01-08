@@ -1,0 +1,87 @@
+name: Deploy Bot with Docker to Production
+on:
+  push:
+    branches: [ live ]
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  REPO_OWNER: ${{ github.repository_owner }}
+  LIVE_NAME: ${{ github.event.repository.name }}-live
+jobs:
+  clone:
+    name: Clone Repo
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Clone Repo
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.USERNAME_TEST }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/
+            git clone git@github.com:${{env.REPO_OWNER}}/${{ env.REPO_NAME }}.git ${{ env.LIVE_NAME }}
+            pwd
+
+  add-bot-env:
+    needs: clone
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: adding env file for ${{ env.REPO_NAME }} bot
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ env.LIVE_NAME }}
+            touch .env
+            echo "${{ secrets.BOT_TOKEN }}" > .env
+            echo $?
+
+  push:
+    name: Push to docker registry
+    needs: [clone,add-bot-env]
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Get latest release tag
+        id: latest_release
+        run: |
+          tag=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" "https://api.github.com/repos/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}/releases/latest" | jq -r ".tag_name")
+          echo "::set-output name=tag::$tag"
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/${{ env.LIVE_NAME }}
+            git pull
+            docker-compose build
+            docker tag in-house-queue henrykoleoso/in-house-queue:${{ steps.latest_release.outputs.tag }}
+            docker push henrykoleoso/in-house-queue:${{ steps.latest_release.outputs.tag }}
+
+  build:
+    name: Build and run
+    needs: [clone,add-bot-env,push]
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.ROOT_USERNAME }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /root/${{ env.LIVE_NAME }}
+            docker-compose up -d
