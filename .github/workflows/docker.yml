@@ -7,24 +7,6 @@ env:
   REPO_NAME: ${{ github.event.repository.name }}
   REPO_OWNER: ${{ github.repository_owner }}
 jobs:
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: |
-          pip3 install --user pytest-mock
-          pip3 install mocker
-          pip3 install pytest-asyncio
-          pip3 install pytest
-
-      - name: Run pytest tests
-        run: |
-          python3 -m pytest tests/*
   clone:
     name: Clone Repo
     needs: unit-tests
