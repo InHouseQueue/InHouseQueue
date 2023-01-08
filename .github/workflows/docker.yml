@@ -41,7 +41,6 @@ jobs:
             cd ${{ env.REPO_NAME }}
             touch .env
             echo "${{ secrets.BOT_TOKEN }}" > .env
-            cat .env
             echo $?
 
   push:
