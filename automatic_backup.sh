@@ -4,22 +4,43 @@
 echo "Enter the name of the tar file:"
 read file_name
 
-# Copy the tar file from /root/s3-bucket-2/staging to /root/backups
-cp /root/s3-bucket-2/staging/$file_name /root/backups
+# Read the value of AWS_S3_PATH from the .env file
+s3_path=$(grep AWS_S3_PATH .env | cut -d '"' -f 2)
 
-# Extract the tar file in /root/backups
-tar -xvzf /root/backups/$file_name -C /root/backups
+# Set the correct values for the source and destination directories based on the value of AWS_S3_PATH
+if [ "$s3_path" == "staging" ]; then
+  src_dir="/root/s3-bucket-2/staging"
+  dst_dir="/root/backups"
+  compose_dir="/root/InHouseQueue"
+  volume_name="inhousequeue_inhouse-db"
+elif [ "$s3_path" == "production" ]; then
+  src_dir="/root/s3-bucket-2/production"
+  dst_dir="/root/backups"
+  compose_dir="/root/InHouseQueue-live"
+  volume_name="inhousequeue-live_inhouse-db"
+else
+  echo "Invalid value for AWS_S3_PATH. Must be either 'staging' or 'production'"
+  exit 1
+fi
 
-# Run "docker-compose down" in the /root/InHouseQueue directory
-cd /root/InHouseQueue
+# Copy the tar file from the source directory to the destination directory
+cp $src_dir/$file_name $dst_dir
+
+# Extract the tar file in the destination directory
+tar -xvzf $dst_dir/$file_name -C $dst_dir
+
+# Change to the correct compose directory
+cd $compose_dir || exit
+
+# Run "docker-compose down" in the compose directory
 docker-compose down
 
-# Remove the inhousequeue_inhouse-db volume
-docker volume rm inhousequeue_inhouse-db
+# Remove the volume
+docker volume rm $volume_name
 
-# Run the cp command to copy main.sqlite to the inhousequeue_inhouse-db volume
-docker run --rm -it -v inhousequeue_inhouse-db:/inhousequeue_inhouse-db -v /root/backups/backup/inhouse-db-backup:/archive:ro alpine cp /archive/main.sqlite /inhousequeue_inhouse-db
+# Run the cp command to copy main.sqlite to the volume
+docker run --rm -it -v $volume_name:/$volume_name -v $dst_dir/backup/inhouse-db-backup:/archive:ro alpine cp /archive/main.sqlite /$volume_name
 
-# Remove the "backup" directory and tar file from /root/backups
-rm -r /root/backups/backup
-rm /root/backups/$file_name
+# Remove the "backup" directory and tar file from the destination directory
+rm -r $dst_dir/backup
+rm $dst_dir/$file_name
