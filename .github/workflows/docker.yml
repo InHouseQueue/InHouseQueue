@@ -9,7 +9,6 @@ env:
 jobs:
   clone:
     name: Clone Repo
-    needs: unit-tests
     runs-on: ubuntu-latest
     environment: Staging
     steps:
