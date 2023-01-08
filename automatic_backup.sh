@@ -5,7 +5,7 @@ echo "Enter the name of the tar file:"
 read file_name
 
 # Read the value of AWS_S3_PATH from the .env file
-s3_path=$(grep AWS_S3_PATH .env | cut -d '"' -f 2)
+s3_path=$(grep AWS_S3_PATH .env | cut -d '"' -f 2 | cut -d '=' -f 2)
 
 # Set the correct values for the source and destination directories based on the value of AWS_S3_PATH
 if [ "$s3_path" == "staging" ]; then
@@ -19,7 +19,7 @@ elif [ "$s3_path" == "production" ]; then
   compose_dir="/root/InHouseQueue-live"
   volume_name="inhousequeue-live_inhouse-db"
 else
-  echo "Invalid value for AWS_S3_PATH. Must be either 'staging' or 'production'"
+  echo "Invalid value for AWS_S3_PATH. Must be either 'staging' or 'production'. Value found: $s3_path"
   exit 1
 fi
 
