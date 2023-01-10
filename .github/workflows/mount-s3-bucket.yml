@@ -7,20 +7,21 @@ on:
 env:
   REPO_NAME: ${{ github.event.repository.name }}
 jobs:
-  create-mount:
+  clone:
+    name: Create Mount
     runs-on: ubuntu-latest
     steps:
-      - name: Mounting S3 bucket
-        uses: fifsky/ssh-action@master
+      - name: Create Mount
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
         with:
-          command: |
+          host: ${{ secrets.HOST_TEST }}
+          username: ${{ secrets.USERNAME_TEST }}
+          password: ${{ secrets.PASSWORD_TEST }}
+          port: ${{ secrets.PORT }}
+          script: |
             sudo apt-get update -y
             sudo apt-get install s3fs -y
             echo ${{ secrets.AWS_ACCESS_KEY_ID_S3 }}:${{ secrets.AWS_SECRET_ACCESS_KEY_S3}} > ~/.passwd-s3fs
             chmod 600 ~/.passwd-s3fs
             mkdir ~/s3-bucket
             s3fs henrykoleoso-backups ~/s3-bucket -o passwd_file=~/.passwd-s3fs
-
-          host: ${{ secrets.HOST }}
-          user: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
