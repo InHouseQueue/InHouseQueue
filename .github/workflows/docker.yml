@@ -34,7 +34,7 @@ jobs:
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
         with:
           host: ${{ secrets.HOST_TEST }}
-          username: ${{ secrets.ROOT_USERNAME }}
+          username: ${{ secrets.USERNAME_TEST }}
           password: ${{ secrets.PASSWORD_TEST }}
           port: ${{ secrets.PORT }}
           script: |
@@ -53,7 +53,7 @@ jobs:
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
         with:
           host: ${{ secrets.HOST_TEST }}
-          username: ${{ secrets.ROOT_USERNAME }}
+          username: ${{ secrets.USERNAME_TEST }}
           password: ${{ secrets.PASSWORD_TEST }}
           port: ${{ secrets.PORT }}
           script: |
@@ -73,7 +73,7 @@ jobs:
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
         with:
           host: ${{ secrets.HOST_TEST }}
-          username: ${{ secrets.ROOT_USERNAME }}
+          username: ${{ secrets.USERNAME_TEST }}
           password: ${{ secrets.PASSWORD_TEST }}
           port: ${{ secrets.PORT }}
           script: |
