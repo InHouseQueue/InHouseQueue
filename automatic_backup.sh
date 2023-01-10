@@ -9,12 +9,12 @@ s3_path=$(grep AWS_S3_PATH .env | cut -d '"' -f 2 | cut -d '=' -f 2)
 
 # Set the correct values for the source and destination directories based on the value of AWS_S3_PATH
 if [ "$s3_path" == "staging" ]; then
-  src_dir="/home/henry/s3-bucket-2/staging"
+  src_dir="/home/henry/s3-bucket/staging"
   dst_dir="/home/henry/backups"
   compose_dir="/home/henry/InHouseQueue"
   volume_name="inhousequeue_inhouse-db"
 elif [ "$s3_path" == "production" ]; then
-  src_dir="/home/henry/s3-bucket-2/production"
+  src_dir="/home/henry/s3-bucket/production"
   dst_dir="/home/henry/backups"
   compose_dir="/home/henry/InHouseQueue-live"
   volume_name="inhousequeue-live_inhouse-db"
