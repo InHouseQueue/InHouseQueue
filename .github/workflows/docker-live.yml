@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.IH_PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /root/
+            cd /home/henry/
             git clone git@github.com:${{env.REPO_OWNER}}/${{ env.REPO_NAME }}.git ${{ env.LIVE_NAME }}
             pwd
 
@@ -62,7 +62,7 @@ jobs:
           password: ${{ secrets.IH_PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /root/${{ env.LIVE_NAME }}
+            cd /home/henry/${{ env.LIVE_NAME }}
             git pull
             docker-compose build
             docker tag in-house-queue henrykoleoso/in-house-queue:${{ steps.latest_release.outputs.tag }}
