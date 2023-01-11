@@ -10,12 +10,12 @@ s3_path=$(grep AWS_S3_PATH .env | cut -d '"' -f 2 | cut -d '=' -f 2)
 # Set the correct values for the source and destination directories based on the value of AWS_S3_PATH
 if [ "$s3_path" == "staging" ]; then
   src_dir="/home/henry/s3-bucket/staging"
-  dst_dir="/home/henry/backups"
+  dst_dir="/home/henry/"
   compose_dir="/home/henry/InHouseQueue"
   volume_name="inhousequeue_inhouse-db"
 elif [ "$s3_path" == "production" ]; then
   src_dir="/home/henry/s3-bucket/production"
-  dst_dir="/home/henry/backups"
+  dst_dir="/home/henry/"
   compose_dir="/home/henry/InHouseQueue-live"
   volume_name="inhousequeue-live_inhouse-db"
 else
@@ -26,8 +26,10 @@ fi
 # Copy the tar file from the source directory to the destination directory
 cp $src_dir/$file_name $dst_dir || { echo "Error copying tar file. Exiting script."; exit 1; }
 
+cd $dst_dir || { echo "Error copying tar file. Exiting script."; exit 1; }
+
 # Extract the tar file in the destination directory
-tar -xvzf $dst_dir/$file_name -C $dst_dir || { echo "Error extracting tar file. Exiting script."; exit 1; }
+tar -xvzf $file_name -C $dst_dir || { echo "Error extracting tar file. Exiting script."; exit 1; }
 
 # Change to the correct compose directory
 cd $compose_dir || { echo "Error changing to compose directory. Exiting script."; exit 1; }
