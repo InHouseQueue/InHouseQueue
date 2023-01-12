@@ -12,6 +12,7 @@ services:
 
   backup:
     image: offen/docker-volume-backup:v2
+    restart: always
     environment:
       BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S-${AWS_S3_PATH}.tar.gz
       BACKUP_PRUNING_PREFIX: backup-
