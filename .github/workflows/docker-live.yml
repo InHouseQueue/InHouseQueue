@@ -22,7 +22,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /home/henry/
-            git clone git@github.com:${{env.REPO_OWNER}}/${{ env.REPO_NAME }}.git ${{ env.LIVE_NAME }}
+            git clone git@github.com:${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}.git ${{ env.LIVE_NAME }}
             pwd
 
   add-bot-env:
