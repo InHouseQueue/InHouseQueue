@@ -1,4 +1,4 @@
-name: Deploy Bot with Docker to Staging
+name: Deploy Staging
 on:
   push:
     branches: [ main ]
@@ -8,7 +8,7 @@ env:
   REPO_OWNER: ${{ github.repository_owner }}
 jobs:
   clone:
-    name: Clone Repo
+    name: Clone
     runs-on: ubuntu-latest
     environment: Staging
     steps:
@@ -25,7 +25,7 @@ jobs:
             pwd
 
   add-bot-env:
-    name: Add env file
+    name: Secrets
     needs: clone
     runs-on: ubuntu-latest
     environment: Staging
@@ -44,12 +44,12 @@ jobs:
             echo $?
 
   push:
-    name: Push to docker registry
+    name: Build & Push
     needs: [clone,add-bot-env]
     runs-on: ubuntu-latest
     environment: Staging
     steps:
-      - name: Build Docker Image
+      - name: Tag latest
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
         with:
           host: ${{ secrets.IH_HOST }}
@@ -63,8 +63,8 @@ jobs:
             docker tag in-house-queue henrykoleoso/in-house-queue:latest
             docker push henrykoleoso/in-house-queue:latest
 
-  build:
-    name: Build and run
+  run:
+    name: Run
     needs: [clone,add-bot-env,push]
     runs-on: ubuntu-latest
     environment: Staging
