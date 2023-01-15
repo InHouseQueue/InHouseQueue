@@ -1,3 +1,5 @@
+# THIS IS THE DOCKER COMPOSE I’M USING
+# DO NOT USE IT TO DEPLOY THE BOT
 version: '3.8'
 
 services:
