@@ -2,14 +2,15 @@
 
 ## Available on Docker [hub:](https://hub.docker.com/repository/docker/henrykoleoso/in-house-queue)
 ### Prerequisites
+- Basic Linux command line knowledge (changing directories, renaming files etc.)
 - Assuming your server is on Linux Ubuntu - follow this guide to install [docker](https://docs.docker.com/engine/install/ubuntu/)
-- Log into your server!
+- You will also need `docker-compose`. Step 1 of this [guide](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04) usually helps
 
-1. Pull the latest **production** image - `docker pull henrykoleoso/in-house-queue:v1.4.3-beta` - Check [releases](https://github.com/HenrySpartGlobal/InHouseQueue/releases) for the most up to date release. You can also run `docker pull henrykoleoso/in-house-queue` to always pull the latest code. 
-2. To start the bot - `docker run -v db:/app/db -e TOKEN=XXXXXXXXXXXXX -d henrykoleoso/in-house-queue:v1.4.3-beta`
-3. That's it - your bot should be up and running!
-4. To stop the bot - `docker stop [containerid]`.
-5. Get the containerid with `docker ps`. 
-
-**IMPORTANT:**
-`-v db:/app/db` creates a named volume called `db`, (The db directly after -v) (feel free to change this if you like). This volume is attached to the docker container and contains the `sqlite` file, which is your DATABASE. It has all the crucial data about your server, leaderboard, set channels, wins, etc. You can pull a new version at any time, and the data will persist, so don't worry.
+### Steps
+1. First you need to download the code repository files and upload them to your server. You can `git clone` or manually upload the files with something like [FileZilla](https://filezilla-project.org/).
+2. Once the files are there, navigate into the InHouseQueue directory.
+4. Inside the root directory, delete the existing `docker-compose.yml` and rename `docker-compose-example.yml` to `docker-compose.yml`.
+5. If you look at the file you can see it's pretty simple, but there is one important file we still need.
+6. Create a `.env` file in the **root** directory.
+7. Use this format `TOKEN=XXXXXXXXXXXXXXX`. Save it.
+8.You can now run `docker-compose build` and then `docker-compose up -d`.
