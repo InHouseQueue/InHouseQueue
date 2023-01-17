@@ -29,6 +29,7 @@ cp $src_dir/$file_name $dst_dir || { echo "Error copying tar file. Exiting scrip
 cd $dst_dir || { echo "Error copying tar file. Exiting script."; exit 1; }
 
 # Extract the tar file in the destination directory
+
 tar -xvzf $file_name -C $dst_dir || { echo "Error extracting tar file. Exiting script."; exit 1; }
 
 # Change to the correct compose directory
@@ -43,6 +44,6 @@ docker volume rm $volume_name || { echo "Error removing volume. Exiting script."
 # Run the cp command to copy main.sqlite to the volume
 docker run --rm -it -v $volume_name:/$volume_name -v $dst_dir/backup/inhouse-db-backup:/archive:ro alpine cp /archive/main.sqlite /$volume_name || { echo "Error running cp command. Exiting script."; exit 1; }
 
-# Remove the "backup" directory and tar file from the destination directory
+## Remove the "backup" directory and tar file from the destination directory
 rm -r $dst_dir/backup || { echo "Error running rm command. Exiting script."; exit 1; }
 rm $dst_dir/$file_name || { echo "Error running rm command. Exiting script."; exit 1; }
