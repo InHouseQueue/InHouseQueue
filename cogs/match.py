@@ -514,18 +514,18 @@ class QueueButtons(ui.View):
 
                 # CHECK
                 # roles_occupation = {
-                #     "TOP": [],
-                #     "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                #     "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
-                #     "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                #     "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-                # }
+                #      "TOP": [],
+                #      "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                #      "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
+                #      "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                #      "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+                #  }
                 roles_occupation = {
-                    "TOP": [],
-                    "JUNGLE": [],
-                    "MID": [],
-                    "ADC": [],
-                    "SUPPORT": []
+                   "TOP": [],
+                   "JUNGLE": [],
+                   "MID": [],
+                   "ADC": [],
+                   "SUPPORT": []
                 }
 
                 for data in member_data:

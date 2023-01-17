@@ -3,22 +3,25 @@
 # In-House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/welcome.png)
 
-A Discord Bot designed to organise In-house Custom games for competitive 5v5 games. Inspired by the newly created Official [Champions Queue](https://championsqueue.lolesports.com/en-us/).
-
+A Discord Bot designed to organise In-House Custom games for competitive 5v5 games.
+Support for 1v1 - 8v8 games will be available soon.
 Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
 
-**Currently, for League of Legends. Support for more games is on the way (Overwatch and Valorant).**
+**Current visuals are for League of Legends. Overwatch and Valorant visuals will soon be supported as well**
 
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
 - Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the Bot out yourself!
 - Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the Bot to your server
 
-# Discord Server setup
-1. Invite the Bot to your server - [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot)
-2. Create a new text channel and run `/setchannel #channelname`. This will now be the queue channel. Messages sent in this channel are **deleted**. Do not use this command on an existing text channel for obvious reasons!
-3. Create another channel, run `/setwinnerlog #channlename`. We suggest you name this something like match-history. 
-4. That's it! Now when you are ready to play, just run `/start` in your queue channel!
+## Discord Server setup
+Set up [guide](https://docs.inhousequeue.xyz/documentation/quick-start)
+
+# Documentation 
+Everything you need to know is also on our Documentation website - https://docs.inhousequeue.xyz/
+
+# All Commands
+Available at: https://www.inhousequeue.xyz/commands
 
 ## Step by Step bot user flow
 [Here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
@@ -42,15 +45,16 @@ TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
 ```
 python3 main.py
 ```
-5. Now set up the Bot with the steps in [Discord server setup](https://github.com/HenrySpartGlobal/InHouseQueue#discord-server-setup)
+5. Now set up the Bot with the steps in [Discord server setup](https://docs.inhousequeue.xyz/documentation/quick-start)
 
+## Running locally with Docker 
+View the guide [here](https://docs.inhousequeue.xyz/documentation/reference/technical-documentation/running-with-docker)
 
-## HOST THE BOT YOURSELF
-I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the Bot to your server, but if you want to make some changes and host it yourself feel free.
-View my Hosting [guide](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/HOSTING.md) 
+## Self hosting
+I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the Bot to your server, but if you want to make some changes and host it yourself feel free. Here is my  [Hosting guide](https://docs.inhousequeue.xyz/documentation/reference/technical-documentation/hosting)
 
-# All Commands
-Available at: https://www.inhousequeue.xyz/commands
+## More details on the MMR alogrithm used
+https://docs.inhousequeue.xyz/documentation/reference/sbmm
 
 # Contributing
 Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
@@ -60,4 +64,3 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 # Acknowledgments
 [Aarno](https://aarno.is-a.dev)
-
