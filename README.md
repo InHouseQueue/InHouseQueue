@@ -53,6 +53,9 @@ View the guide [here](https://docs.inhousequeue.xyz/documentation/reference/tech
 ## Self hosting
 I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the Bot to your server, but if you want to make some changes and host it yourself feel free. Here is my  [Hosting guide](https://docs.inhousequeue.xyz/documentation/reference/technical-documentation/hosting)
 
+## More details on the MMR alogrithm used
+https://docs.inhousequeue.xyz/documentation/reference/sbmm
+
 # Contributing
 Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
