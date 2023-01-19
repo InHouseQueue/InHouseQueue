@@ -119,6 +119,15 @@ class Win(Cog):
         st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
         winning_team_str = ""
         losing_team_str = ""
+
+        role_emojis = {
+            'top': "<:TOP:1005606989109399684>",
+            'jungle': "<:JGL:1005609899092365322>",
+            'mid': "<:MID:1005607040581898321>",
+            'support': "<:SUP:1005606977621209168>",
+            'adc': "<:BOT:1005606963830329436>"
+        }
+        
         if not st_pref:
             winner_team_rating = []
             losing_team_rating = []
@@ -129,12 +138,12 @@ class Win(Cog):
                     winner_team_rating.append(
                         {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
                     )
-                    winning_team_str += f"• <@{member_entry[0]}> \n"
+                    winning_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
                 else:
                     losing_team_rating.append(
                         {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
                     )
-                    losing_team_str += f"• <@{member_entry[0]}> \n"
+                    losing_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
 
             backends.choose_backend("mpmath")
             updated_rating = rate(
@@ -166,9 +175,9 @@ class Win(Cog):
         else:
             for member_entry in member_data:
                 if member_entry[2] == winner.lower():
-                    winning_team_str += f"• <@{member_entry[0]}> \n"
+                    winning_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
                 else:
-                    losing_team_str += f"• <@{member_entry[0]}> \n"
+                    losing_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
         embed = Embed(
             title=f"Game concluded!",
             description=f"Game **{game_data[0]}** was concluded!",

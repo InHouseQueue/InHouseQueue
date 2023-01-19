@@ -34,7 +34,7 @@ class Admin(Cog):
         )
         return False
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(minutes=5)
     async def persistent_lb(self):
         await self.bot.wait_until_ready()
 
