@@ -790,7 +790,8 @@ class Match(Cog):
                     await channel.send(
                         embed=Embed(
                             title=":warning: NOTICE",
-                            description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message.",
+                            description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message. \n"
+                                        "Join our [Support Server](https://discord.com/invite/NDKMeT6GE7) for the patch notes.",
                             color=Color.yellow()
                         )
                     )
