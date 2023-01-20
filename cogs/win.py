@@ -211,12 +211,19 @@ class Win(Cog):
                 member_entry[3]
             )
             user = self.bot.get_user(member_entry[0])
+            role_emojis = {
+                'top': "<:TOP:1005606989109399684>",
+                'jungle': "<:JGL:1005609899092365322>",
+                'mid': "<:MID:1005607040581898321>",
+                'support': "<:SUP:1005606977621209168>",
+                'adc': "<:BOT:1005606963830329436>"
+            }
             try:
                 await user.send(
                     embed=Embed(
                         title=":trophy: Vote for MVP",
                         description="Pick your MVP by responding with a number (1-10). \n"
-                                    + '\n'.join([f"**{i + 1}.** {'🔵' if x[2] == 'blue' else '🔴'} <@{x[0]}>" for i, x in enumerate(member_data)]),
+                                    + '\n'.join([f"{role_emojis[1]} **{i + 1}.** {'🔵' if x[2] == 'blue' else '🔴'} <@{x[0]}>" for i, x in enumerate(member_data)]),
                         color=Color.blurple()
                     )
                 )
