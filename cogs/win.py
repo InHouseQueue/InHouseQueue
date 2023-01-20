@@ -2,6 +2,8 @@ from disnake import Color, Embed
 from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, backends, rate
 
+from core.embeds import error
+
 
 class Win(Cog):
     """
@@ -184,7 +186,10 @@ class Win(Cog):
         if log_channel_id:
             log_channel = self.bot.get_channel(log_channel_id[0])
             if log_channel:
-                await log_channel.send(mentions, embed=embed)
+                try:
+                    await log_channel.send(mentions, embed=embed)
+                except:
+                    await queuechannel.send(embed=error(f"Could not log the game {game_data[0]} in {log_channel.mention}. Please check my permissions."), delete_after=120.0)
                 await msg.delete()
 
         await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_data[0]}'")

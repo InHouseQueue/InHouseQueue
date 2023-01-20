@@ -813,11 +813,15 @@ class Match(Cog):
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
         )
         if not data:
-            return await channel.send(
-                embed=error(
-                    f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+            try:
+                return await channel.send(
+                    embed=error(
+                        f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+                    )
                 )
-            )
+            except:
+                if author:
+                    return await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
         # If you change this - update /events.py L28 as well!
         embed = Embed(
@@ -833,8 +837,11 @@ class Match(Cog):
             else:
                 embed.set_author(name=f"Initiated by {author.name}")
             
-
-        await channel.send(embed=embed, view=QueueButtons(self.bot))
+        try:
+            await channel.send(embed=embed, view=QueueButtons(self.bot))
+        except:
+            if author:
+                await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
     @command(aliases=["inhouse", "play"], name="start")
     async def start_prefix(self, ctx):

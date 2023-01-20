@@ -263,14 +263,19 @@ class Events(Cog):
                 embed = msg.embeds[0]
             if (
                     (not embed.title == "Match Overview - SR Tournament Draft")
-                    and (not embed.description == "Game was found! Time to ready up!")
                     and (
-                    not embed.description
-                        == "Mentioned players have been removed from the queue for not being ready on time."
-            )
+                        not embed.description == "Game was found! Time to ready up!"
+                    )
                     and (
-                    not embed.title == ":warning: NOTICE"
-            )
+                        not embed.description
+                            == "Mentioned players have been removed from the queue for not being ready on time."
+                    )
+                    and (
+                        not embed.title == ":warning: NOTICE"
+                    )
+                    and (
+                        not "Could not log the game" in embed.description
+                    )
             ):
                 try:
                     await msg.delete()
