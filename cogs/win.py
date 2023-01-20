@@ -204,6 +204,11 @@ class Win(Cog):
             user_data = await self.bot.fetchrow(
                 f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {channel.guild.id}"
             )
+
+            existing_voting = await self.bot.fetchrow(f"SELECT * FROM mvp_voting WHERE user_id = {member_entry[0]}")
+            if existing_voting:
+                await self.bot.execute(f"DELETE FROM mvp_voting WHERE user_id = {member_entry[0]}")
+                
             await self.bot.execute(
                 f"INSERT INTO mvp_voting(guild_id, user_id, game_id) VALUES($1, $2, $3)",
                 channel.guild.id,
