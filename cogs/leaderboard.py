@@ -89,7 +89,7 @@ class Leaderboard(Cog):
                 
                 embeds[current_embed].add_field(
                     name=name,
-                    value=f"{most_played_role} `{member_name}   {wins}W {losses}L {percentage}WR {data[2]} MVP`",
+                    value=f"{most_played_role} `{member_name}   {wins}W {losses}L {percentage}% WR {data[2]} MVP`",
                     inline=False,
                 )
             else:
@@ -101,7 +101,7 @@ class Leaderboard(Cog):
                 
                 embeds[current_embed].add_field(
                     name=name,
-                    value=f"{most_played_role} `{member_name}   {display_mmr} {wins}W {losses}L {percentage}WR`",
+                    value=f"{most_played_role} `{member_name}   {display_mmr} {wins}W {losses}L {percentage}% WR`",
                     inline=False,
                 )
 

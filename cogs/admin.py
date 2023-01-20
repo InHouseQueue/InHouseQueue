@@ -133,7 +133,7 @@ class Admin(Cog):
 
             embed.add_field(
                 name=name,
-                value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}WR`",
+                value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}% WR`",
                 inline=False,
             )
 
