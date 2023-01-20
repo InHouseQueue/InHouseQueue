@@ -1,10 +1,10 @@
-from core.embeds import error, success
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
-from disnake.ext.commands import Cog, Context, Param, group, slash_command
 from disnake.ext import tasks
+from disnake.ext.commands import Cog, Context, Param, group, slash_command, command
 
-from cogs.win import Win
 from cogs.match import QueueButtons
+from cogs.win import Win
+from core.embeds import error, success
 
 
 class Admin(Cog):
@@ -19,7 +19,16 @@ class Admin(Cog):
     async def cog_check(self, ctx: Context) -> bool:
         if ctx.author.guild_permissions.administrator:
             return True
+        
+        if ctx.command.qualified_name in ['admin', 'admin reset']:
+            return True
 
+        author_role_ids = [r.id for r in ctx.author.roles]
+        admin_enable = await self.bot.fetch(f"SELECT * FROM admin_enables WHERE guild_id = {ctx.guild.id} and command = '{ctx.command.qualified_name}'")
+        for data in admin_enable:
+            if data[2] in author_role_ids:
+                return True
+        
         await ctx.send(
             embed=error("You need **administrator** permissions to use this command.")
         )
@@ -28,6 +37,15 @@ class Admin(Cog):
     async def cog_slash_command_check(self, inter) -> bool:
         if inter.author.guild_permissions.administrator:
             return True
+
+        if inter.application_command.qualified_name in ['admin', 'admin reset']:
+            return True
+
+        author_role_ids = [r.id for r in inter.author.roles]
+        admin_enable = await self.bot.fetch(f"SELECT * FROM admin_enables WHERE guild_id = {inter.guild.id} and command = '{inter.application_command.qualified_name}'")
+        for data in admin_enable:
+            if data[2] in author_role_ids:
+                return True
 
         await inter.send(
             embed=error("You need **administrator** permissions to use this command.")
@@ -52,59 +70,55 @@ class Admin(Cog):
                 embed = await self.leaderboard_persistent(channel)
                 await msg.edit(embed=embed)
 
+    async def leaderboard_persistent(self, channel):
+        user_data = await self.bot.fetch(
+            f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
+        )
+        if not user_data:
+            return await channel.send(embed=error("There are no records to display."))
+        user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
+        user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
+        # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+
+        embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
+        if channel.guild.icon:
+            embed.set_thumbnail(url=channel.guild.icon.url)
+
+
+        async def add_field(data) -> None:
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
+            if not st_pref:
+                mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
+                if mmr_data:
+                    skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
+                    if mmr_data[4] >= 10:
+                        display_mmr = f"- **{int(skill*100)}** MMR"
+                    else:
+                        display_mmr = f"- **{mmr_data[4]}/10** Games Played"
+                else:
+                    display_mmr = f"- **0/10** Games Played"
+            else:
+                display_mmr = ""
+
+            embed.add_field(
+                name=f"#{i + 1}",
+                value=f"<@{data[1]}> - **{data[2]}** Wins - **{round(data[4]*100, 2)}%** WR {display_mmr}",
+                inline=False,
+            )
+
+        for i, data in enumerate(user_data):
+
+            if i <= 9:
+                await add_field(data)
+
+        return embed
+
     @group()
     async def admin(self, ctx):
         pass
-
-    @slash_command(name="admin")
-    async def admin_slash(self, ctx):
-        pass
-
-    @admin_slash.sub_command_group(name="reset")
-    async def reset_slash(self, ctx):
-        pass
-
-    @admin.group()
-    async def reset(self, ctx):
-        pass
-
-    @admin_slash.sub_command()
-    async def queue_preference(self, ctx, preference = Param(choices=[OptionChoice("Multi Queue", "1"), OptionChoice("Single Queue", "2")])):
-        """
-        Decide if players can be in multiple queues at once
-        """
-        preference_data = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {ctx.guild.id}")
-        if preference_data:
-            await self.bot.execute("UPDATE queue_preference SET preference = $1 WHERE guild_id = $2", int(preference), ctx.guild.id)
-        else:
-            await self.bot.execute(
-                f"INSERT INTO queue_preference(guild_id, preference) VALUES($1, $2)",
-                ctx.guild.id,
-                int(preference)
-            )
-        
-        await ctx.send(embed=success("Preference updated successfully."))
-
-    @reset.command(aliases=['lb'])
-    async def leaderboard(self, ctx):
-        data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} ")
-        if not data:
-            return await ctx.send(embed=error("There are no records to be deleted"))
-
-        await self.bot.execute(f"UPDATE mvp_points SET votes = 0 WHERE guild_id = {ctx.guild.id}")
-        await self.bot.execute(f"UPDATE points SET wins = 0, losses = 0 WHERE guild_id = {ctx.guild.id}")
-        await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id}")
-        await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
-
-    @reset_slash.sub_command(name="leaderboard")
-    async def leaderboard_slash(self, ctx):
-        """
-        Reset your entire servers Wins, Losses, MMR and MVP votes back to 0.
-        """
-        await self.leaderboard(ctx)
-
-    @reset.command()
-    async def user(self, ctx, member: Member):
+    
+    @admin.command()
+    async def user_dequeue(self, ctx, member: Member):
         member_data = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE author_id = ? ", member.id
         )
@@ -131,36 +145,27 @@ class Admin(Cog):
 
         await ctx.send(embed=success(f"{member.mention} was removed from all active queues."))
 
-    @reset_slash.sub_command(name="user")
-    async def user_slash(self, ctx, member: Member):
-        """
-        Remove a user from all queues. Rejoin the queue to refresh the Embed.
-        """
-        await self.user(ctx, member)
-
-    @reset.command()
-    async def queue(self, ctx, game_id):
-        game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
-        if game_data:
-            return await ctx.send(embed=error("You cannot reset an ongoing game. To cancel an ongoing game, please use `/admin cancel [member]`"))
-
-        member_data = await self.bot.fetchrow(
-            "SELECT * FROM game_member_data WHERE game_id = ?", game_id
+    @admin.command()
+    async def winner(self, ctx, role: Role):
+        role_name = role.name
+        game_id = role_name.replace("Red: ", "").replace("Blue: ", "")
+        game_data = await self.bot.fetchrow(
+            f"SELECT * FROM games WHERE game_id = '{game_id}'"
         )
-        if member_data:
-            await self.bot.execute(
-                "DELETE FROM game_member_data WHERE game_id = ? ", game_id
-            )
-            await ctx.send(embed=success(f"Game **{game_id}** queue was refreshed."))
-        else:
-            await ctx.send(embed=error(f"Game **{game_id}** was not found."))
 
-    @reset_slash.sub_command(name="queue")
-    async def queue_slash(self, ctx, game_id: str):
-        """
-        Remove everyone from a queue. Rejoin the queue to refresh the Embed.
-        """
-        await self.queue(ctx, game_id)
+        if game_data:
+            if "Red" in role_name:
+                team = "red"
+            else:
+                team = "blue"
+
+            await ctx.send(embed=success(f"Game **{game_id}** was concluded."))
+
+            channel = self.bot.get_channel(game_data[1])
+            await Win.process_win(self, channel, ctx.author, True, team)
+
+        else:
+            await ctx.send(embed=error("Game was not found."))
 
     @admin.command()
     async def change_winner(self, ctx, game_id: str, team: str):
@@ -240,48 +245,41 @@ class Admin(Cog):
 
         await ctx.send(embed=success("Game winner was changed."))
 
-    @admin_slash.sub_command(name="change_winner")
-    async def change_winner_slash(
-        self,
-        ctx,
-        game_id,
-        team=Param(choices=[OptionChoice("Red", "red"), OptionChoice("Blue", "blue")]),
-    ):
-        """
-        Change the winner of a finished game.
-        """
-        await self.change_winner(ctx, game_id, team)
+    @admin.command()
+    async def void(self, ctx, game_id):
+        game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
+        if not game_data:
+            return await ctx.send(embed=error("Game not found."))
+        
+        await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_id}'")
+        await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{game_id}'")
+        await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{game_id}'")
+
+        try:
+            for category in ctx.guild.categories:
+                if category.name == f"Game: {game_data[0]}":
+                    await category.delete()
+
+            red_channel = self.bot.get_channel(game_data[2])
+            await red_channel.delete()
+
+            blue_channel = self.bot.get_channel(game_data[3])
+            await blue_channel.delete()
+
+            red_role = ctx.guild.get_role(game_data[4])
+            await red_role.delete()
+
+            blue_role = ctx.guild.get_role(game_data[5])
+            await blue_role.delete()
+
+            lobby = self.bot.get_channel(game_data[1])
+            await lobby.delete()
+        except:
+            await ctx.send(embed=error("Unable to delete game channels and roles, please remove them manually."))
+
+        await ctx.send(embed=success(f"All records for Game **{game_id}** were deleted."))
 
     @admin.command()
-    async def winner(self, ctx, role: Role):
-        role_name = role.name
-        game_id = role_name.replace("Red: ", "").replace("Blue: ", "")
-        game_data = await self.bot.fetchrow(
-            f"SELECT * FROM games WHERE game_id = '{game_id}'"
-        )
-
-        if game_data:
-            if "Red" in role_name:
-                team = "red"
-            else:
-                team = "blue"
-
-            await ctx.send(embed=success(f"Game **{game_id}** was concluded."))
-
-            channel = self.bot.get_channel(game_data[1])
-            await Win.process_win(self, channel, ctx.author, True, team)
-
-        else:
-            await ctx.send(embed=error("Game was not found."))
-
-    @admin_slash.sub_command(name="winner")
-    async def winner_slash(self, ctx, role: Role):
-        """
-        Announce the winner of a game. Skips voting. The game must be in progress.
-        """
-        await self.winner(ctx, role)
-
-    @admin.group()
     async def cancel(self, ctx, member: Member):
         member_data = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE author_id = {member.id}"
@@ -325,55 +323,164 @@ class Admin(Cog):
                 embed=error(f"{member.mention} is not a part of any ongoing games.")
             )
 
+    @admin.group()
+    async def reset(self, ctx):
+        pass
+    
+    @reset.command(aliases=['lb'])
+    async def leaderboard(self, ctx):
+        data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} ")
+        if not data:
+            return await ctx.send(embed=error("There are no records to be deleted"))
+
+        await self.bot.execute(f"UPDATE mvp_points SET votes = 0 WHERE guild_id = {ctx.guild.id}")
+        await self.bot.execute(f"UPDATE points SET wins = 0, losses = 0 WHERE guild_id = {ctx.guild.id}")
+        await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id}")
+        await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
+    
+    @reset.command()
+    async def queue(self, ctx, game_id):
+        game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
+        if game_data:
+            return await ctx.send(embed=error("You cannot reset an ongoing game. To cancel an ongoing game, please use `/admin cancel [member]`"))
+
+        member_data = await self.bot.fetchrow(
+            "SELECT * FROM game_member_data WHERE game_id = ?", game_id
+        )
+        if member_data:
+            await self.bot.execute(
+                "DELETE FROM game_member_data WHERE game_id = ? ", game_id
+            )
+            await ctx.send(embed=success(f"Game **{game_id}** queue was refreshed."))
+        else:
+            await ctx.send(embed=error(f"Game **{game_id}** was not found."))
+    
+    # SLASH COMMANDS
+
+    @slash_command(name="admin")
+    async def admin_slash(self, ctx):
+        pass
+    
+    @admin_slash.sub_command()
+    async def enable(
+        self,
+        ctx, 
+        role: Role, 
+        command = Param(
+            choices=[
+                OptionChoice('leaderboard reset', 'admin reset leaderboard'),
+                OptionChoice('user dequeue', 'user_dequeue'),
+                OptionChoice('queue reset', 'admin reset queue'),
+                OptionChoice('change_winner', 'admin change_winner'),
+                OptionChoice('declare winner', 'admin winner'),
+                OptionChoice('cancel game', 'admin cancel'),
+                OptionChoice('void game', 'admin void'),
+                OptionChoice('sbmm', 'admin sbmm'),
+                OptionChoice('top_ten', 'admin top_ten'),
+                OptionChoice('queue_preference', 'admin queue_preference'),
+            ]
+        ), 
+    ):
+        """
+        Allow a role to run a particular admin command.
+        """
+        data = await self.bot.fetchrow(f"SELECT * FROM admin_enables WHERE guild_id = {ctx.guild.id} and role_id = {role.id} and command = '{command}'")
+        if data:
+            return await ctx.send(
+                embed=error(f"{role.mention} already has access to the command.")
+            )
+        
+        await self.bot.execute(
+            f"INSERT INTO admin_enables(guild_id, command, role_id) VALUES(?,?,?)",
+            ctx.guild.id,
+            command,
+            role.id
+        )
+        await ctx.send(embed=success(f"Command enabled for {role.mention} successfully."))
+    
+    @admin_slash.sub_command()
+    async def disable(
+        self,
+        ctx, 
+        role: Role, 
+        command = Param(
+            choices=[
+                OptionChoice('leaderboard reset', 'admin reset leaderboard'),
+                OptionChoice('user dequeue', 'user_dequeue'),
+                OptionChoice('queue reset', 'admin reset queue'),
+                OptionChoice('change_winner', 'admin change_winner'),
+                OptionChoice('declare winner', 'admin winner'),
+                OptionChoice('cancel game', 'admin cancel'),
+                OptionChoice('void game', 'admin void'),
+                OptionChoice('sbmm', 'admin sbmm'),
+                OptionChoice('top_ten', 'admin top_ten'),
+                OptionChoice('queue_preference', 'admin queue_preference'),
+            ]
+        ), 
+    ):
+        """
+        Disallow a role to run a admin command.
+        """
+        data = await self.bot.fetchrow(f"SELECT * FROM admin_enables WHERE guild_id = {ctx.guild.id} and role_id = {role.id} and command = '{command}'")
+        if not data:
+            return await ctx.send(
+                embed=error(f"{role.mention} already does not have access to the command.")
+            )
+        
+        await self.bot.execute(
+            f"DELETE FROM admin_enables WHERE guild_id = {ctx.guild.id} and command = '{command}' and role_id = {role.id}"
+        )
+        await ctx.send(embed=success(f"Command disabled for {role.mention} successfully."))
+
+    @admin_slash.sub_command(name="user_dequeue")
+    async def user_slash(self, ctx, member: Member):
+        """
+        Remove a user from all queues. Rejoin the queue to refresh the Embed.
+        """
+        await self.user_dequeue(ctx, member)
+
+    @admin_slash.sub_command()
+    async def queue_preference(self, ctx, preference = Param(choices=[OptionChoice("Multi Queue", "1"), OptionChoice("Single Queue", "2")])):
+        """
+        Decide if players can be in multiple queues at once
+        """
+        preference_data = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {ctx.guild.id}")
+        if preference_data:
+            await self.bot.execute("UPDATE queue_preference SET preference = $1 WHERE guild_id = $2", int(preference), ctx.guild.id)
+        else:
+            await self.bot.execute(
+                f"INSERT INTO queue_preference(guild_id, preference) VALUES($1, $2)",
+                ctx.guild.id,
+                int(preference)
+            )
+        
+        await ctx.send(embed=success("Preference updated successfully."))
+
+    @admin_slash.sub_command(name="change_winner")
+    async def change_winner_slash(
+        self,
+        ctx,
+        game_id,
+        team=Param(choices=[OptionChoice("Red", "red"), OptionChoice("Blue", "blue")]),
+    ):
+        """
+        Change the winner of a finished game.
+        """
+        await self.change_winner(ctx, game_id, team)
+
+    @admin_slash.sub_command(name="winner")
+    async def winner_slash(self, ctx, role: Role):
+        """
+        Announce the winner of a game. Skips voting. The game must be in progress.
+        """
+        await self.winner(ctx, role)
+
     @admin_slash.sub_command(name="cancel")
     async def cancel_slash(self, ctx, member: Member):
         """
         Cancel the member's game.
         """
         await self.cancel(ctx, member)
-
-    async def leaderboard_persistent(self, channel):
-        user_data = await self.bot.fetch(
-            f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
-        )
-        if not user_data:
-            return await channel.send(embed=error("There are no records to display."))
-        user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
-        user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
-        # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
-
-        embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
-        if channel.guild.icon:
-            embed.set_thumbnail(url=channel.guild.icon.url)
-
-
-        async def add_field(data) -> None:
-            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
-            if not st_pref:
-                mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
-                if mmr_data:
-                    skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
-                    if mmr_data[4] >= 10:
-                        display_mmr = f"- **{int(skill*100)}** MMR"
-                    else:
-                        display_mmr = f"- **{mmr_data[4]}/10** Games Played"
-                else:
-                    display_mmr = f"- **0/10** Games Played"
-            else:
-                display_mmr = ""
-
-            embed.add_field(
-                name=f"#{i + 1}",
-                value=f"<@{data[1]}> - **{data[2]}** Wins - **{round(data[4]*100, 2)}%** WR {display_mmr}",
-                inline=False,
-            )
-
-        for i, data in enumerate(user_data):
-
-            if i <= 9:
-                await add_field(data)
-
-        return embed
 
     @admin_slash.sub_command(name="top_ten")
     async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
@@ -406,40 +513,6 @@ class Admin(Cog):
         except:
             pass
     
-    @admin.command()
-    async def void(self, ctx, game_id):
-        game_data = await self.bot.fetchrow(f"SELECT * FROM games WHERE game_id = '{game_id}'")
-        if not game_data:
-            return await ctx.send(embed=error("Game not found."))
-        
-        await self.bot.execute(f"DELETE FROM games WHERE game_id = '{game_id}'")
-        await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{game_id}'")
-        await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{game_id}'")
-
-        try:
-            for category in ctx.guild.categories:
-                if category.name == f"Game: {game_data[0]}":
-                    await category.delete()
-
-            red_channel = self.bot.get_channel(game_data[2])
-            await red_channel.delete()
-
-            blue_channel = self.bot.get_channel(game_data[3])
-            await blue_channel.delete()
-
-            red_role = ctx.guild.get_role(game_data[4])
-            await red_role.delete()
-
-            blue_role = ctx.guild.get_role(game_data[5])
-            await blue_role.delete()
-
-            lobby = self.bot.get_channel(game_data[1])
-            await lobby.delete()
-        except:
-            await ctx.send(embed=error("Unable to delete game channels and roles, please remove them manually."))
-
-        await ctx.send(embed=success(f"All records for Game **{game_id}** were deleted."))
-
     @admin_slash.sub_command(name="void")
     async def void_slash(self, ctx, game_id):
         """
@@ -467,6 +540,24 @@ class Admin(Cog):
             )
             
         await ctx.send(embed=success(f"SBMM preference changed successfully."))
+
+    @admin_slash.sub_command_group(name="reset")
+    async def reset_slash(self, ctx):
+        pass
+    
+    @reset_slash.sub_command(name="leaderboard")
+    async def leaderboard_slash(self, ctx):
+        """
+        Reset your entire servers Wins, Losses, MMR and MVP votes back to 0.
+        """
+        await self.leaderboard(ctx)
+
+    @reset_slash.sub_command(name="queue")
+    async def queue_slash(self, ctx, game_id: str):
+        """
+        Remove everyone from a queue. Rejoin the queue to refresh the Embed.
+        """
+        await self.queue(ctx, game_id)
 
 
 def setup(bot):

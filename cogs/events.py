@@ -181,6 +181,16 @@ class Events(Cog):
             """
         )
 
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS admin_enables(
+                guild_id INTEGER,
+                command TEXT,
+                role_id INTEGER
+            )
+            """
+        )
+
     @Cog.listener()
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
