@@ -1,6 +1,6 @@
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
 from disnake.ext import tasks
-from disnake.ext.commands import Cog, Context, Param, group, slash_command, command
+from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
 from cogs.match import QueueButtons
 from cogs.win import Win
@@ -86,23 +86,54 @@ class Admin(Cog):
 
 
         async def add_field(data) -> None:
+            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
+            if user_history:
+                roles_players = {
+                    'top': 0,
+                    'jungle': 0,
+                    'mid': 0,
+                    'support': 0,
+                    'adc': 0
+                }
+                for history in user_history:
+                    if history[0]:
+                        roles_players[history[0]] += 1
+                
+                most_played_role = max(roles_players, key = lambda x: roles_players[x])
+                most_played_role = self.bot.role_emojis[most_played_role]
+
             st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
             if not st_pref:
                 mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
                 if mmr_data:
                     skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
                     if mmr_data[4] >= 10:
-                        display_mmr = f"- **{int(skill*100)}** MMR"
+                        display_mmr = f"{int(skill*100)}"
                     else:
-                        display_mmr = f"- **{mmr_data[4]}/10** Games Played"
+                        display_mmr = f"{mmr_data[4]}/10GP"
                 else:
-                    display_mmr = f"- **0/10** Games Played"
+                    display_mmr = f"0/10GP"
             else:
                 display_mmr = ""
 
+            if i+1 == 1:
+                name = "🥇"
+            elif i+1 == 2:
+                name = "🥈"
+            elif i+1 == 3:
+                name = "🥉"
+            else:
+                name = f"#{i+1}"
+            
+            member = channel.guild.get_member(data[1])
+            if member:
+                member_name = member.name
+            else:
+                member_name = "Unknown Member"
+
             embed.add_field(
-                name=f"#{i + 1}",
-                value=f"<@{data[1]}> - **{data[2]}** Wins - **{round(data[4]*100, 2)}%** WR {display_mmr}",
+                name=name,
+                value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}WR`",
                 inline=False,
             )
 

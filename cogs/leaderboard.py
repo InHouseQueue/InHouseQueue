@@ -1,6 +1,7 @@
 from disnake import Color, Embed, OptionChoice
-from disnake.ext.commands import Cog, command, slash_command, Param
+from disnake.ext.commands import Cog, Param, command, slash_command
 from Paginator import CreatePaginator
+
 from core.embeds import error
 
 
@@ -67,7 +68,7 @@ class Leaderboard(Cog):
             if not total:
                 total = 1
 
-            percentage = round((wins / total) * 100, 2)
+            percentage = round((wins / total) * 100)
 
             if i+1 == 1:
                 name = "🥇"
@@ -88,7 +89,7 @@ class Leaderboard(Cog):
                 
                 embeds[current_embed].add_field(
                     name=name,
-                    value=f"{most_played_role} `{member_name}     {wins}W {losses}L {percentage}WR {data[2]} MVP`",
+                    value=f"{most_played_role} `{member_name}   {wins}W {losses}L {percentage}WR {data[2]} MVP`",
                     inline=False,
                 )
             else:
@@ -100,7 +101,7 @@ class Leaderboard(Cog):
                 
                 embeds[current_embed].add_field(
                     name=name,
-                    value=f"{most_played_role} `{member_name}     {display_mmr} {wins}W {losses}L {percentage}WR`",
+                    value=f"{most_played_role} `{member_name}   {display_mmr} {wins}W {losses}L {percentage}WR`",
                     inline=False,
                 )
 
