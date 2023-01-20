@@ -119,14 +119,6 @@ class Win(Cog):
         st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
         winning_team_str = ""
         losing_team_str = ""
-
-        role_emojis = {
-            'top': "<:TOP:1005606989109399684>",
-            'jungle': "<:JGL:1005609899092365322>",
-            'mid': "<:MID:1005607040581898321>",
-            'support': "<:SUP:1005606977621209168>",
-            'adc': "<:BOT:1005606963830329436>"
-        }
         
         if not st_pref:
             winner_team_rating = []
@@ -138,12 +130,12 @@ class Win(Cog):
                     winner_team_rating.append(
                         {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
                     )
-                    winning_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
+                    winning_team_str += f"• {self.bot.role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
                 else:
                     losing_team_rating.append(
                         {"user_id": member_entry[0], "rating": Rating(mu=float(rating[2]), sigma=float(rating[3]))}
                     )
-                    losing_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
+                    losing_team_str += f"• {self.bot.role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
 
             backends.choose_backend("mpmath")
             updated_rating = rate(
@@ -175,9 +167,9 @@ class Win(Cog):
         else:
             for member_entry in member_data:
                 if member_entry[2] == winner.lower():
-                    winning_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
+                    winning_team_str += f"• {self.bot.role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
                 else:
-                    losing_team_str += f"• {role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
+                    losing_team_str += f"• {self.bot.role_emojis[member_entry[1]]} <@{member_entry[0]}> \n"
         embed = Embed(
             title=f"Game concluded!",
             description=f"Game **{game_data[0]}** was concluded!",
@@ -216,19 +208,13 @@ class Win(Cog):
                 member_entry[3]
             )
             user = self.bot.get_user(member_entry[0])
-            role_emojis = {
-                'top': "<:TOP:1005606989109399684>",
-                'jungle': "<:JGL:1005609899092365322>",
-                'mid': "<:MID:1005607040581898321>",
-                'support': "<:SUP:1005606977621209168>",
-                'adc': "<:BOT:1005606963830329436>"
-            }
+ 
             try:
                 await user.send(
                     embed=Embed(
                         title=":trophy: Vote for MVP",
                         description="Pick your MVP by responding with a number (1-10). \n"
-                                    + '\n'.join([f"{role_emojis[1]} **{i + 1}.** {'🔵' if x[2] == 'blue' else '🔴'} <@{x[0]}>" for i, x in enumerate(member_data)]),
+                                    + '\n'.join([f"**{i + 1}.** {self.bot.role_emojis[x[1]]} {'🔵' if x[2] == 'blue' else '🔴'} <@{x[0]}>" for i, x in enumerate(member_data)]),
                         color=Color.blurple()
                     )
                 )
@@ -238,11 +224,12 @@ class Win(Cog):
 
             if member_entry[2] == winner.lower():
                 await self.bot.execute(
-                    f"INSERT INTO members_history(user_id, game_id, team, result) VALUES($1, $2, $3, $4)",
+                    f"INSERT INTO members_history(user_id, game_id, team, result, role) VALUES($1, $2, $3, $4, $5)",
                     member_entry[0],
                     game_data[0],
                     member_entry[2],
                     "won",
+                    member_entry[1],
                 )
 
                 if user_data:
@@ -263,11 +250,12 @@ class Win(Cog):
 
             else:
                 await self.bot.execute(
-                    f"INSERT INTO members_history(user_id, game_id, team, result) VALUES($1, $2, $3, $4)",
+                    f"INSERT INTO members_history(user_id, game_id, team, result, role) VALUES($1, $2, $3, $4, $5)",
                     member_entry[0],
                     game_data[0],
                     member_entry[2],
                     "lost",
+                    member_entry[1]
                 )
 
                 if user_data:
