@@ -31,7 +31,7 @@ class WS:
 
         #data = {"type": "joinroom", "roomId": "XcLps_nS", "password": ""}
         #data = {"type": "createroom"}
-        data = {"type": "createroom", "blueName": "EloHunters Inhouses Blue", "redName": "EloHunters Inhouses Red", "disabledTurns": [], "disabledChamps": [], "timePerPick": "30", "timePerBan": "30"}
+        data = {"type": "createroom", "blueName": "In-House Queue Blue", "redName": "In-House Queue Red", "disabledTurns": [], "disabledChamps": [], "timePerPick": "30", "timePerBan": "30"}
         self.ws.send(json.dumps(data))
 
     def on_close(self, ws):
