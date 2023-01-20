@@ -3,12 +3,14 @@ import uuid
 from datetime import datetime, timedelta
 
 from core.embeds import error, success
-from disnake import ButtonStyle, Color, Embed, File, PermissionOverwrite, ui
+from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui
 from disnake.ext import tasks
-from disnake.ext.commands import Cog, command, context, slash_command
+from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, quality
 import itertools
 import asyncio
+
+from core.loldraft import WS
 
 
 class SpectateButton(ui.View):
@@ -244,8 +246,8 @@ class ReadyButton(ui.View):
             )
 
             # CHECK
-            # if len(ready_ups) == 2:
-            if len(ready_ups) == 10:
+            if len(ready_ups) == 2:
+            # if len(ready_ups) == 10:
                 preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
                 if preference:
                     preference = preference[1]
@@ -361,6 +363,17 @@ class ReadyButton(ui.View):
                                     f"Your discord Nickname **must** be in this format:`IGN: Faker` or `Faker` \n \n"
                                     f":warning: If your Discord Nickname is currently **not** your IGN, change it **AFTER** this match.",
                         color=Color.blurple(),
+                    )
+                )
+
+                draft_data = WS()
+                draft_data.stream()
+                await asyncio.sleep(2)
+                await game_lobby.send(
+                    embed=Embed(
+                        title="League of Legends Draft",
+                        description="\n".join(draft_data.response),
+                        color=Color.blurple()
                     )
                 )
 
@@ -503,8 +516,8 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        # if checks_passed == 1:
-        if checks_passed == len(self.children) - 2:
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 2:
 
             st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
             if not st_pref:
@@ -513,20 +526,20 @@ class QueueButtons(ui.View):
                 )
 
                 # CHECK
-                # roles_occupation = {
-                #      "TOP": [],
-                #      "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                #      "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
-                #      "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                #      "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-                #  }
                 roles_occupation = {
-                   "TOP": [],
-                   "JUNGLE": [],
-                   "MID": [],
-                   "ADC": [],
-                   "SUPPORT": []
-                }
+                     "TOP": [],
+                     "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                     "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
+                     "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                     "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+                 }
+                # roles_occupation = {
+                #    "TOP": [],
+                #    "JUNGLE": [],
+                #    "MID": [],
+                #    "ADC": [],
+                #    "SUPPORT": []
+                # }
 
                 for data in member_data:
                     member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id}")
@@ -800,11 +813,15 @@ class Match(Cog):
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
         )
         if not data:
-            return await channel.send(
-                embed=error(
-                    f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+            try:
+                return await channel.send(
+                    embed=error(
+                        f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+                    )
                 )
-            )
+            except:
+                if author:
+                    return await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
         # If you change this - update /events.py L28 as well!
         embed = Embed(
@@ -820,8 +837,11 @@ class Match(Cog):
             else:
                 embed.set_author(name=f"Initiated by {author.name}")
             
-
-        await channel.send(embed=embed, view=QueueButtons(self.bot))
+        try:
+            await channel.send(embed=embed, view=QueueButtons(self.bot))
+        except:
+            if author:
+                await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
     @command(aliases=["inhouse", "play"], name="start")
     async def start_prefix(self, ctx):

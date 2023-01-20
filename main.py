@@ -16,6 +16,13 @@ PREFIX = "!"
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.role_emojis = {
+            'top': "<:TOP:1005606989109399684>",
+            'jungle': "<:JGL:1005609899092365322>",
+            'mid': "<:MID:1005607040581898321>",
+            'support': "<:SUP:1005606977621209168>",
+            'adc': "<:BOT:1005606963830329436>"
+        }
 
     async def commit(self):
         async with aiosqlite.connect("db/main.sqlite") as db:

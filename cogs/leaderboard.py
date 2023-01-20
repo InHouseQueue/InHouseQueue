@@ -1,6 +1,7 @@
 from disnake import Color, Embed, OptionChoice
-from disnake.ext.commands import Cog, command, slash_command, Param
+from disnake.ext.commands import Cog, Param, command, slash_command
 from Paginator import CreatePaginator
+
 from core.embeds import error
 
 
@@ -40,6 +41,22 @@ class Leaderboard(Cog):
         vals = 1
 
         async def add_field(data, current_embed) -> None:
+            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
+            if user_history:
+                roles_players = {
+                    'top': 0,
+                    'jungle': 0,
+                    'mid': 0,
+                    'support': 0,
+                    'adc': 0
+                }
+                for history in user_history:
+                    if history[0]:
+                        roles_players[history[0]] += 1
+                
+                most_played_role = max(roles_players, key = lambda x: roles_players[x])
+                most_played_role = self.bot.role_emojis[most_played_role]
+
             user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id}")
             if user_data:
                 wins = user_data[2]
@@ -51,24 +68,40 @@ class Leaderboard(Cog):
             if not total:
                 total = 1
 
-            percentage = round((wins / total) * 100, 2)
+            percentage = round((wins / total) * 100)
+
+            if i+1 == 1:
+                name = "🥇"
+            elif i+1 == 2:
+                name = "🥈"
+            elif i+1 == 3:
+                name = "🥉"
+            else:
+                name = f"#{i+1}"
+            
+            member = ctx.guild.get_member(data[1])
+            if member:
+                member_name = member.name
+            else:
+                member_name = "Unknown Member"
 
             if type == 'mvp':
+                
                 embeds[current_embed].add_field(
-                    name=f"#{i+1}",
-                    value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - **{data[2]}x** MVP",
+                    name=name,
+                    value=f"{most_played_role} `{member_name}   {wins}W {losses}L {percentage}% WR {data[2]} MVP`",
                     inline=False,
                 )
             else:
                 skill = round(float(data[2]) - (2 * float(data[3])), 2)
                 if data[4] >= 10:
-                    display_mmr = f"**{int(skill*100)}** MMR"
+                    display_mmr = f"{int(skill*100)}"
                 else:
-                    display_mmr = f"**{data[4]}/10** Games Played"
+                    display_mmr = f"{data[4]}/10" 
                 
                 embeds[current_embed].add_field(
-                    name=f"#{i + 1}",
-                    value=f"<@{data[1]}> - **{wins}** Wins - **{percentage}%** WR - {display_mmr}",
+                    name=name,
+                    value=f"{most_played_role} `{member_name}   {display_mmr} {wins}W {losses}L {percentage}% WR`",
                     inline=False,
                 )
 
