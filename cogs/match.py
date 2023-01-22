@@ -3,12 +3,14 @@ import uuid
 from datetime import datetime, timedelta
 
 from core.embeds import error, success
-from disnake import ButtonStyle, Color, Embed, File, PermissionOverwrite, ui
+from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui
 from disnake.ext import tasks
-from disnake.ext.commands import Cog, command, context, slash_command
+from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, quality
 import itertools
 import asyncio
+
+from core.loldraft import WS
 
 
 class SpectateButton(ui.View):
@@ -244,7 +246,7 @@ class ReadyButton(ui.View):
             )
 
             # CHECK
-            # if len(ready_ups) == 2:
+            #if len(ready_ups) == 2:
             if len(ready_ups) == 10:
                 preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
                 if preference:
@@ -361,6 +363,17 @@ class ReadyButton(ui.View):
                                     f"Your discord Nickname **must** be in this format:`IGN: Faker` or `Faker` \n \n"
                                     f":warning: If your Discord Nickname is currently **not** your IGN, change it **AFTER** this match.",
                         color=Color.blurple(),
+                    )
+                )
+
+                draft_data = WS()
+                draft_data.stream()
+                await asyncio.sleep(2)
+                await game_lobby.send(
+                    embed=Embed(
+                        title="League of Legends Draft",
+                        description="\n".join(draft_data.response),
+                        color=Color.blurple()
                     )
                 )
 
@@ -777,7 +790,8 @@ class Match(Cog):
                     await channel.send(
                         embed=Embed(
                             title=":warning: NOTICE",
-                            description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message.",
+                            description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message. \n"
+                                        "Join our [Support Server](https://discord.com/invite/NDKMeT6GE7) for the patch notes.",
                             color=Color.yellow()
                         )
                     )
@@ -800,11 +814,15 @@ class Match(Cog):
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
         )
         if not data:
-            return await channel.send(
-                embed=error(
-                    f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+            try:
+                return await channel.send(
+                    embed=error(
+                        f"{channel.mention} is not setup as the queue channel, please run this command in a queue channel."
+                    )
                 )
-            )
+            except:
+                if author:
+                    return await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
         # If you change this - update /events.py L28 as well!
         embed = Embed(
@@ -820,8 +838,11 @@ class Match(Cog):
             else:
                 embed.set_author(name=f"Initiated by {author.name}")
             
-
-        await channel.send(embed=embed, view=QueueButtons(self.bot))
+        try:
+            await channel.send(embed=embed, view=QueueButtons(self.bot))
+        except:
+            if author:
+                await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
     @command(aliases=["inhouse", "play"], name="start")
     async def start_prefix(self, ctx):

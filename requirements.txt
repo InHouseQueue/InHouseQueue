@@ -4,3 +4,4 @@ disnake-pagination
 python-dotenv
 trueskill
 mpmath
+websocket-client
