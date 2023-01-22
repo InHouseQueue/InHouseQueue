@@ -17,11 +17,11 @@ class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role_emojis = {
-            'top': "<:TOP:1005606989109399684>",
-            'jungle': "<:JGL:1005609899092365322>",
-            'mid': "<:MID:1005607040581898321>",
-            'support': "<:SUP:1005606977621209168>",
-            'adc': "<:BOT:1005606963830329436>"
+            'top': "<:TOP:1066065292691779637>",
+            'jungle': "<:JGL:1066065288107397200>",
+            'mid': "<:MID:1066065288862380033>",
+            'support': "<:SUP:1066065290540093450>",
+            'adc': "<:BOT:1066065285938946078>"
         }
 
     async def commit(self):
