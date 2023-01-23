@@ -56,11 +56,11 @@ class Leaderboard(Cog):
                 
                 most_played_role = max(roles_players, key = lambda x: roles_players[x])
                 if not roles_players[most_played_role]:
-                    most_played_role = " "
+                    most_played_role = "<:fill:1066868480537800714>"
                 else:
                     most_played_role = self.bot.role_emojis[most_played_role]
             else:
-                most_played_role = " "
+                most_played_role = "<:fill:1066868480537800714>"
 
             user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id}")
             if user_data:
