@@ -101,11 +101,11 @@ class Admin(Cog):
                 
                 most_played_role = max(roles_players, key = lambda x: roles_players[x])
                 if not roles_players[most_played_role]:
-                    most_played_role = " "
+                    most_played_role = "<:fill:1066868480537800714>"
                 else:
                     most_played_role = self.bot.role_emojis[most_played_role]
             else:
-                most_played_role = " "
+                most_played_role = "<:fill:1066868480537800714>"
 
             st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
             if not st_pref:
