@@ -1,7 +1,7 @@
 ![Discord Shield](https://discord.com/api/guilds/1005601917466058792/widget.png?style=shield) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/badge/version-v0.1.0-red.svg)](https://semver.org)
 
 # In-House Queue
-![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/welcome.png)
+![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/banner.jpg)
 
 A Discord Bot designed to organise In-House Custom games for competitive 5v5 games.
 Support for 1v1 - 8v8 games will be available soon.
