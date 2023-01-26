@@ -830,7 +830,7 @@ class Match(Cog):
         )
         embed.add_field(name="🔵 Blue", value="No members yet")
         embed.add_field(name="🔴 Red", value="No members yet")
-        embed.set_image(url="https://media.discordapp.net/attachments/1003340610897457162/1047988008353288282/queue.png")
+        embed.set_image(url="https://cdn.discordapp.com/attachments/328696263568654337/1068133100451803197/image.png")
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
         if author:
             if author.avatar:
