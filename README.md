@@ -15,16 +15,13 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 - Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the Bot to your server
 
 ## Discord Server setup
-[Guide](https://docs.inhousequeue.xyz/documentation/quick-start)
+https://docs.inhousequeue.xyz/documentation/quick-start
 
 # Documentation 
 https://docs.inhousequeue.xyz/
 
 # All Commands
 https://www.inhousequeue.xyz/commands
-
-## Step by Step bot user flow
-[Here](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/run-and-details.md)
 
 # Installation
 ## Running locally
