@@ -1,0 +1,94 @@
+name: Deploy to Rai
+on:
+  push:
+    branches: [ rai ]
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  REPO_OWNER: ${{ github.repository_owner }}
+  LIVE_NAME: ${{ github.event.repository.name }}-rai
+jobs:
+  clone:
+    name: Clone
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Clone Repo
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.IH_HOST }}
+          username: ${{ secrets.IH_USERNAME }}
+          password: ${{ secrets.IH_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /home/henry/
+            git clone git@github.com:${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}.git ${{ env.LIVE_NAME }}
+            pwd
+  backup:
+    name: Backup
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Back Up Volume
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.IH_HOST }}
+          username: ${{ secrets.IH_USERNAME }}
+          password: ${{ secrets.IH_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ env.LIVE_NAME }}
+
+  add-bot-env:
+    name: Secrets
+    needs: backup
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: adding env file for ${{ env.REPO_NAME }} bot
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.IH_HOST }}
+          username: ${{ secrets.IH_USERNAME }}
+          password: ${{ secrets.IH_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ env.LIVE_NAME }}
+            touch .env
+            echo "${{ secrets.BOT_TOKEN_RAI }}" > .env
+            echo $?
+
+  push:
+    name: Build & Push
+    needs: [backup,add-bot-env]
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.IH_HOST }}
+          username: ${{ secrets.IH_USERNAME }}
+          password: ${{ secrets.IH_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /home/henry/${{ env.LIVE_NAME }}
+            git pull
+            docker-compose build
+
+  run:
+    name: Run
+    needs: [backup,add-bot-env,push]
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Run the Bot
+        uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
+        with:
+          host: ${{ secrets.IH_HOST }}
+          username: ${{ secrets.IH_USERNAME }}
+          password: ${{ secrets.IH_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /home/henry/${{ env.LIVE_NAME }}
+            docker-compose up -d
