@@ -5,6 +5,7 @@ from disnake.ext.commands import Cog, Context, Param, group, slash_command
 from cogs.match import QueueButtons
 from cogs.win import Win
 from core.embeds import error, success
+from core.buttons import ConfirmationButtons
 
 
 class Admin(Cog):
@@ -368,11 +369,20 @@ class Admin(Cog):
         data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} ")
         if not data:
             return await ctx.send(embed=error("There are no records to be deleted"))
-
-        await self.bot.execute(f"UPDATE mvp_points SET votes = 0 WHERE guild_id = {ctx.guild.id}")
-        await self.bot.execute(f"UPDATE points SET wins = 0, losses = 0 WHERE guild_id = {ctx.guild.id}")
-        await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id}")
-        await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
+        
+        view = ConfirmationButtons(ctx.author.id)
+        await ctx.send(
+            "This will reset all member's wins, losses, MMR and MVP votes back to 0. Are you sure?",
+            view=view
+        )
+        await view.wait()
+        if view.value:
+            await self.bot.execute(f"UPDATE mvp_points SET votes = 0 WHERE guild_id = {ctx.guild.id}")
+            await self.bot.execute(f"UPDATE points SET wins = 0, losses = 0 WHERE guild_id = {ctx.guild.id}")
+            await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id}")
+            await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
+        else:
+            await ctx.send(emebd=success("Process aborted."))
     
     @reset.command()
     async def queue(self, ctx, game_id):
@@ -391,6 +401,26 @@ class Admin(Cog):
         else:
             await ctx.send(embed=error(f"Game **{game_id}** was not found."))
     
+    @reset.command()
+    async def user(self, ctx, member: Member):
+        data = await self.bot.fetch(f"SELECT * FROM points WHERE guild_id = {ctx.guild.id} and user_id = {member.id}")
+        if not data:
+            return await ctx.send(embed=error("There are no records to be deleted"))
+        
+        view = ConfirmationButtons(ctx.author.id)
+        await ctx.send(
+            f"This will reset all {member.display_name}'s wins, losses, MMR and MVP votes back to 0. Are you sure?",
+            view=view
+        )
+        await view.wait()
+        if view.value:
+            await self.bot.execute(f"UPDATE mvp_points SET votes = 0 WHERE guild_id = {ctx.guild.id} and user_id = {member.id}")
+            await self.bot.execute(f"UPDATE points SET wins = 0, losses = 0 WHERE guild_id = {ctx.guild.id} and user_id = {member.id}")
+            await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id} and user_id = {member.id}")
+            await ctx.send(embed=success(f"Successfully reset all wins, mmr and mvp votes of {member.display_name}"))
+        else:
+            await ctx.send(emebd=success("Process aborted."))
+
     # SLASH COMMANDS
 
     @slash_command(name="admin")
@@ -469,7 +499,7 @@ class Admin(Cog):
         await ctx.send(embed=success(f"Command disabled for {role.mention} successfully."))
 
     @admin_slash.sub_command(name="user_dequeue")
-    async def user_slash(self, ctx, member: Member):
+    async def user_dequeue_slash(self, ctx, member: Member):
         """
         Remove a user from all queues. Rejoin the queue to refresh the Embed.
         """
@@ -595,6 +625,12 @@ class Admin(Cog):
         """
         await self.queue(ctx, game_id)
 
+    @reset_slash.sub_command(name="user")
+    async def user_slash(self, ctx, member: Member):
+        """
+        Reset a member's Wins, Losses, MMR and MVP votes back to 0.
+        """
+        await self.user(ctx, member)
 
 def setup(bot):
     bot.add_cog(Admin(bot))
