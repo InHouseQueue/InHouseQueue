@@ -276,6 +276,9 @@ class Events(Cog):
                     and (
                         not "Could not log the game" in embed.description
                     )
+                    and (
+                        not "was successfully set as queue channel." in embed.description
+                    )
             ):
                 try:
                     await msg.delete()
