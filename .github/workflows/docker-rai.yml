@@ -26,6 +26,7 @@ jobs:
             pwd
   backup:
     name: Backup
+    needs: clone
     runs-on: ubuntu-latest
     environment: Production
     steps:
