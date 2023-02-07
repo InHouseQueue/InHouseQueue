@@ -361,7 +361,7 @@ class Admin(Cog):
             await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id}")
             await ctx.send(embed=success("Successfully reset all wins, mmr and mvp votes"))
         else:
-            await ctx.send(emebd=success("Process aborted."))
+            await ctx.send(embed=success("Process aborted."))
     
     @reset.command()
     async def queue(self, ctx, game_id):
@@ -398,7 +398,7 @@ class Admin(Cog):
             await self.bot.execute(f"UPDATE mmr_rating SET counter = 0, mu = 25.0, sigma = 8.33333333333333 WHERE guild_id = {ctx.guild.id} and user_id = {member.id}")
             await ctx.send(embed=success(f"Successfully reset all wins, mmr and mvp votes of {member.display_name}"))
         else:
-            await ctx.send(emebd=success("Process aborted."))
+            await ctx.send(embed=success("Process aborted."))
 
     # SLASH COMMANDS
 
