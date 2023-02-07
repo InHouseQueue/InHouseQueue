@@ -3,7 +3,8 @@ import uuid
 from datetime import datetime, timedelta
 
 from core.embeds import error, success
-from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui
+from core.selectmenus import SelectMenuDeploy
+from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui, SelectOption
 from disnake.ext import tasks
 from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, quality
@@ -727,7 +728,7 @@ class QueueButtons(ui.View):
                 embed=error("You are not a participant of this game."), ephemeral=True
             )
 
-    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
+    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="queue:switchteam")
     async def switchteam(self, button, inter):
         await inter.response.defer()
         st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
@@ -770,6 +771,36 @@ class QueueButtons(ui.View):
             await inter.send(
                 embed=error("You are not a part of this game."), ephemeral=True
             )
+
+    @ui.button(label="Duo", style=ButtonStyle.blurple, custom_id="queue:duo")
+    async def duo_queue(self, button, inter):
+        await inter.response.defer()
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+        if st_pref:
+            return await inter.send(embed=error("Duo queue is not available with SBMM disabled. If you wish to enable it, run: `/admin sbmm Enable`"), ephemeral=True)
+        
+        queue_check = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
+        )
+        if not queue_check:
+            return await inter.send(embed=error("You are not a part of this queue."), ephemeral=True)
+        
+        queue_members = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+        )
+        if len(queue_members) == 1:
+            return await inter.send(embed=error("Please wait for someone to join the queue to select a duo partner."), ephemeral=True)
+        
+        options = []
+        for member_data in queue_members:
+            member = inter.guild.get_member(member_data[0])
+            options.append(SelectOption(label=member.display_name, value=member.id))
+        
+        async def Function(vals, *args):
+            await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id) VALUES($1, $2, $3)", inter.guild.id, inter.author.id, int(vals[0]))
+
+        await inter.send(content="Select a member you wish to duo with.", view=SelectMenuDeploy(self.bot, inter.author.id, options, 1, 1, Function, self.game_id), ephemeral=True)
+
 
 
 class Match(Cog):
