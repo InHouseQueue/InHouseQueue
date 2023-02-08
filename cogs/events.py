@@ -12,6 +12,23 @@ class Events(Cog):
         self.bot = bot
 
     @Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        deletions = []
+        setchannel = await self.bot.fetch(f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}")
+        if setchannel:
+            deletions.append("queuechannels")
+        log_channels = await self.bot.fetch(f"SELECT * FROM winner_log_channel WHERE channel_id = {channel.id}")
+        if log_channels:
+            deletions.append("winner_log_channel")
+        top_ten = await self.bot.fetch(f"SELECT * FROM persistent_lb WHERE channel_id = {channel.id}")
+        if top_ten:
+            deletions.append("persistent_lb")
+        
+        for deletion in deletions:
+            await self.bot.execute(f"DELETE FROM {deletion} WHERE channel_id = {channel.id}")
+
+
+    @Cog.listener()
     async def on_message(self, msg):
         data = await self.bot.fetch("SELECT * FROM queuechannels")
         if not data:
@@ -275,6 +292,9 @@ class Events(Cog):
                     )
                     and (
                         not "Could not log the game" in embed.description
+                    )
+                    and (
+                        not "was successfully set as queue channel." in embed.description
                     )
             ):
                 try:

@@ -1,15 +1,16 @@
 #!/usr/bin/env/python3
 import os
+import topgg
 
 import aiosqlite
 from disnake import Intents
 from disnake.ext import commands
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
+dbl_token = os.getenv("TOP_GG_TOKEN")
 PREFIX = "!"
 
 
@@ -80,12 +81,22 @@ intents.members = True
 
 bot = MyBot(intents=intents, command_prefix=PREFIX)
 bot.remove_command("help")
+bot.topggpy = topgg.DBLClient(bot, dbl_token, autopost=True, post_shard_count=True)
+
+
+@bot.event
+async def on_autopost_success():
+    print(
+        f"Posted server count ({bot.topggpy.guild_count}), shard count ({bot.shard_count})"
+    )
+
 
 @bot.before_slash_command_invoke
 async def before_invoke_slash(inter):
     if not inter.response.is_done():
         await inter.response.defer()
-        
+
+
 # Load all cogs
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py"):
