@@ -132,7 +132,7 @@ class Admin(Cog):
     @group()
     async def admin(self, ctx):
         pass
-    
+
     @admin.command()
     async def user_dequeue(self, ctx, member: Member):
         member_data = await self.bot.fetch(
@@ -585,6 +585,30 @@ class Admin(Cog):
             )
             
         await ctx.send(embed=success(f"SBMM preference changed successfully."))
+
+    @admin_slash.sub_command()
+    async def duo_queue(self, ctx, preference = Param(
+        choices=[
+            OptionChoice('Enabled', '1'),
+            OptionChoice('Disabled', '0')
+        ]
+    )):
+        """
+        Enable/Disable Duo Queue system.
+        """
+        sbmm = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
+        if sbmm:
+            return await ctx.send(embed=error("Duo queue can only work with sbmm enabled."))
+        if int(preference):
+            await self.bot.execute(
+                f"INSERT INTO duo_queue_preference(guild_id) VALUES($1)",
+                ctx.guild.id
+            )
+            
+        else:
+            await self.bot.execute(f"DELETE FROM duo_queue_preference WHERE guild_id = {ctx.guild.id}")
+            
+        await ctx.send(embed=success(f"Duo Queue preference changed successfully."))
 
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):

@@ -222,6 +222,14 @@ class Events(Cog):
 
         await bot.execute(
             """
+            CREATE TABLE IF NOT EXISTS duo_queue_preference(
+                guild_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
             CREATE TABLE IF NOT EXISTS admin_enables(
                 guild_id INTEGER,
                 command TEXT,
