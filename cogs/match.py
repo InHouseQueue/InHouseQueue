@@ -412,7 +412,7 @@ class QueueButtons(ui.View):
         embed.clear_fields()
         teams = ["blue", "red"]
 
-        for team in teams:
+        for index, team in enumerate(teams):
 
             team_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and team = '{team}'"
@@ -424,8 +424,12 @@ class QueueButtons(ui.View):
                 emoji = "🔵"
 
             name = f"{emoji} {team.capitalize()}"
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {msg.guild.id}")
+            if not st_pref:
+                name = f"Slot {index+1}"
+            
             if team_data:
-                duos = await self.bot.fetch(f"SELECT * FROM duo_queues WHERE game_id = '{self.game_id}'")
+                duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
                 in_duo = []
                 for duo in duos:
                     in_duo.extend([duo[1], duo[2]])
@@ -795,6 +799,9 @@ class QueueButtons(ui.View):
         duo_pref = await self.bot.fetchrow(f"SELECT * FROM duo_queue_preference WHERE guild_id = {inter.guild.id}")
         if not duo_pref:
             return await inter.send(embed=error("Duo queue is not enabled for this server."), ephemeral=True)
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+        if st_pref:
+            return await inter.send(embed=error("Duo queue is not available with SBMM disabled."), ephemeral=True)
         
         queue_check = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
@@ -838,7 +845,8 @@ class QueueButtons(ui.View):
                 await m.send(
                     embed=Embed(
                         title="👥 Duo Request",
-                        description=f"**{inter.author.display_name}** has sent you a duo request for game **{args[0]}** in {inter.channel.mention}. Do you accept?"
+                        description=f"**{inter.author.display_name}** has sent you a duo request for game **{args[0]}** in {inter.channel.mention}. Do you accept?",
+                        color=Color.red()
                     ),
                     view=view
                 )
@@ -848,6 +856,8 @@ class QueueButtons(ui.View):
             await view.wait()
             if view.value:
                 await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
+                embed = await self.gen_embed(inter.message)
+                await inter.message.edit(view=self, embed=embed, attachments=[]) 
                 await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
 
         await inter.send(content="Select a member you wish to duo with.", view=SelectMenuDeploy(self.bot, inter.author.id, options, 1, 1, Function, self.game_id), ephemeral=True)
@@ -910,8 +920,13 @@ class Match(Cog):
         embed = Embed(
             title="Match Overview - SR Tournament Draft", color=Color.red()
         )
-        embed.add_field(name="🔵 Blue", value="No members yet")
-        embed.add_field(name="🔴 Red", value="No members yet")
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
+        if not st_pref:
+            embed.add_field(name="Slot 1", value="No members yet")
+            embed.add_field(name="Slot 2", value="No members yet")
+        else:
+            embed.add_field(name="🔵 Blue", value="No members yet")
+            embed.add_field(name="🔴 Red", value="No members yet")
         embed.set_image(url="https://cdn.discordapp.com/attachments/328696263568654337/1068133100451803197/image.png")
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
         if author:
