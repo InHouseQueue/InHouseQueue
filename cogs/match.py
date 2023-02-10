@@ -13,7 +13,7 @@ import itertools
 import asyncio
 
 from core.loldraft import WS
-
+#TODO REMOVE DUO FROM WINNER, ADD CONFIRMATION AFTER SELECTING A PARTNER
 
 class SpectateButton(ui.View):
     def __init__(self, bot):
@@ -433,9 +433,26 @@ class QueueButtons(ui.View):
                 in_duo = []
                 for duo in duos:
                     in_duo.extend([duo[1], duo[2]])
-                value = "\n".join(
-                    [f"{'⭐' if data[0] in in_duo else ''} <@{data[0]}> - `{data[1].capitalize()}`" for data in team_data]
-                )
+                usage = 0
+                duo_emoji = ":one:"
+                value = ""
+                for data in team_data:
+                    if data[0] in in_duo:
+                        value += f"{duo_emoji} "
+                        usage += 1
+                        if not usage%2:
+                            if usage/2 == 1:
+                                duo_emoji = ":two:"
+                            elif usage/2 == 2:
+                                duo_emoji = ":three:"
+                            elif usage/2 == 3:
+                                duo_emoji = ":four:"
+                            elif usage/2 == 4:
+                                duo_emoji = ":five:"
+                            else:
+                                duo_emoji = ":six:" # Should not happen
+                    value += f"<@{data[0]}> - `{data[1].capitalize()}`\n"
+
             else:
                 value = "No members yet"
 
@@ -802,7 +819,7 @@ class QueueButtons(ui.View):
         st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
         if st_pref:
             return await inter.send(embed=error("Duo queue is not available with SBMM disabled."), ephemeral=True)
-        
+
         queue_check = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
         )
@@ -812,8 +829,6 @@ class QueueButtons(ui.View):
         queue_members = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
-        if len(queue_members) == 1:
-            return await inter.send(embed=error("Please wait for someone to join the queue to select a duo partner."), ephemeral=True)
         
         options = []
         for member_data in queue_members:
@@ -825,40 +840,44 @@ class QueueButtons(ui.View):
                 continue
             check = False
             for duo in duos:
-                if duo[1] == member.id:
-                    check = True
-                if duo[2] == member.id:
+                if inter.author.id in [duo[1], duo[2]]:
+                    return await inter.send(embed=error("You are already in a duo."), ephemeral=True,)
+                if member.id in [duo[1], duo[2]]:
                     check = True
             if check:
                 continue
             options.append(SelectOption(label=member.display_name, value=member.id))
-        
+
         if not options:
             return await inter.send(
-                embed=error("Please wait for more people to join the queue."),
+                embed=error("Unable to find available duo members for you."),
                 ephemeral=True
             )
         async def Function(vals, *args):
+            view = ConfirmationButtons(inter.author.id)
             m = inter.guild.get_member(int(vals[0]))
-            view = ConfirmationButtons(m.id)
-            try:
-                await m.send(
-                    embed=Embed(
-                        title="👥 Duo Request",
-                        description=f"**{inter.author.display_name}** has sent you a duo request for game **{args[0]}** in {inter.channel.mention}. Do you accept?",
-                        color=Color.red()
-                    ),
-                    view=view
-                )
-            except:
-                return await inter.send(embed=success(f"Unable to send duo queue request to {m.display_name}. Their DMs might be disabled for the bot."), ephemeral=True)
-            await inter.send(embed=success(f"Duo queue request sent to {m.display_name}"), ephemeral=True)
+            await inter.send(f"Are you sure you wish to duo with {m.display_name}?", view=view, ephemeral=True)
             await view.wait()
             if view.value:
-                await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
-                embed = await self.gen_embed(inter.message)
-                await inter.message.edit(view=self, embed=embed, attachments=[]) 
-                await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
+                view = ConfirmationButtons(m.id)
+                try:
+                    await m.send(
+                        embed=Embed(
+                            title="👥 Duo Request",
+                            description=f"**{inter.author.display_name}** has sent you a duo request for game **{args[0]}** in {inter.channel.mention}. Do you accept?",
+                            color=Color.red()
+                        ),
+                        view=view
+                    )
+                except:
+                    return await inter.send(embed=success(f"Unable to send duo queue request to {m.display_name}. Their DMs might be disabled for the bot."), ephemeral=True)
+                await inter.send(embed=success(f"Duo queue request sent to {m.display_name}"), ephemeral=True)
+                await view.wait()
+                if view.value:
+                    await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
+                    embed = await self.gen_embed(inter.message)
+                    await inter.message.edit(view=self, embed=embed, attachments=[]) 
+                    await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
 
         await inter.send(content="Select a member you wish to duo with.", view=SelectMenuDeploy(self.bot, inter.author.id, options, 1, 1, Function, self.game_id), ephemeral=True)
 
