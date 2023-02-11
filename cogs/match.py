@@ -815,10 +815,10 @@ class QueueButtons(ui.View):
         await inter.response.defer()
         duo_pref = await self.bot.fetchrow(f"SELECT * FROM duo_queue_preference WHERE guild_id = {inter.guild.id}")
         if not duo_pref:
-            return await inter.send(embed=error("Duo queue is not enabled for this server."), ephemeral=True)
+            return await inter.send(embed=error("Duo queue is not enabled. Please ask an admin to run `/admin duo_queue Enabled`"), ephemeral=True)
         st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
         if st_pref:
-            return await inter.send(embed=error("Duo queue is not available with SBMM disabled."), ephemeral=True)
+            return await inter.send(embed=error("Duo queue is not available while SBMM is disabled. Please ask an admin to run: `/admin sbmm Enabled`"), ephemeral=True)
 
         queue_check = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
