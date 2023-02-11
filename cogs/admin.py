@@ -1,5 +1,4 @@
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
-from disnake.ext import tasks
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
 from cogs.match import QueueButtons
@@ -7,6 +6,84 @@ from cogs.win import Win
 from core.embeds import error, success
 from core.buttons import ConfirmationButtons
 
+async def leaderboard_persistent(bot, channel):
+    user_data = await bot.fetch(
+        f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
+    )
+    if not user_data:
+        return await channel.send(embed=error("There are no records to display."))
+    user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
+    user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
+    # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+
+    embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
+    if channel.guild.icon:
+        embed.set_thumbnail(url=channel.guild.icon.url)
+
+
+    async def add_field(data) -> None:
+        user_history = await bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
+        if user_history:
+            roles_players = {
+                'top': 0,
+                'jungle': 0,
+                'mid': 0,
+                'support': 0,
+                'adc': 0
+            }
+            for history in user_history:
+                if history[0]:
+                    roles_players[history[0]] += 1
+            
+            most_played_role = max(roles_players, key = lambda x: roles_players[x])
+            if not roles_players[most_played_role]:
+                most_played_role = "<:fill:1066868480537800714>"
+            else:
+                most_played_role = bot.role_emojis[most_played_role]
+        else:
+            most_played_role = "<:fill:1066868480537800714>"
+
+        st_pref = await bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
+        if not st_pref:
+            mmr_data = await bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
+            if mmr_data:
+                skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
+                if mmr_data[4] >= 10:
+                    display_mmr = f"{int(skill*100)}"
+                else:
+                    display_mmr = f"{mmr_data[4]}/10GP"
+            else:
+                display_mmr = f"0/10GP"
+        else:
+            display_mmr = ""
+
+        if i+1 == 1:
+            name = "🥇"
+        elif i+1 == 2:
+            name = "🥈"
+        elif i+1 == 3:
+            name = "🥉"
+        else:
+            name = f"#{i+1}"
+        
+        member = channel.guild.get_member(data[1])
+        if member:
+            member_name = member.name
+        else:
+            member_name = "Unknown Member"
+
+        embed.add_field(
+            name=name,
+            value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}% WR`",
+            inline=False,
+        )
+
+    for i, data in enumerate(user_data):
+
+        if i <= 9:
+            await add_field(data)
+
+    return embed
 
 class Admin(Cog):
     """
@@ -15,7 +92,6 @@ class Admin(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.persistent_lb.start()
 
     async def cog_check(self, ctx: Context) -> bool:
         if ctx.author.guild_permissions.administrator:
@@ -53,107 +129,10 @@ class Admin(Cog):
         )
         return False
 
-    @tasks.loop(minutes=5)
-    async def persistent_lb(self):
-        await self.bot.wait_until_ready()
-
-        data = await self.bot.fetch(f"SELECT * FROM persistent_lb")
-        for entry in data:
-            channel = self.bot.get_channel(entry[1])
-            if not channel:
-                continue
-            msg = self.bot.get_message(entry[2])
-            if not msg:
-                msg = await channel.fetch_message(entry[2])
-                if not msg:
-                    continue
-            if msg:
-                embed = await self.leaderboard_persistent(channel)
-                await msg.edit(embed=embed)
-
-    async def leaderboard_persistent(self, channel):
-        user_data = await self.bot.fetch(
-            f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
-        )
-        if not user_data:
-            return await channel.send(embed=error("There are no records to display."))
-        user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
-        user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
-        # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
-
-        embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
-        if channel.guild.icon:
-            embed.set_thumbnail(url=channel.guild.icon.url)
-
-
-        async def add_field(data) -> None:
-            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
-            if user_history:
-                roles_players = {
-                    'top': 0,
-                    'jungle': 0,
-                    'mid': 0,
-                    'support': 0,
-                    'adc': 0
-                }
-                for history in user_history:
-                    if history[0]:
-                        roles_players[history[0]] += 1
-                
-                most_played_role = max(roles_players, key = lambda x: roles_players[x])
-                if not roles_players[most_played_role]:
-                    most_played_role = "<:fill:1066868480537800714>"
-                else:
-                    most_played_role = self.bot.role_emojis[most_played_role]
-            else:
-                most_played_role = "<:fill:1066868480537800714>"
-
-            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
-            if not st_pref:
-                mmr_data = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
-                if mmr_data:
-                    skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
-                    if mmr_data[4] >= 10:
-                        display_mmr = f"{int(skill*100)}"
-                    else:
-                        display_mmr = f"{mmr_data[4]}/10GP"
-                else:
-                    display_mmr = f"0/10GP"
-            else:
-                display_mmr = ""
-
-            if i+1 == 1:
-                name = "🥇"
-            elif i+1 == 2:
-                name = "🥈"
-            elif i+1 == 3:
-                name = "🥉"
-            else:
-                name = f"#{i+1}"
-            
-            member = channel.guild.get_member(data[1])
-            if member:
-                member_name = member.name
-            else:
-                member_name = "Unknown Member"
-
-            embed.add_field(
-                name=name,
-                value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}% WR`",
-                inline=False,
-            )
-
-        for i, data in enumerate(user_data):
-
-            if i <= 9:
-                await add_field(data)
-
-        return embed
-
     @group()
     async def admin(self, ctx):
         pass
-    
+
     @admin.command()
     async def user_dequeue(self, ctx, member: Member):
         member_data = await self.bot.fetch(
@@ -553,7 +532,7 @@ class Admin(Cog):
         """
         Create a Dynamic Top 10 leaderboard
         """
-        embed = await self.leaderboard_persistent(channel)
+        embed = await leaderboard_persistent(self.bot, channel)
         msg = await channel.send(embed=embed)
         if not msg:
             return await ctx.send(embed=error("There are no records to display in the leaderboard, try playing a match first."))
@@ -606,6 +585,30 @@ class Admin(Cog):
             )
             
         await ctx.send(embed=success(f"SBMM preference changed successfully."))
+
+    @admin_slash.sub_command()
+    async def duo_queue(self, ctx, preference = Param(
+        choices=[
+            OptionChoice('Enabled', '1'),
+            OptionChoice('Disabled', '0')
+        ]
+    )):
+        """
+        Enable/Disable Duo Queue system.
+        """
+        sbmm = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
+        if sbmm:
+            return await ctx.send(embed=error("Duo queue can only work with sbmm enabled."))
+        if int(preference):
+            await self.bot.execute(
+                f"INSERT INTO duo_queue_preference(guild_id) VALUES($1)",
+                ctx.guild.id
+            )
+            
+        else:
+            await self.bot.execute(f"DELETE FROM duo_queue_preference WHERE guild_id = {ctx.guild.id}")
+            
+        await ctx.send(embed=success(f"Duo Queue preference changed successfully."))
 
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):

@@ -3,7 +3,9 @@ import uuid
 from datetime import datetime, timedelta
 
 from core.embeds import error, success
-from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui
+from core.selectmenus import SelectMenuDeploy
+from core.buttons import ConfirmationButtons
+from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui, SelectOption
 from disnake.ext import tasks
 from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, quality
@@ -11,7 +13,7 @@ import itertools
 import asyncio
 
 from core.loldraft import WS
-
+#TODO REMOVE DUO FROM WINNER, ADD CONFIRMATION AFTER SELECTING A PARTNER
 
 class SpectateButton(ui.View):
     def __init__(self, bot):
@@ -246,7 +248,7 @@ class ReadyButton(ui.View):
             )
 
             # CHECK
-            #if len(ready_ups) == 2:
+            # if len(ready_ups) == 2:
             if len(ready_ups) == 10:
                 preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
                 if preference:
@@ -410,7 +412,7 @@ class QueueButtons(ui.View):
         embed.clear_fields()
         teams = ["blue", "red"]
 
-        for team in teams:
+        for index, team in enumerate(teams):
 
             team_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and team = '{team}'"
@@ -422,10 +424,35 @@ class QueueButtons(ui.View):
                 emoji = "🔵"
 
             name = f"{emoji} {team.capitalize()}"
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {msg.guild.id}")
+            if not st_pref:
+                name = f"Slot {index+1}"
+            
             if team_data:
-                value = "\n".join(
-                    [f"<@{data[0]}> - `{data[1].capitalize()}`" for data in team_data]
-                )
+                duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
+                in_duo = []
+                for duo in duos:
+                    in_duo.extend([duo[1], duo[2]])
+                usage = 0
+                duo_emoji = ":one:"
+                value = ""
+                for data in team_data:
+                    if data[0] in in_duo:
+                        value += f"{duo_emoji} "
+                        usage += 1
+                        if not usage%2:
+                            if usage/2 == 1:
+                                duo_emoji = ":two:"
+                            elif usage/2 == 2:
+                                duo_emoji = ":three:"
+                            elif usage/2 == 3:
+                                duo_emoji = ":four:"
+                            elif usage/2 == 4:
+                                duo_emoji = ":five:"
+                            else:
+                                duo_emoji = ":six:" # Should not happen
+                    value += f"<@{data[0]}> - `{data[1].capitalize()}`\n"
+
             else:
                 value = "No members yet"
 
@@ -469,7 +496,6 @@ class QueueButtons(ui.View):
                     ephemeral=True,
                 )
 
-
         label = button.label.lower()
         team = "blue"
 
@@ -506,7 +532,7 @@ class QueueButtons(ui.View):
     async def check_end(self, inter) -> None:
         checks_passed = 0
         for button in self.children:
-            if button.label in ["Leave Queue", "Switch Team"]:
+            if button.label in ["Leave Queue", "Switch Team", "Duo"]:
                 continue
 
             data = await self.bot.fetch(
@@ -517,7 +543,7 @@ class QueueButtons(ui.View):
 
         # CHECK
         # if checks_passed == 1:
-        if checks_passed == len(self.children) - 2:
+        if checks_passed == len(self.children) - 3:
 
             st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
             if not st_pref:
@@ -528,8 +554,8 @@ class QueueButtons(ui.View):
                 # CHECK
                 # roles_occupation = {
                 #      "TOP": [],
-                #      "JUNGLE": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                #      "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()}, ],
+                #      "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                #      "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
                 #      "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
                 #      "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
                 #  }
@@ -573,6 +599,19 @@ class QueueButtons(ui.View):
                         for val in roles_occupation[x]:
                             if val['user_id'] not in players_in_pair:
                                 t2.append(val)
+                    duo = await self.bot.fetch(
+                        f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'"
+                    )
+                    check = True
+                    for duo_data in duo:
+                        user1 = duo_data[1]
+                        user2 = duo_data[2]
+                        
+                        if not ( ( user1 in players_in_pair and user2 in players_in_pair ) or ( user1 in [x['user_id'] for x in t2] and user2 in [x['user_id'] for x in t2] ) ):
+                            check = False
+                    if not check:
+                        # Skip the pair
+                        continue
 
                     qua = quality([[x['rating'] for x in list(pair)], [x['rating'] for x in t2]])
                     qualities.append(qua)
@@ -630,12 +669,12 @@ class QueueButtons(ui.View):
     async def process_button(self, button, inter) -> None:
         await inter.response.defer()
         if not self.cooldown:
-            self.cooldown = datetime.utcnow() + timedelta(seconds=1.5)
+            self.cooldown = datetime.now() + timedelta(seconds=1.5)
         else:
-            if self.cooldown <= datetime.utcnow():
+            if self.cooldown <= datetime.now():
                 self.cooldown = datetime.now() + timedelta(seconds=1.5)
             else:
-                await asyncio.sleep((datetime.utcnow() - self.cooldown).seconds)
+                await asyncio.sleep((datetime.now() - self.cooldown).seconds)
 
 
         if not self.game_id:
@@ -704,7 +743,7 @@ class QueueButtons(ui.View):
             embed = await self.gen_embed(inter.message)
 
             for button in self.children:
-                if button.label in ["Leave Queue", "Switch Team"]:
+                if button.label in ["Leave Queue", "Switch Team", "Duo"]:
                     continue
 
                 data = await self.bot.fetch(
@@ -727,7 +766,7 @@ class QueueButtons(ui.View):
                 embed=error("You are not a participant of this game."), ephemeral=True
             )
 
-    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="switchteam")
+    @ui.button(label="Switch Team", style=ButtonStyle.blurple, custom_id="queue:switchteam")
     async def switchteam(self, button, inter):
         await inter.response.defer()
         st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
@@ -770,6 +809,78 @@ class QueueButtons(ui.View):
             await inter.send(
                 embed=error("You are not a part of this game."), ephemeral=True
             )
+
+    @ui.button(label="Duo", style=ButtonStyle.blurple, custom_id="queue:duo")
+    async def duo_queue(self, button, inter):
+        await inter.response.defer()
+        duo_pref = await self.bot.fetchrow(f"SELECT * FROM duo_queue_preference WHERE guild_id = {inter.guild.id}")
+        if not duo_pref:
+            return await inter.send(embed=error("Duo queue is not enabled for this server."), ephemeral=True)
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+        if st_pref:
+            return await inter.send(embed=error("Duo queue is not available with SBMM disabled."), ephemeral=True)
+
+        queue_check = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
+        )
+        if not queue_check:
+            return await inter.send(embed=error("You are not a part of this queue."), ephemeral=True)
+        
+        queue_members = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+        )
+        
+        options = []
+        for member_data in queue_members:
+            duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
+            member = inter.guild.get_member(member_data[0])
+            if member.id == inter.author.id:
+                continue
+            if member_data[1] == queue_check[1]:
+                continue
+            check = False
+            for duo in duos:
+                if inter.author.id in [duo[1], duo[2]]:
+                    return await inter.send(embed=error("You are already in a duo."), ephemeral=True,)
+                if member.id in [duo[1], duo[2]]:
+                    check = True
+            if check:
+                continue
+            options.append(SelectOption(label=member.display_name, value=member.id))
+
+        if not options:
+            return await inter.send(
+                embed=error("Unable to find available duo members for you."),
+                ephemeral=True
+            )
+        async def Function(vals, *args):
+            view = ConfirmationButtons(inter.author.id)
+            m = inter.guild.get_member(int(vals[0]))
+            await inter.send(f"Are you sure you wish to duo with {m.display_name}?", view=view, ephemeral=True)
+            await view.wait()
+            if view.value:
+                view = ConfirmationButtons(m.id)
+                try:
+                    await m.send(
+                        embed=Embed(
+                            title="👥 Duo Request",
+                            description=f"**{inter.author.display_name}** has sent you a duo request for game **{args[0]}** in {inter.channel.mention}. Do you accept?",
+                            color=Color.red()
+                        ),
+                        view=view
+                    )
+                except:
+                    return await inter.send(embed=success(f"Unable to send duo queue request to {m.display_name}. Their DMs might be disabled for the bot."), ephemeral=True)
+                await inter.send(embed=success(f"Duo queue request sent to {m.display_name}"), ephemeral=True)
+                await view.wait()
+                if view.value:
+                    await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
+                    embed = await self.gen_embed(inter.message)
+                    await inter.message.edit(view=self, embed=embed, attachments=[]) 
+                    await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
+
+        await inter.send(content="Select a member you wish to duo with.", view=SelectMenuDeploy(self.bot, inter.author.id, options, 1, 1, Function, self.game_id), ephemeral=True)
+
 
 
 class Match(Cog):
@@ -828,8 +939,13 @@ class Match(Cog):
         embed = Embed(
             title="Match Overview - SR Tournament Draft", color=Color.red()
         )
-        embed.add_field(name="🔵 Blue", value="No members yet")
-        embed.add_field(name="🔴 Red", value="No members yet")
+        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
+        if not st_pref:
+            embed.add_field(name="Slot 1", value="No members yet")
+            embed.add_field(name="Slot 2", value="No members yet")
+        else:
+            embed.add_field(name="🔵 Blue", value="No members yet")
+            embed.add_field(name="🔴 Red", value="No members yet")
         embed.set_image(url="https://cdn.discordapp.com/attachments/328696263568654337/1068133100451803197/image.png")
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
         if author:
