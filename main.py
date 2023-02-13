@@ -81,8 +81,7 @@ intents.members = True
 
 bot = MyBot(intents=intents, command_prefix=PREFIX)
 bot.remove_command("help")
-if dbl_token:
-    bot.topggpy = topgg.DBLClient(bot, dbl_token, autopost=True)
+bot.topggpy = topgg.DBLClient(bot, dbl_token, autopost=True)
 
 
 @bot.event
