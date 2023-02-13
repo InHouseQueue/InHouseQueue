@@ -430,7 +430,9 @@ class QueueButtons(ui.View):
         embed = msg.embeds[0]
         embed.clear_fields()
         teams = ["blue", "red"]
-
+        
+        duo_usage = 0
+        duo_emoji = ":one:"
         for index, team in enumerate(teams):
 
             team_data = await self.bot.fetch(
@@ -452,24 +454,21 @@ class QueueButtons(ui.View):
                 in_duo = []
                 for duo in duos:
                     in_duo.extend([duo[1], duo[2]])
-                usage = 0
-                duo_emoji = ":one:"
+            
                 value = ""
                 for data in team_data:
                     if data[0] in in_duo:
                         value += f"{duo_emoji} "
-                        usage += 1
-                        if not usage%2:
-                            if usage/2 == 1:
+                        duo_usage += 1
+                        if not duo_usage%2:
+                            if duo_usage/2 == 1:
                                 duo_emoji = ":two:"
-                            elif usage/2 == 2:
+                            elif duo_usage/2 == 2:
                                 duo_emoji = ":three:"
-                            elif usage/2 == 3:
+                            elif duo_usage/2 == 3:
                                 duo_emoji = ":four:"
-                            elif usage/2 == 4:
-                                duo_emoji = ":five:"
                             else:
-                                duo_emoji = ":six:" # Should not happen
+                                duo_emoji = ":five:" # Should not happen
                     value += f"<@{data[0]}> - `{data[1].capitalize()}`\n"
 
             else:
