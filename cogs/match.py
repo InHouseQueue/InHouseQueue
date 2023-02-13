@@ -1,19 +1,22 @@
+import asyncio
+import itertools
+import json
 import traceback
 import uuid
 from datetime import datetime, timedelta
 
-from core.embeds import error, success
-from core.selectmenus import SelectMenuDeploy
-from core.buttons import ConfirmationButtons
-from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui, SelectOption
+import async_timeout
+import websockets
+from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
+                     SelectOption, ui)
 from disnake.ext import tasks
 from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, quality
-import itertools
-import asyncio
 
-from core.loldraft import WS
-#TODO REMOVE DUO FROM WINNER, ADD CONFIRMATION AFTER SELECTING A PARTNER
+from core.buttons import ConfirmationButtons
+from core.embeds import error, success
+from core.selectmenus import SelectMenuDeploy
+
 
 class SpectateButton(ui.View):
     def __init__(self, bot):
@@ -368,16 +371,32 @@ class ReadyButton(ui.View):
                     )
                 )
 
-                draft_data = WS()
-                draft_data.stream()
-                await asyncio.sleep(2)
-                await game_lobby.send(
-                    embed=Embed(
-                        title="League of Legends Draft",
-                        description="\n".join(draft_data.response),
-                        color=Color.blurple()
+                response = None
+                async with websockets.connect("wss://draftlol.dawe.gg/") as websocket:
+                    data = {"type": "createroom", "blueName": "In-House Queue Blue", "redName": "In-House Queue Red", "disabledTurns": [], "disabledChamps": [], "timePerPick": "30", "timePerBan": "30"}
+                    await websocket.send(json.dumps(data))
+                    
+                    try:
+                        async with async_timeout.timeout(10):
+                            result = await websocket.recv()
+                            if result:
+                                data = json.loads(result)
+                                response = ("🔵 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["bluePassword"], "🔴 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["redPassword"], "\n**Spectators:** https://draftlol.dawe.gg/" + data["roomId"])
+                    except asyncio.TimeoutError:
+                        pass
+                
+                if response:
+                    await game_lobby.send(
+                        embed=Embed(
+                            title="League of Legends Draft",
+                            description="\n".join(response),
+                            color=Color.blurple()
+                        )
                     )
-                )
+                else:
+                    await game_lobby.send(
+                        embed=error("Draftlol is down, could not retrieve links.")
+                    )
 
                 await self.bot.execute(
                     f"INSERT INTO games(game_id, lobby_id, voice_red_id, voice_blue_id, red_role_id, blue_role_id, queuechannel_id, msg_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
