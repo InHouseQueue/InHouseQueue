@@ -1,19 +1,22 @@
+import asyncio
+import itertools
+import json
 import traceback
 import uuid
 from datetime import datetime, timedelta
 
-from core.embeds import error, success
-from core.selectmenus import SelectMenuDeploy
-from core.buttons import ConfirmationButtons
-from disnake import ButtonStyle, Color, Embed, PermissionOverwrite, ui, SelectOption
+import async_timeout
+import websockets
+from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
+                     SelectOption, ui)
 from disnake.ext import tasks
 from disnake.ext.commands import Cog, command, slash_command
 from trueskill import Rating, quality
-import itertools
-import asyncio
 
-from core.loldraft import WS
-#TODO REMOVE DUO FROM WINNER, ADD CONFIRMATION AFTER SELECTING A PARTNER
+from core.buttons import ConfirmationButtons
+from core.embeds import error, success
+from core.selectmenus import SelectMenuDeploy
+
 
 class SpectateButton(ui.View):
     def __init__(self, bot):
@@ -248,8 +251,8 @@ class ReadyButton(ui.View):
             )
 
             # CHECK
-            # if len(ready_ups) == 2:
-            if len(ready_ups) == 10:
+            if len(ready_ups) == 2:
+            # if len(ready_ups) == 10:
                 preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
                 if preference:
                     preference = preference[1]
@@ -368,16 +371,32 @@ class ReadyButton(ui.View):
                     )
                 )
 
-                draft_data = WS()
-                draft_data.stream()
-                await asyncio.sleep(2)
-                await game_lobby.send(
-                    embed=Embed(
-                        title="League of Legends Draft",
-                        description="\n".join(draft_data.response),
-                        color=Color.blurple()
+                response = None
+                async with websockets.connect("wss://draftlol.dawe.gg/") as websocket:
+                    data = {"type": "createroom", "blueName": "In-House Queue Blue", "redName": "In-House Queue Red", "disabledTurns": [], "disabledChamps": [], "timePerPick": "30", "timePerBan": "30"}
+                    await websocket.send(json.dumps(data))
+                    
+                    try:
+                        async with async_timeout.timeout(10):
+                            result = await websocket.recv()
+                            if result:
+                                data = json.loads(result)
+                                response = ("🔵 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["bluePassword"], "🔴 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["redPassword"], "\n**Spectators:** https://draftlol.dawe.gg/" + data["roomId"])
+                    except asyncio.TimeoutError:
+                        pass
+                
+                if response:
+                    await game_lobby.send(
+                        embed=Embed(
+                            title="League of Legends Draft",
+                            description="\n".join(response),
+                            color=Color.blurple()
+                        )
                     )
-                )
+                else:
+                    await game_lobby.send(
+                        embed=error("Draftlol is down, could not retrieve links.")
+                    )
 
                 await self.bot.execute(
                     f"INSERT INTO games(game_id, lobby_id, voice_red_id, voice_blue_id, red_role_id, blue_role_id, queuechannel_id, msg_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
@@ -542,8 +561,8 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        # if checks_passed == 1:
-        if checks_passed == len(self.children) - 3:
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 3:
 
             st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
             if not st_pref:
@@ -552,20 +571,20 @@ class QueueButtons(ui.View):
                 )
 
                 # CHECK
-                # roles_occupation = {
-                #      "TOP": [],
-                #      "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                #      "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
-                #      "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                #      "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-                #  }
                 roles_occupation = {
-                   "TOP": [],
-                   "JUNGLE": [],
-                   "MID": [],
-                   "ADC": [],
-                   "SUPPORT": []
-                }
+                     "TOP": [],
+                     "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                     "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
+                     "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                     "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+                 }
+                # roles_occupation = {
+                #    "TOP": [],
+                #    "JUNGLE": [],
+                #    "MID": [],
+                #    "ADC": [],
+                #    "SUPPORT": []
+                # }
 
                 for data in member_data:
                     member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id}")
