@@ -81,7 +81,8 @@ intents.members = True
 
 bot = MyBot(intents=intents, command_prefix=PREFIX)
 bot.remove_command("help")
-bot.topggpy = topgg.DBLClient(bot, dbl_token, autopost=True, post_shard_count=True)
+if dbl_token:
+    bot.topggpy = topgg.DBLClient(bot, dbl_token, autopost=True)
 
 
 @bot.event
@@ -95,7 +96,6 @@ async def on_autopost_success():
 async def before_invoke_slash(inter):
     if not inter.response.is_done():
         await inter.response.defer()
-
 
 # Load all cogs
 for filename in os.listdir("./cogs"):
