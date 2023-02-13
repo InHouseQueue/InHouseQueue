@@ -892,6 +892,10 @@ class QueueButtons(ui.View):
                 await inter.send(embed=success(f"Duo queue request sent to {m.display_name}"), ephemeral=True)
                 await view.wait()
                 if view.value:
+                    user_duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
+                    for user_duo in user_duos:
+                        if int(vals[0]) in [user_duo[1], user_duo[2]]:
+                            return await m.send(embed=error("You are already in a duo."))
                     await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
                     embed = await self.gen_embed(inter.message)
                     await inter.message.edit(view=self, embed=embed, attachments=[]) 
