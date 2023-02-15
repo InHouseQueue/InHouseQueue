@@ -86,7 +86,8 @@ class Events(Cog):
         await bot.execute(
             """
             CREATE TABLE IF NOT EXISTS queuechannels(
-                channel_id INTEGER
+                channel_id INTEGER,
+                region TEXT
             )
             """
         )

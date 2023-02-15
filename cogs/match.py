@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 import json
+import re
 import traceback
 import uuid
 from datetime import datetime, timedelta
@@ -166,7 +167,7 @@ class ReadyButton(ui.View):
             self.game_id = game_id
         embed = self.msg.embeds[0]
         embed.clear_fields()
-        embed.description = ""
+        embed.description = "These are not the final teams."
         duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
         in_duo = []
         for duo in duos:
@@ -176,12 +177,14 @@ class ReadyButton(ui.View):
         team_data = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
-        value = ""
-        for team in team_data:
-            mmr_data = await self.bot.fetchrow(
-                f"SELECT * FROM mmr_rating WHERE user_id = {team[0]}"
-            )
-            skill = int(round(float(mmr_data[2]) - (2 * float(mmr_data[3])), 2)) * 100
+        value1 = ""
+        value2 = ""
+        for i, team in enumerate(team_data):
+            # mmr_data = await self.bot.fetchrow(
+            #     f"SELECT * FROM mmr_rating WHERE user_id = {team[0]}"
+            # )
+            # skill = int(round(float(mmr_data[2]) - (2 * float(mmr_data[3])), 2)) * 100
+            value = ""
             if team[0] in ready_ups:
                 value += "✅"
             else:
@@ -199,13 +202,52 @@ class ReadyButton(ui.View):
                     else:
                         duo_emoji = ":five:" # Should not happen
             
-            value += f"<@{team[0]}> - `{team[1].capitalize()}` - **{skill}** MMR \n"
+            value += f"<@{team[0]}> - `{team[1].capitalize()}` \n"
+            if i in range(0, 5):
+                value1 += value
+            else:
+                value2 += value
 
-        embed.add_field(name="👥 Participants", value=value)
+        embed.add_field(name="👥 Participants", value=value1)
+        embed.add_field(name="👥 Participants", value=value2)
 
         embed.set_footer(text=self.game_id)
 
         return embed
+
+    async def opgg(self, inter, region):
+        teams = {
+            'blue': '',
+            'red': ''
+        }
+
+        for team in teams:
+            url = f'https://www.op.gg/multisearch/{region}?summoners='
+            data = await self.bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and team = '{team}'")
+            nicknames = []
+            for entry in data:
+                member = inter.guild.get_member(entry[0])
+                if member.nick:
+                    nick = member.nick
+                else:
+                    nick = member.name
+
+                pattern = re.compile("ign ", re.IGNORECASE)
+                nick = pattern.sub("", nick)
+
+                pattern2 = re.compile("ign: ", re.IGNORECASE)
+                nick = pattern2.sub("", nick)
+
+                nicknames.append(str(nick).replace(' ', '%20'))
+
+            for i, nick in enumerate(nicknames):
+                if not i == 0:
+                    url += "%2C"
+                url += nick
+
+            teams[team] = url
+        
+        return teams
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
@@ -525,18 +567,18 @@ class ReadyButton(ui.View):
                         color=Color.yellow(),
                     )
                 )
-                await game_lobby.send(
-                    embed=Embed(
-                        title="<:opgg:1052529528913805402> Multi OP.GG",
-                        description=f"**League of Legends**\n \n"
-                                    f"**Copy** and **Paste** for Red or Blue Teams Multi op.gg link, then pick a **region**.\n"
-                                    f"🔵 - `/opgg game_id: {self.game_id} team: Blue region: `\n"
-                                    f"🔴 - `/opgg game_id: {self.game_id} team: Red region: `\n \n"
-                                    f"Your discord Nickname **must** be in this format:`IGN: Faker` or `Faker` \n \n"
-                                    f":warning: If your Discord Nickname is currently **not** your IGN, change it **AFTER** this match.",
-                        color=Color.blurple(),
-                    )
-                )
+                # await game_lobby.send(
+                #     embed=Embed(
+                #         title="<:opgg:1052529528913805402> Multi OP.GG",
+                #         description=f"**League of Legends**\n \n"
+                #                     f"**Copy** and **Paste** for Red or Blue Teams Multi op.gg link, then pick a **region**.\n"
+                #                     f"🔵 - `/opgg game_id: {self.game_id} team: Blue region: `\n"
+                #                     f"🔴 - `/opgg game_id: {self.game_id} team: Red region: `\n \n"
+                #                     f"Your discord Nickname **must** be in this format:`IGN: Faker` or `Faker` \n \n"
+                #                     f":warning: If your Discord Nickname is currently **not** your IGN, change it **AFTER** this match.",
+                #         color=Color.blurple(),
+                #     )
+                # )
 
                 response = None
                 async with websockets.connect("wss://draftlol.dawe.gg/") as websocket:
@@ -564,6 +606,16 @@ class ReadyButton(ui.View):
                     await game_lobby.send(
                         embed=error("Draftlol is down, could not retrieve links.")
                     )
+
+                region = await self.bot.fetchrow(f"SELECT region FROM queuechannels WHERE channel_id = {inter.channel.id}")
+                opgg = await self.opgg(inter, region[0])
+                await game_lobby.send(
+                    embed=Embed(
+                        title="🔗 Multi OP.GG",
+                        description=f"🔵 Blue Team \n{opgg['blue']}\n\n🔴 Red Team \n{opgg['red']}",
+                        color=Color.blurple()
+                    )
+                )
 
                 await self.bot.execute(
                     f"INSERT INTO games(game_id, lobby_id, voice_red_id, voice_blue_id, red_role_id, blue_role_id, queuechannel_id, msg_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
@@ -1066,11 +1118,32 @@ class Match(Cog):
         else:
             embed.set_image(url="https://cdn.discordapp.com/attachments/328696263568654337/1068133100451803197/image.png")
         embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
-        if author:
-            if author.avatar:
-                embed.set_author(name=f"Initiated by {author.name}", icon_url=author.avatar.url)
-            else:
-                embed.set_author(name=f"Initiated by {author.name}")
+        if not data[1]:
+            data = (data[0], 'na')
+        if data[1] == "euw":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297635442738/LoL_EUW.png"
+        elif data[1] == "eune":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297434112041/LoL_EUNE.png"
+        elif data[1] == "br":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297224413256/LoL_BR.jpg"
+        elif data[1] == "la":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298105200660/LoL_LA.png"
+        elif data[1] == "jp":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297870336072/LoL_JP.png"
+        elif data[1] == "la":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298105200660/LoL_LA.png"
+        elif data[1] == "las":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298352668672/LoL_LAS.png"
+        elif data[1] == "tr":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418299434795088/LoL_TR.jpg"
+        elif data[1] == "oce":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298939867216/LoL_OCE.png"
+        elif data[1] == "ru":
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418299195723786/LoL_RU.jpg"
+        else:
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298671448134/LoL_NA.jpg"
+        
+        embed.set_author(name=f"{data[1].upper()} Queue", icon_url=icon_url)
             
         try:
             await channel.send(embed=embed, view=QueueButtons(self.bot))

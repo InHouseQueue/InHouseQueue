@@ -1,6 +1,6 @@
 from core import embeds, buttons
-from disnake import TextChannel, Embed, Color
-from disnake.ext.commands import Cog, command, slash_command
+from disnake import TextChannel, Embed, Color, OptionChoice
+from disnake.ext.commands import Cog, command, slash_command, Param
 
 
 class ChannelCommands(Cog):
@@ -38,7 +38,9 @@ class ChannelCommands(Cog):
         return False
 
     @command(aliases=["channel"])
-    async def setchannel(self, ctx, channel: TextChannel):
+    async def setchannel(self, ctx, channel: TextChannel, region):
+        if region.upper() not in [ "BR", "EUNE", "EUW", "LA", "LAS", "NA", "OCE", "RU", "TR", "JP"]:
+            return await ctx.send(embed=embeds.error("Please input a valid region."))
         view = buttons.ConfirmationButtons(ctx.author.id)
         await ctx.send(
             embed=Embed(title=":warning: Notice", description=f"Messages in {channel.mention} will automatically be deleted to keep the queue channel clean, do you want to proceed?", color=Color.yellow()),
@@ -62,7 +64,7 @@ class ChannelCommands(Cog):
             )
 
         await self.bot.execute(
-            "INSERT INTO queuechannels(channel_id) VALUES($1)", channel.id
+            "INSERT INTO queuechannels(channel_id, region) VALUES($1, $2)", channel.id, region
         )
 
         await ctx.send(
@@ -72,11 +74,51 @@ class ChannelCommands(Cog):
         )
 
     @slash_command(name="setchannel")
-    async def setchannel_slash(self, ctx, channel: TextChannel):
+    async def setchannel_slash(self, ctx, channel: TextChannel, region = Param(choices=[
+        OptionChoice("EUW", "euw"),
+        OptionChoice("NA", 'na'),
+        OptionChoice("BR", 'br'),
+        OptionChoice("EUNE", 'eune'),
+        OptionChoice("LA", 'la'),
+        OptionChoice("LAS", 'las'),
+        OptionChoice("OCE", 'oce'),
+        OptionChoice("RU", 'ru'),
+        OptionChoice("TR", 'tr'),
+        OptionChoice("JP", 'jp')
+    ])):
         """
         Set a channel to be used as the queue.
         """
-        await self.setchannel(ctx, channel)
+        await self.setchannel(ctx, channel, region)
+
+    @command()
+    async def setregion(self, ctx, queue_channel: TextChannel, region):
+        if region.upper() not in [ "BR", "EUNE", "EUW", "LA", "LAS", "NA", "OCE", "RU", "TR", "JP"]:
+            return await ctx.send(embed=embeds.error("Please input a valid region."))
+
+        data = await self.bot.fetchrow(f"SELECT * FROM queuechannels WHERE channel_id = {queue_channel.id}")
+        if not data:
+            return await ctx.send(embed=embeds.error(f"{queue_channel.mention} is not a queue channel."))
+        
+        await self.bot.execute(f"UPDATE queuechannels SET region = ? WHERE channel_id = {queue_channel.id}", region)
+        await ctx.send(embed=embeds.success("Region for the queue channel updated successfully."))
+
+
+    @slash_command(name="setregion")
+    async def setregion_slash(self, ctx, queue_channel: TextChannel, region= Param(choices=[
+        OptionChoice("EUW", "euw"),
+        OptionChoice("NA", 'na'),
+        OptionChoice("BR", 'br'),
+        OptionChoice("EUNE", 'eune'),
+        OptionChoice("LA", 'la'),
+        OptionChoice("LAS", 'las'),
+        OptionChoice("OCE", 'oce'),
+        OptionChoice("RU", 'ru'),
+        OptionChoice("TR", 'tr'),
+        OptionChoice("JP", 'jp')]),
+        ):
+            await self.setregion(ctx, queue_channel, region)
+            
 
     @command()
     async def setwinnerlog(self, ctx, channel: TextChannel):
