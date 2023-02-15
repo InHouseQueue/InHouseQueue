@@ -3,13 +3,51 @@ from io import StringIO
 
 from core import embeds
 from disnake import Color, Embed, File, Game
-from disnake.ext import commands
+from disnake.ext import commands, tasks
 from disnake.ext.commands import Cog
+
+from cogs.admin import leaderboard_persistent
 
 
 class Events(Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.persistent_lb.start()
+
+    @tasks.loop(seconds=5)
+    async def persistent_lb(self):
+        await self.bot.wait_until_ready()
+
+        data = await self.bot.fetch(f"SELECT * FROM persistent_lb")
+        for entry in data:
+            channel = self.bot.get_channel(entry[1])
+            if not channel:
+                continue
+            msg = self.bot.get_message(entry[2])
+            if not msg:
+                msg = await channel.fetch_message(entry[2])
+                if not msg:
+                    continue
+            if msg:
+                embed = await leaderboard_persistent(self.bot, channel)
+                await msg.edit(embed=embed)
+
+    @Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        deletions = []
+        setchannel = await self.bot.fetch(f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}")
+        if setchannel:
+            deletions.append("queuechannels")
+        log_channels = await self.bot.fetch(f"SELECT * FROM winner_log_channel WHERE channel_id = {channel.id}")
+        if log_channels:
+            deletions.append("winner_log_channel")
+        top_ten = await self.bot.fetch(f"SELECT * FROM persistent_lb WHERE channel_id = {channel.id}")
+        if top_ten:
+            deletions.append("persistent_lb")
+        
+        for deletion in deletions:
+            await self.bot.execute(f"DELETE FROM {deletion} WHERE channel_id = {channel.id}")
+
 
     @Cog.listener()
     async def on_message(self, msg):
@@ -48,7 +86,8 @@ class Events(Cog):
         await bot.execute(
             """
             CREATE TABLE IF NOT EXISTS queuechannels(
-                channel_id INTEGER
+                channel_id INTEGER,
+                region TEXT
             )
             """
         )
@@ -184,10 +223,29 @@ class Events(Cog):
 
         await bot.execute(
             """
+            CREATE TABLE IF NOT EXISTS duo_queue_preference(
+                guild_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
             CREATE TABLE IF NOT EXISTS admin_enables(
                 guild_id INTEGER,
                 command TEXT,
                 role_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS duo_queue(
+                guild_id INTEGER,
+                user1_id INTEGER, 
+                user2_id INTEGER,
+                game_id TEXT
             )
             """
         )
@@ -275,6 +333,9 @@ class Events(Cog):
                     )
                     and (
                         not "Could not log the game" in embed.description
+                    )
+                    and (
+                        not "was successfully set as queue channel." in embed.description
                     )
             ):
                 try:

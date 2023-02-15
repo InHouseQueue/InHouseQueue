@@ -7,12 +7,12 @@ env:
   REPO_NAME: ${{ github.event.repository.name }}
   REPO_OWNER: ${{ github.repository_owner }}
 jobs:
-  clone:
-    name: Clone
+  backup:
+    name: Backup
     runs-on: ubuntu-latest
     environment: Staging
     steps:
-      - name: Clone Repo
+      - name: Back Up Volume
         uses: appleboy/ssh-action@dce9d565de8d876c11d93fa4fe677c0285a66d78
         with:
           host: ${{ secrets.IH_HOST }}
@@ -20,13 +20,12 @@ jobs:
           password: ${{ secrets.IH_PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /home/henry
-            git clone git@github.com:${{env.REPO_OWNER}}/${{ env.REPO_NAME }}.git
-            pwd
+            cd ${{ env.REPO_NAME }}
+            docker exec inhousequeue_backup_1 backup
 
   add-bot-env:
     name: Secrets
-    needs: clone
+    needs: backup
     runs-on: ubuntu-latest
     environment: Staging
     steps:
@@ -45,7 +44,7 @@ jobs:
 
   push:
     name: Build & Push
-    needs: [clone,add-bot-env]
+    needs: [backup,add-bot-env]
     runs-on: ubuntu-latest
     environment: Staging
     steps:
@@ -65,7 +64,7 @@ jobs:
 
   run:
     name: Run
-    needs: [clone,add-bot-env,push]
+    needs: [backup,add-bot-env,push]
     runs-on: ubuntu-latest
     environment: Staging
     steps:
