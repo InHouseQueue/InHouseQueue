@@ -117,6 +117,9 @@ class ChannelCommands(Cog):
         OptionChoice("TR", 'tr'),
         OptionChoice("JP", 'jp')]),
         ):
+            """
+            Set a region for a queue channel.
+            """
             await self.setregion(ctx, queue_channel, region)
             
 

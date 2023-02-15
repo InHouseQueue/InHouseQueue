@@ -1121,27 +1121,25 @@ class Match(Cog):
         if not data[1]:
             data = (data[0], 'na')
         if data[1] == "euw":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297635442738/LoL_EUW.png"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853028175934/OW_Europe.png"
         elif data[1] == "eune":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297434112041/LoL_EUNE.png"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853028175934/OW_Europe.png"
         elif data[1] == "br":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297224413256/LoL_BR.jpg"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444852579373136/OW_Americas.png"
         elif data[1] == "la":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298105200660/LoL_LA.png"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444852579373136/OW_Americas.png"
         elif data[1] == "jp":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418297870336072/LoL_JP.png"
-        elif data[1] == "la":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298105200660/LoL_LA.png"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444852784910376/OW_Asia.png?width=572&height=572"
         elif data[1] == "las":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298352668672/LoL_LAS.png"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444852579373136/OW_Americas.png"
         elif data[1] == "tr":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418299434795088/LoL_TR.jpg"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853233684581/VAL_AP.png"
         elif data[1] == "oce":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298939867216/LoL_OCE.png"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853233684581/VAL_AP.png"
         elif data[1] == "ru":
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418299195723786/LoL_RU.jpg"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853233684581/VAL_AP.png"
         else:
-            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075418298671448134/LoL_NA.jpg"
+            icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444852369670214/VAL_NA.png"
         
         embed.set_author(name=f"{data[1].upper()} Queue", icon_url=icon_url)
             
