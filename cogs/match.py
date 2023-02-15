@@ -103,11 +103,18 @@ class ReadyButton(ui.View):
 
         self.disable_button.start()
 
-    async def gen_embed(self, ready_ups):
+    async def team_embed(self, ready_ups):
 
         embed = self.msg.embeds[0]
         embed.clear_fields()
         teams = ["blue", "red"]
+
+        duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
+        in_duo = []
+        for duo in duos:
+            in_duo.extend([duo[1], duo[2]])
+        duo_usage = 0
+        duo_emoji = ":one:"
 
         for team in teams:
 
@@ -123,21 +130,78 @@ class ReadyButton(ui.View):
             name = f"{emoji} {team.capitalize()}"
 
             if team_data:
-                value_list = []
+            
+                value = ""
                 for data in team_data:
+                    
                     if data[0] in ready_ups:
-                        value_list.append(
-                            f":white_check_mark: <@{data[0]}> - `{data[1].capitalize()}`"
-                        )
+                        value += "✅ "
                     else:
-                        value_list.append(
-                            f":x: <@{data[0]}> - `{data[1].capitalize()}`"
-                        )
-                value = "\n".join(value_list)
+                        value += "❌ "
+                    if data[0] in in_duo:
+                        value += f"{duo_emoji} "
+                        duo_usage += 1
+                        if not duo_usage%2:
+                            if duo_usage/2 == 1:
+                                duo_emoji = ":two:"
+                            elif duo_usage/2 == 2:
+                                duo_emoji = ":three:"
+                            elif duo_usage/2 == 3:
+                                duo_emoji = ":four:"
+                            else:
+                                duo_emoji = ":five:" # Should not happen
+
+                    value += f"<@{data[0]}> - `{data[1].capitalize()}`\n"
             else:
                 value = "No members yet"
 
             embed.add_field(name=name, value=value)
+
+        embed.set_footer(text=self.game_id)
+
+        return embed
+
+    async def anonymous_team_embed(self, ready_ups, game_id = None):
+        if game_id:
+            self.game_id = game_id
+        embed = self.msg.embeds[0]
+        embed.clear_fields()
+        embed.description = ""
+        duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
+        in_duo = []
+        for duo in duos:
+            in_duo.extend([duo[1], duo[2]])
+        duo_usage = 0
+        duo_emoji = ":one:"
+        team_data = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+        )
+        value = ""
+        for team in team_data:
+            mmr_data = await self.bot.fetchrow(
+                f"SELECT * FROM mmr_rating WHERE user_id = {team[0]}"
+            )
+            skill = int(round(float(mmr_data[2]) - (2 * float(mmr_data[3])), 2)) * 100
+            if team[0] in ready_ups:
+                value += "✅"
+            else:
+                value += "❌"
+            if team[0] in in_duo:
+                value += f"{duo_emoji} "
+                duo_usage += 1
+                if not duo_usage%2:
+                    if duo_usage/2 == 1:
+                        duo_emoji = ":two:"
+                    elif duo_usage/2 == 2:
+                        duo_emoji = ":three:"
+                    elif duo_usage/2 == 3:
+                        duo_emoji = ":four:"
+                    else:
+                        duo_emoji = ":five:" # Should not happen
+            
+            value += f"<@{team[0]}> - `{team[1].capitalize()}` - **{skill}** MMR \n"
+
+        embed.add_field(name="👥 Participants", value=value)
 
         embed.set_footer(text=self.game_id)
 
@@ -245,14 +309,117 @@ class ReadyButton(ui.View):
             )
             ready_ups.append(inter.author.id)
 
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+            if st_pref:
+                embed = await self.team_embed(ready_ups)
+            else:
+                embed = await self.anonymous_team_embed(ready_ups)
             await inter.message.edit(
                 f"{len(ready_ups)}/10 Players are ready!\nReady up before <t:{int(datetime.timestamp((self.time_of_execution + timedelta(seconds=290))))}:t>",
-                embed=await self.gen_embed(ready_ups),
+                embed=embed,
             )
 
             # CHECK
-            # if len(ready_ups) == 2:
-            if len(ready_ups) == 10:
+            if len(ready_ups) == 2:
+            # if len(ready_ups) == 10:
+                
+                if not st_pref:
+                    member_data = await self.bot.fetch(
+                        f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+                    )
+
+                    # CHECK
+                    roles_occupation = {
+                        "TOP": [],
+                        "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                        "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
+                        "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                        "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+                    }
+                    # roles_occupation = {
+                    #    "TOP": [],
+                    #    "JUNGLE": [],
+                    #    "MID": [],
+                    #    "ADC": [],
+                    #    "SUPPORT": []
+                    # }
+
+                    for data in member_data:
+                        member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id}")
+                        if member_rating:
+                            mu = float(member_rating[2])
+                            sigma = float(member_rating[3])
+                            rating = Rating(mu, sigma)
+
+                        else:
+                            rating = Rating()
+                            await self.bot.execute(
+                                f"INSERT INTO mmr_rating(guild_id, user_id, mu, sigma, counter) VALUES($1, $2, $3, $4, $5)",
+                                inter.guild.id,
+                                data[0],
+                                rating.mu,
+                                rating.sigma,
+                                0
+                            )
+
+                        roles_occupation[data[1].upper()].append({'user_id': data[0], 'rating': rating})
+
+                    all_occupations = [*roles_occupation.values()]
+
+                    unique_combinations = list(itertools.product(*all_occupations))
+                    team_data = []
+                    qualities = []
+                    for pair in unique_combinations:
+                        players_in_pair = [x['user_id'] for x in list(pair)]
+                        t2 = []
+                        for x in roles_occupation:
+                            for val in roles_occupation[x]:
+                                if val['user_id'] not in players_in_pair:
+                                    t2.append(val)
+                        duo = await self.bot.fetch(
+                            f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'"
+                        )
+                        check = True
+                        for duo_data in duo:
+                            user1 = duo_data[1]
+                            user2 = duo_data[2]
+                            
+                            if not ( ( user1 in players_in_pair and user2 in players_in_pair ) or ( user1 in [x['user_id'] for x in t2] and user2 in [x['user_id'] for x in t2] ) ):
+                                check = False
+                        if not check:
+                            # Skip the pair
+                            continue
+
+                        qua = quality([[x['rating'] for x in list(pair)], [x['rating'] for x in t2]])
+                        qualities.append(qua)
+                        team_data.append({'quality': qua, 'teams': [list(pair), t2]})
+
+                    closet_quality = qualities[min(range(len(qualities)), key=lambda i: abs(qualities[i] - 50))]
+                    for entry in team_data:
+                        if entry['quality'] == closet_quality:
+                            final_teams = entry['teams']
+                    
+                    # mentions = (
+                    #     f"🔴 Red Team: "
+                    #     + ", ".join(f"<@{data['user_id']}>" for data in final_teams[0])
+                    #     + "\n🔵 Blue Team: "
+                    #     + ", ".join(
+                    #         f"<@{data['user_id']}>" for data in final_teams[1]
+                    #     )
+                    # )
+                    for i, team_entries in enumerate(final_teams):
+                        if i:
+                            team = 'blue'
+                        else:
+                            team = 'red'
+                        for entry in team_entries:
+                            await self.bot.execute("UPDATE game_member_data SET team = $1 WHERE author_id = $2", team, entry['user_id'])
+                    self.data = await self.bot.fetch(
+                        f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+                    )
+                else:
+                    pass
+                            
                 preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
                 if preference:
                     preference = preference[1]
@@ -345,7 +512,7 @@ class ReadyButton(ui.View):
 
                 await game_lobby.send(
                     content=f"{red_role.mention} {blue_role.mention}",
-                    embed=await self.gen_embed(ready_ups),
+                    embed=await self.team_embed(ready_ups),
                     view=SpectateButton(self.bot)
                 )
                 await game_lobby.send(
@@ -418,6 +585,14 @@ class ReadyButton(ui.View):
                 embed=error("You are not a part of this game."), ephemeral=True
             )
 
+    @ui.button(label="Duo", style=ButtonStyle.blurple, custom_id="readyup:duo")
+    async def duo_queue_readyup(self, button, inter):
+        if not self.game_id:
+            self.game_id = inter.message.embeds[0].footer.text
+
+        if not self.msg:
+            self.msg = inter.message
+        await QueueButtons.duo_queue(self, button, inter)
 
 class QueueButtons(ui.View):
     def __init__(self, bot):
@@ -425,6 +600,7 @@ class QueueButtons(ui.View):
         self.bot = bot
         self.game_id = None
         self.cooldown = None
+        self.msg = None
 
     async def gen_embed(self, msg) -> Embed:
         embed = msg.embeds[0]
@@ -560,122 +736,28 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        # if checks_passed == 1:
-        if checks_passed == len(self.children) - 3:
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 3:
+            member_data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+            )
 
-            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
-            if not st_pref:
-                member_data = await self.bot.fetch(
-                    f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
-                )
-
-                # CHECK
-                # roles_occupation = {
-                #      "TOP": [],
-                #      "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                #      "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
-                #      "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                #      "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-                #  }
-                roles_occupation = {
-                   "TOP": [],
-                   "JUNGLE": [],
-                   "MID": [],
-                   "ADC": [],
-                   "SUPPORT": []
-                }
-
-                for data in member_data:
-                    member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id}")
-                    if member_rating:
-                        mu = float(member_rating[2])
-                        sigma = float(member_rating[3])
-                        rating = Rating(mu, sigma)
-
-                    else:
-                        rating = Rating()
-                        await self.bot.execute(
-                            f"INSERT INTO mmr_rating(guild_id, user_id, mu, sigma, counter) VALUES($1, $2, $3, $4, $5)",
-                            inter.guild.id,
-                            data[0],
-                            rating.mu,
-                            rating.sigma,
-                            0
-                        )
-
-                    roles_occupation[data[1].upper()].append({'user_id': data[0], 'rating': rating})
-
-                all_occupations = [*roles_occupation.values()]
-
-                unique_combinations = list(itertools.product(*all_occupations))
-                team_data = []
-                qualities = []
-                for pair in unique_combinations:
-                    players_in_pair = [x['user_id'] for x in list(pair)]
-                    t2 = []
-                    for x in roles_occupation:
-                        for val in roles_occupation[x]:
-                            if val['user_id'] not in players_in_pair:
-                                t2.append(val)
-                    duo = await self.bot.fetch(
-                        f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'"
-                    )
-                    check = True
-                    for duo_data in duo:
-                        user1 = duo_data[1]
-                        user2 = duo_data[2]
-                        
-                        if not ( ( user1 in players_in_pair and user2 in players_in_pair ) or ( user1 in [x['user_id'] for x in t2] and user2 in [x['user_id'] for x in t2] ) ):
-                            check = False
-                    if not check:
-                        # Skip the pair
-                        continue
-
-                    qua = quality([[x['rating'] for x in list(pair)], [x['rating'] for x in t2]])
-                    qualities.append(qua)
-                    team_data.append({'quality': qua, 'teams': [list(pair), t2]})
-
-                closet_quality = qualities[min(range(len(qualities)), key=lambda i: abs(qualities[i] - 50))]
-                for entry in team_data:
-                    if entry['quality'] == closet_quality:
-                        final_teams = entry['teams']
-                
-                mentions = (
-                    f"🔴 Red Team: "
-                    + ", ".join(f"<@{data['user_id']}>" for data in final_teams[0])
-                    + "\n🔵 Blue Team: "
-                    + ", ".join(
-                        f"<@{data['user_id']}>" for data in final_teams[1]
-                    )
-                )
-                for i, team_entries in enumerate(final_teams):
-                    if i:
-                        team = 'blue'
-                    else:
-                        team = 'red'
-                    for entry in team_entries:
-                        await self.bot.execute("UPDATE game_member_data SET team = $1 WHERE author_id = $2", team,
-                                            entry['user_id'])
-
-            else:
-                member_data = await self.bot.fetch(
-                    f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
-                )
-
-                mentions = (
-                    f"🔴 Red Team: "
-                    + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
-                    + "\n🔵 Blue Team: "
-                    + ", ".join(
-                        f"<@{data[0]}>" for data in member_data if data[2] == "blue"
-                    )
-                )
+            mentions = (
+                ", ".join(f"<@{data[0]}>" for data in member_data)
+            )
 
             self.msg = inter.message
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+            if st_pref:
+                embed = await ReadyButton.team_embed(self, [])
+            else:
+                embed = await ReadyButton.anonymous_team_embed(self, [], self.game_id)
+
+            
             await inter.edit_original_message(
                 view=ReadyButton(self.bot),
                 content="0/10 Players are ready!",
-                embed=await ReadyButton.gen_embed(self, [])
+                embed=embed
             )
 
             embed = Embed(
@@ -897,7 +979,18 @@ class QueueButtons(ui.View):
                         if int(vals[0]) in [user_duo[1], user_duo[2]]:
                             return await m.send(embed=error("You are already in a duo."))
                     await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
-                    embed = await self.gen_embed(inter.message)
+                    if isinstance(self, QueueButtons):
+                        embed = await self.gen_embed(inter.message)
+                    else:
+                        ready_ups = await self.bot.fetch(
+                            f"SELECT * FROM ready_ups WHERE game_id = '{self.game_id}'"
+                        )
+                        ready_ups = [x[1] for x in ready_ups]
+                        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+                        if st_pref:
+                            embed = await self.team_embed(ready_ups)
+                        else:
+                            embed = await self.anonymous_team_embed(ready_ups)
                     await inter.message.edit(view=self, embed=embed, attachments=[]) 
                     await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
 
