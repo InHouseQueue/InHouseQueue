@@ -7,8 +7,9 @@ services:
     build: .
     image: in-house-queue
     # create a .env file in the root directory
-    env_file:
-      - .env
+    environment:
+      # Discord bot token
+      TOKEN: ${TOKEN}
     volumes:
       - inhouse-db:/app/db
     # if the bot fails it will attempt to restart, up to 5 times
