@@ -196,6 +196,9 @@ class Win(Cog):
         await self.bot.execute(
             f"DELETE FROM game_member_data WHERE game_id = '{game_data[0]}'"
         )
+        await self.bot.execute(
+            f"DELETE FROM duo_queue WHERE game_id = '{game_data[0]}'"
+        )
 
         for member_entry in member_data:
             user_data = await self.bot.fetchrow(
