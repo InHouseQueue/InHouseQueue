@@ -608,7 +608,11 @@ class ReadyButton(ui.View):
                     )
 
                 region = await self.bot.fetchrow(f"SELECT region FROM queuechannels WHERE channel_id = {inter.channel.id}")
-                opgg = await self.opgg(inter, region[0])
+                if not region[0]:
+                    region = "na"
+                else:
+                    region = region[0]
+                opgg = await self.opgg(inter, region)
                 await game_lobby.send(
                     embed=Embed(
                         title="🔗 Multi OP.GG",
