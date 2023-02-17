@@ -598,7 +598,7 @@ class Admin(Cog):
         """
         sbmm = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
         if sbmm:
-            return await ctx.send(embed=error("Duo queue can only work with sbmm enabled."))
+            return await ctx.send(embed=error("Please enable sbmm to Duo. `/admin sbmm Enabled`"))
         if int(preference):
             await self.bot.execute(
                 f"INSERT INTO duo_queue_preference(guild_id) VALUES($1)",
