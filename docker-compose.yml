@@ -6,14 +6,25 @@ services:
   bot:
     build: .
     image: in-house-queue
-    env_file:
-      - .env
+    environment:
+      TOKEN: ${TOKEN}
+      TOP_GG_TOKEN: ${TOP_GG_TOKEN}
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: 5
     volumes:
       - inhouse-db:/app/db
     restart: on-failure
 
   backup:
     image: offen/docker-volume-backup:v2
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: 5
     restart: always
     environment:
       BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S-${AWS_S3_PATH}.tar.gz
