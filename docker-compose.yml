@@ -23,14 +23,14 @@ services:
     logging:
       driver: local
       options:
-        max-size: 10m
-        max-file: 5
+        max-size: "10m"
+        max-file: "5"
     restart: always
     environment:
       BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S-${AWS_S3_PATH}.tar.gz
       BACKUP_PRUNING_PREFIX: backup-
       BACKUP_CRON_EXPRESSION: "0 0 * * *"
-      BACKUP_RETENTION_DAYS: "7"
+      BACKUP_RETENTION_DAYS: "30"
       AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
