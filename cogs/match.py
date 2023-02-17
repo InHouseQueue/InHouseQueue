@@ -567,18 +567,7 @@ class ReadyButton(ui.View):
                         color=Color.yellow(),
                     )
                 )
-                # await game_lobby.send(
-                #     embed=Embed(
-                #         title="<:opgg:1052529528913805402> Multi OP.GG",
-                #         description=f"**League of Legends**\n \n"
-                #                     f"**Copy** and **Paste** for Red or Blue Teams Multi op.gg link, then pick a **region**.\n"
-                #                     f"🔵 - `/opgg game_id: {self.game_id} team: Blue region: `\n"
-                #                     f"🔴 - `/opgg game_id: {self.game_id} team: Red region: `\n \n"
-                #                     f"Your discord Nickname **must** be in this format:`IGN: Faker` or `Faker` \n \n"
-                #                     f":warning: If your Discord Nickname is currently **not** your IGN, change it **AFTER** this match.",
-                #         color=Color.blurple(),
-                #     )
-                # )
+
 
                 response = None
                 async with websockets.connect("wss://draftlol.dawe.gg/") as websocket:
@@ -616,7 +605,7 @@ class ReadyButton(ui.View):
                 await game_lobby.send(
                     embed=Embed(
                         title="🔗 Multi OP.GG",
-                        description=f"🔵 Blue Team \n{opgg['blue']}\n\n🔴 Red Team \n{opgg['red']}",
+                        description=f"🔵{opgg['blue']}\n🔴{opgg['red']} \n \n :warning: If the OP.GG  **region** is incorrect, update your queue channel region with `/setregion`",
                         color=Color.blurple()
                     )
                 )
