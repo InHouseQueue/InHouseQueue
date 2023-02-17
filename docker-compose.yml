@@ -12,8 +12,8 @@ services:
     logging:
       driver: local
       options:
-        max-size: 10m
-        max-file: 5
+        max-size: "10m"
+        max-file: "5"
     volumes:
       - inhouse-db:/app/db
     restart: on-failure
