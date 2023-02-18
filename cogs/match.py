@@ -109,6 +109,7 @@ class ReadyButton(ui.View):
         embed = self.msg.embeds[0]
         embed.clear_fields()
         teams = ["blue", "red"]
+        embed.description = ""
 
         duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
         in_duo = []
@@ -781,7 +782,7 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        #if checks_passed == 1:
+        # if checks_passed == 1:
         if checks_passed == len(self.children) - 3:
             member_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
