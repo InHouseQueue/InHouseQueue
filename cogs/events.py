@@ -102,7 +102,8 @@ class Events(Cog):
                 red_role_id INTEGER, 
                 blue_role_id INTEGER,
                 queuechannel_id INTEGER,
-                msg_id INTEGER
+                msg_id INTEGER,
+                game TEXT
             )
             """
         )
