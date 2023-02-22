@@ -87,7 +87,8 @@ class Events(Cog):
             """
             CREATE TABLE IF NOT EXISTS queuechannels(
                 channel_id INTEGER,
-                region TEXT
+                region TEXT,
+                game TEXT
             )
             """
         )
@@ -148,7 +149,8 @@ class Events(Cog):
             """
             CREATE TABLE IF NOT EXISTS winner_log_channel(
                 channel_id INTEGER,
-                guild_id INTEGER
+                guild_id INTEGER,
+                game TEXT
             )
             """
         )
@@ -321,7 +323,7 @@ class Events(Cog):
             else:
                 embed = msg.embeds[0]
             if (
-                    (not embed.title == "Match Overview - SR Tournament Draft")
+                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive"])
                     and (
                         not embed.description == "Game was found! Time to ready up!"
                     )

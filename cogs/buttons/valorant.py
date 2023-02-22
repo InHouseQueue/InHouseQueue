@@ -3,8 +3,8 @@ import itertools
 import json
 import re
 import traceback
-
 from datetime import datetime, timedelta
+
 import async_timeout
 import websockets
 from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
@@ -12,10 +12,10 @@ from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
 from disnake.ext import tasks
 from trueskill import Rating, quality
 
+from cogs.buttons import utility
 from core.buttons import ConfirmationButtons
 from core.embeds import error, success
 from core.selectmenus import SelectMenuDeploy
-from cogs.match import Match
 
 
 class SpectateButton(ui.View):
@@ -623,7 +623,7 @@ class ReadyButton(ui.View):
                 )
 
                 self.disable_button.cancel()
-                await Match.start(self, inter.channel)
+                await utility.start(self, inter.channel)
 
         else:
             await inter.send(
@@ -821,7 +821,6 @@ class QueueButtons(ui.View):
             else:
                 await asyncio.sleep((datetime.now() - self.cooldown).seconds)
 
-
         if not self.game_id:
             self.game_id = inter.message.embeds[0].footer.text
         
@@ -856,23 +855,23 @@ class QueueButtons(ui.View):
         await self.add_participant(inter, button)
         await self.check_end(inter)
 
-    @ui.button(label="Top", style=ButtonStyle.green, custom_id="valorant-queue:first")
+    @ui.button(label="Agent 1", style=ButtonStyle.green, custom_id="valorant-queue:first")
     async def first_button(self, button, inter):
         await self.process_button(button, inter)
 
-    @ui.button(label="Jungle", style=ButtonStyle.green, custom_id="valorant-queue:second")
+    @ui.button(label="Agent 2", style=ButtonStyle.green, custom_id="valorant-queue:second")
     async def second_button(self, button, inter):
         await self.process_button(button, inter)
 
-    @ui.button(label="Mid", style=ButtonStyle.green, custom_id="valorant-queue:third")
+    @ui.button(label="Agent 3", style=ButtonStyle.green, custom_id="valorant-queue:third")
     async def third_button(self, button, inter):
         await self.process_button(button, inter)
 
-    @ui.button(label="ADC", style=ButtonStyle.green, custom_id="valorant-queue:fourth")
+    @ui.button(label="Agent 4", style=ButtonStyle.green, custom_id="valorant-queue:fourth")
     async def fourth_button(self, button, inter):
         await self.process_button(button, inter)
 
-    @ui.button(label="Support", style=ButtonStyle.green, custom_id="valorant-queue:fifth")
+    @ui.button(label="Agent 5", style=ButtonStyle.green, custom_id="valorant-queue:fifth")
     async def fifth_button(self, button, inter):
         await self.process_button(button, inter)
 

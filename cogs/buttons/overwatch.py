@@ -3,8 +3,8 @@ import itertools
 import json
 import re
 import traceback
-
 from datetime import datetime, timedelta
+
 import async_timeout
 import websockets
 from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
@@ -12,10 +12,10 @@ from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
 from disnake.ext import tasks
 from trueskill import Rating, quality
 
+from cogs.buttons import utility
 from core.buttons import ConfirmationButtons
 from core.embeds import error, success
 from core.selectmenus import SelectMenuDeploy
-from cogs.match import Match
 
 
 class SpectateButton(ui.View):
@@ -623,7 +623,7 @@ class ReadyButton(ui.View):
                 )
 
                 self.disable_button.cancel()
-                await Match.start(self, inter.channel)
+                await utility.start(self, inter.channel)
 
         else:
             await inter.send(
@@ -718,6 +718,34 @@ class QueueButtons(ui.View):
 
         return False
 
+    async def disable_btn(self, label):
+        team = "blue"
+        def disable():
+            for button in self.children:
+                if button.label.lower() == label:
+                    button.disabled = True
+                    button.style = ButtonStyle.grey
+        if label == "tank":
+            data = await self.bot.fetchrow(
+                f"SELECT * FROM game_member_data WHERE role = '{label}' and game_id = '{self.game_id}'"
+            )
+            if data:
+                if data[2] == "blue":
+                    team = "red"
+                disable()
+        else:
+            data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE role = '{label}' and game_id = '{self.game_id}'"
+            )
+            if len(data) > 2:
+                if data[2] == "blue":
+                    team = "red"
+                if len(data)+1 == 4:
+                    disable()
+        
+        return team
+        
+
     async def add_participant(self, inter, button) -> None:
         preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
         if preference:
@@ -736,31 +764,8 @@ class QueueButtons(ui.View):
                 )
 
         label = button.label.lower()
-        team = "blue"
 
-        def disable_btn(label):
-            for button in self.children:
-                if button.label.lower() == label:
-                    button.disabled = True
-                    button.style = ButtonStyle.grey
-
-        if label == "tank":
-            data = await self.bot.fetchrow(
-                f"SELECT * FROM game_member_data WHERE role = '{label}' and game_id = '{self.game_id}'"
-            )
-            if data:
-                if data[2] == "blue":
-                    team = "red"
-                disable_btn(label)
-        else:
-            data = await self.bot.fetch(
-                f"SELECT * FROM game_member_data WHERE role = '{label}' and game_id = '{self.game_id}'"
-            )
-            if len(data) > 2:
-                if data[2] == "blue":
-                    team = "red"
-                if len(data)+1 == 4:
-                    disable_btn(label)
+        team = await self.disable_btn(label)
 
         await self.bot.execute(
             "INSERT INTO game_member_data(author_id, role, team, game_id, queue_id, channel_id) VALUES($1, $2, $3, $4, $5, $6)",
@@ -846,15 +851,7 @@ class QueueButtons(ui.View):
         )
         disabled_buttons = []
         for member in game_members:
-            data = await self.bot.fetch(
-                f"SELECT * FROM game_member_data WHERE role = '{member[1]}' and game_id = '{self.game_id}'"
-            )
-            if len(data) == 2:
-                for b in self.children:
-                    if b.label.lower() == member[1]:
-                        disabled_buttons.append(b.label.lower())
-                        b.disabled = True
-                        b.style = ButtonStyle.grey
+            await self.disable_btn(member[1])
         
         await inter.message.edit(view=self, attachments=[])
         if button.label.lower() in disabled_buttons:

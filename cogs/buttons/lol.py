@@ -3,8 +3,8 @@ import itertools
 import json
 import re
 import traceback
-
 from datetime import datetime, timedelta
+
 import async_timeout
 import websockets
 from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
@@ -12,10 +12,10 @@ from disnake import (ButtonStyle, Color, Embed, PermissionOverwrite,
 from disnake.ext import tasks
 from trueskill import Rating, quality
 
+from cogs.buttons import utility
 from core.buttons import ConfirmationButtons
 from core.embeds import error, success
 from core.selectmenus import SelectMenuDeploy
-from cogs.match import Match
 
 
 class SpectateButton(ui.View):
@@ -619,7 +619,7 @@ class ReadyButton(ui.View):
                 )
 
                 self.disable_button.cancel()
-                await Match.start(self, inter.channel)
+                await utility.start(self, inter.channel)
 
         else:
             await inter.send(
