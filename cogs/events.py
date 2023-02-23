@@ -128,7 +128,8 @@ class Events(Cog):
                 guild_id INTEGER,
                 user_id INTEGER,
                 wins INTEGER,
-                losses INTEGER
+                losses INTEGER,
+                game TEXT
             )
             """
         )
@@ -169,7 +170,8 @@ class Events(Cog):
             CREATE TABLE IF NOT EXISTS persistent_lb(
                 guild_id INTEGER,
                 channel_id INTEGER,
-                msg_id INTEGER
+                msg_id INTEGER,
+                game TEXT
             )
             """
         )
@@ -181,7 +183,8 @@ class Events(Cog):
                 user_id INTEGER,
                 mu TEXT,
                 sigma TEXT,
-                counter INTEGER
+                counter INTEGER,
+                game TEXT
             )
             """
         )
@@ -202,7 +205,8 @@ class Events(Cog):
             CREATE TABLE IF NOT EXISTS mvp_points(
                 guild_id INTEGER,
                 user_id INTEGER,
-                votes INTEGER
+                votes INTEGER,
+                game TEXT
             )
             """
         )

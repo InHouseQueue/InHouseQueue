@@ -93,9 +93,11 @@ async def start(bot, channel, game, author=None):
     if not st_pref:
         embed.add_field(name="Slot 1", value="No members yet")
         embed.add_field(name="Slot 2", value="No members yet")
+        sbmm = True
     else:
         embed.add_field(name="🔵 Blue", value="No members yet")
         embed.add_field(name="🔴 Red", value="No members yet")
+        sbmm = False
     if channel.guild.id == 1071099639333404762:
         embed.set_image(url="https://media.discordapp.net/attachments/1071237723857363015/1073428745253290014/esporty_banner.png")
     else:
@@ -115,8 +117,13 @@ async def start(bot, channel, game, author=None):
     else:
         button = overwatch
     
+    duo_pref = await bot.fetchrow(f"SELECT * FROM duo_queue_preference WHERE guild_id = {channel.guild.id}")
+    if duo_pref:
+        duo = True
+    else:
+        duo = False
     try:
-        await channel.send(embed=embed, view=button.QueueButtons(bot))
+        await channel.send(embed=embed, view=button.Queue(bot, sbmm, duo))
     except:
         if author:
             await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))

@@ -357,8 +357,8 @@ class ReadyButton(ui.View):
             )
 
             # CHECK
-            # if len(ready_ups) == 2:
-            if len(ready_ups) == 10:
+            if len(ready_ups) == 2:
+            # if len(ready_ups) == 10:
                 
                 if not st_pref:
                     member_data = await self.bot.fetch(
@@ -366,20 +366,20 @@ class ReadyButton(ui.View):
                     )
 
                     # CHECK
-                    # roles_occupation = {
-                    #     "TOP": [],
-                    #     "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                    #     "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
-                    #     "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                    #     "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
-                    # }
                     roles_occupation = {
-                       "TOP": [],
-                       "JUNGLE": [],
-                       "MID": [],
-                       "ADC": [],
-                       "SUPPORT": []
+                        "TOP": [],
+                        "JUNGLE": [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                        "MID": [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
+                        "ADC": [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                        "SUPPORT": [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
                     }
+                    # roles_occupation = {
+                    #    "TOP": [],
+                    #    "JUNGLE": [],
+                    #    "MID": [],
+                    #    "ADC": [],
+                    #    "SUPPORT": []
+                    # }
 
                     for data in member_data:
                         member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id}")
@@ -619,7 +619,7 @@ class ReadyButton(ui.View):
                 )
 
                 self.disable_button.cancel()
-                await utility.start(self, inter.channel)
+                await utility.start(self, inter.channel, 'lol')
 
         else:
             await inter.send(
@@ -777,8 +777,8 @@ class QueueButtons(ui.View):
                 checks_passed += 1
 
         # CHECK
-        # if checks_passed == 1:
-        if checks_passed == len(self.children) - 3:
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 3:
             member_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )
@@ -1036,3 +1036,419 @@ class QueueButtons(ui.View):
                     await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
 
         await inter.send(content="Select a member you wish to duo with.", view=SelectMenuDeploy(self.bot, inter.author.id, options, 1, 1, Function, self.game_id), ephemeral=True)
+
+
+class RoleButtons(ui.Button):
+    def __init__(self, bot, label, custom_id, disable):
+        if disable:
+            style = ButtonStyle.gray
+        else:
+            style = ButtonStyle.green
+        super().__init__(
+            label=label, style=style, custom_id=custom_id, disabled=disable
+        )
+        self.bot = bot
+        self.cooldown = None
+    
+    async def in_ongoing_game(self, inter) -> bool:
+        data = await self.bot.fetch(f"SELECT * FROM games")
+        for entry in data:
+            user_roles = [x.id for x in inter.author.roles]
+            if entry[4] in user_roles or entry[5] in user_roles:
+                return True
+
+        return False
+
+    async def add_participant(self, inter, button, view) -> None:
+        preference = await self.bot.fetchrow(f"SELECT * FROM queue_preference WHERE guild_id = {inter.guild.id}")
+        if preference:
+            preference = preference[1]
+        else:
+            preference = 1
+        
+        if preference == 2:
+            in_other_games = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id != '{view.game_id}'"
+            )
+            if in_other_games:
+                return await inter.send(
+                    embed=error(f"You cannot be a part of multiple queues."),
+                    ephemeral=True,
+                )
+
+        label = button.label.lower()
+        team = "blue"
+
+        data = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE role = '{label}' and game_id = '{view.game_id}'"
+        )
+        if data:
+            if data[2] == "blue":
+                team = "red"
+            view.disabled.append(label)
+
+        await self.bot.execute(
+            "INSERT INTO game_member_data(author_id, role, team, game_id, queue_id, channel_id) VALUES($1, $2, $3, $4, $5, $6)",
+            inter.author.id,
+            label,
+            team,
+            view.game_id,
+            inter.message.id,
+            inter.channel.id
+        )
+
+        embed = await view.gen_embed(inter.message, view.game_id)
+
+        await inter.message.edit(view=view, embed=embed, attachments=[])
+
+        await inter.send(
+            embed=success(f"You were assigned as **{label.capitalize()}**."),
+            ephemeral=True,
+        )
+    
+    async def callback(self, inter):
+        await inter.response.defer()
+
+        assert self.view is not None
+        view: Queue = self.view
+
+        if not self.cooldown:
+            self.cooldown = datetime.now() + timedelta(seconds=1.5)
+        else:
+            if self.cooldown <= datetime.now():
+                self.cooldown = datetime.now() + timedelta(seconds=1.5)
+            else:
+                await asyncio.sleep((datetime.now() - self.cooldown).seconds)
+
+        if not view.game_id:
+            view.game_id = inter.message.embeds[0].footer.text
+        
+        if await self.in_ongoing_game(inter):
+            return await inter.send(embed=error("You are already in an ongoing game."), ephemeral=True)
+        
+        game_members = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{view.game_id}'"
+        )
+        disabled_buttons = []
+        for member in game_members:
+            data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE role = '{member[1]}' and game_id = '{view.game_id}'"
+            )
+            if len(data) == 2:
+                if member[1] not in view.disabled:
+                    view.disabled.append(member[1])
+        
+        await inter.message.edit(view=view, attachments=[])
+        if self.label.lower() in disabled_buttons:
+            return await inter.send(embed=error("This role is taken, please choose another."), ephemeral=True)
+
+        if await view.has_participated(inter, view.game_id):
+            return await inter.send(
+                embed=error("You are already a participant of this game."),
+                ephemeral=True,
+            )
+
+        await self.add_participant(inter, self, view)
+        await view.check_end(inter)
+
+class LeaveButton(ui.Button):
+    def __init__(self, bot):
+        self.bot = bot
+        super().__init__(
+            label="Leave Queue", style=ButtonStyle.red, custom_id="lol-queue:leave"
+        )
+        
+
+    async def callback(self, inter):
+        assert self.view is not None
+        view: Queue = self.view
+        if await view.has_participated(inter, view.game_id):
+            await self.bot.execute(
+                f"DELETE FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
+            )
+
+            embed = await view.gen_embed(inter.message, view.game_id)
+
+            for button in view.children:
+                if button.label in ["Leave Queue", "Switch Team", "Duo"]:
+                    continue
+
+                data = await self.bot.fetch(
+                    f"SELECT * FROM game_member_data WHERE game_id = '{view.game_id}' and role = '{button.label.lower()}'"
+                )
+                if len(data) < 2:
+                    if button.disabled:
+                        view.disabled.remove(button.label)
+
+            await inter.message.edit(view=view, embed=embed)
+
+            await inter.send(
+                embed=success("You were removed from the participant list."),
+                ephemeral=True,
+            )
+
+        else:
+            await inter.send(
+                embed=error("You are not a participant of this game."), ephemeral=True
+            )
+
+class SwitchTeamButton(ui.Button):
+    def __init__(self, bot):
+        self.bot = bot
+        super().__init__(
+            label="Switch Team", style=ButtonStyle.blurple, custom_id="lol-queue:switch"
+        )
+    
+    async def callback(self, inter):
+        await inter.response.defer()
+        
+        assert self.view is not None
+        view: Queue = self.view
+
+        data = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
+        )
+        if data:
+            check = await self.bot.fetchrow(
+                f"SELECT * FROM game_member_data WHERE role = '{data[1]}' and game_id = '{view.game_id}' and author_id != {inter.author.id}"
+            )
+            if check:
+                return await inter.send(
+                    "The other team position for this role is already occupied.",
+                    ephemeral=True,
+                )
+
+            if data[2] == "blue":
+                team = "red"
+            else:
+                team = "blue"
+
+            await self.bot.execute(
+                f"UPDATE game_member_data SET team = '{team}' WHERE game_id = $1 and author_id = $2",
+                view.game_id,
+                inter.author.id,
+            )
+            await inter.edit_original_message(embed=await view.gen_embed(inter.message, view.game_id))
+            await inter.send(f"You were assigned to **{team.capitalize()} team**.", ephemeral=True)
+
+        else:
+            await inter.send(
+                embed=error("You are not a part of this game."), ephemeral=True
+            )
+
+class DuoButton(ui.Button):
+    def __init__(self, bot):
+        self.bot = bot
+        super().__init__(
+            label="Duo", style=ButtonStyle.blurple, custom_id="lol-queue:duo"
+        )
+
+    async def callback(self, inter):
+        await inter.response.defer()
+        duo_pref = await self.bot.fetchrow(f"SELECT * FROM duo_queue_preference WHERE guild_id = {inter.guild.id}")
+        if not duo_pref:
+            return await inter.send(embed=error("Duo queue is not enabled. Please ask an admin to run `/admin duo_queue Enabled`"), ephemeral=True)
+
+        assert self.view is not None
+        view: Queue = self.view
+
+        queue_check = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
+        )
+        if not queue_check:
+            return await inter.send(embed=error("You are not a part of this queue."), ephemeral=True)
+        
+        queue_members = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{view.game_id}'"
+        )
+        
+        options = []
+        for member_data in queue_members:
+            duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{view.game_id}'")
+            member = inter.guild.get_member(member_data[0])
+            if member.id == inter.author.id:
+                continue
+            if member_data[1] == queue_check[1]:
+                continue
+            check = False
+            for duo in duos:
+                if inter.author.id in [duo[1], duo[2]]:
+                    return await inter.send(embed=error("You are already in a duo."), ephemeral=True,)
+                if member.id in [duo[1], duo[2]]:
+                    check = True
+            if check:
+                continue
+            options.append(SelectOption(label=member.display_name, value=member.id))
+
+        if not options:
+            return await inter.send(
+                embed=error("Unable to find available duo members for you."),
+                ephemeral=True
+            )
+        async def Function(vals, *args):
+            con_view = ConfirmationButtons(inter.author.id)
+            m = inter.guild.get_member(int(vals[0]))
+            await inter.send(f"Are you sure you wish to duo with {m.display_name}?", view=con_view, ephemeral=True)
+            await con_view.wait()
+            if con_view.value:
+                con_view = ConfirmationButtons(m.id)
+                try:
+                    await m.send(
+                        embed=Embed(
+                            title="👥 Duo Request",
+                            description=f"**{inter.author.display_name}** has sent you a duo request for game **{args[0]}** in {inter.channel.mention}. Do you accept?",
+                            color=Color.red()
+                        ),
+                        view=con_view
+                    )
+                except:
+                    return await inter.send(embed=success(f"Unable to send duo queue request to {m.display_name}. Their DMs might be disabled for the bot."), ephemeral=True)
+                await inter.send(embed=success(f"Duo queue request sent to {m.display_name}"), ephemeral=True)
+                await con_view.wait()
+                if con_view.value:
+                    user_duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
+                    for user_duo in user_duos:
+                        if int(vals[0]) in [user_duo[1], user_duo[2]]:
+                            return await m.send(embed=error("You are already in a duo."))
+                    await self.bot.execute(f"INSERT INTO duo_queue(guild_id, user1_id, user2_id, game_id) VALUES($1, $2, $3, $4)", inter.guild.id, inter.author.id, int(vals[0]), args[0])
+                    if isinstance(self, QueueButtons):
+                        embed = await self.gen_embed(inter.message)
+                    else:
+                        ready_ups = await self.bot.fetch(
+                            f"SELECT * FROM ready_ups WHERE game_id = '{self.game_id}'"
+                        )
+                        ready_ups = [x[1] for x in ready_ups]
+                        st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+                        if st_pref:
+                            embed = await self.team_embed(ready_ups)
+                        else:
+                            embed = await self.anonymous_team_embed(ready_ups)
+                    await inter.message.edit(view=self, embed=embed, attachments=[]) 
+                    await m.send(embed=success(f"You've successfully teamed up with {inter.author.display_name}"))
+
+        await inter.send(content="Select a member you wish to duo with.", view=SelectMenuDeploy(self.bot, inter.author.id, options, 1, 1, Function, self.game_id), ephemeral=True)
+
+class Queue(ui.View):
+    def __init__(self, bot, sbmm, duo):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.disabled = []
+        self.game_id = None
+        self.msg = None
+
+        labels = ["Top", "Jungle", "Mid", "ADC", "Support"]
+        for label in labels:
+            disable = False
+            if label in self.disabled:
+                disable = True
+            self.add_item(RoleButtons(bot, label, f"lol-queue:{label.lower()}", disable))
+        self.add_item(LeaveButton(bot))
+        if not sbmm:
+            self.add_item(SwitchTeamButton(bot))
+        if duo:
+            self.add_item(DuoButton(bot))
+    
+    async def has_participated(self, inter, game_id) -> bool:
+        data = await self.bot.fetchrow(
+            f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{game_id}'"
+        )
+        if data:
+            return True
+        return False
+    
+    async def gen_embed(self, msg, game_id) -> Embed:
+        embed = msg.embeds[0]
+        embed.clear_fields()
+        teams = ["blue", "red"]
+        
+        duo_usage = 0
+        duo_emoji = ":one:"
+        for index, team in enumerate(teams):
+
+            team_data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE game_id = '{game_id}' and team = '{team}'"
+            )
+
+            if team == "red":
+                emoji = "🔴"
+            elif team == "blue":
+                emoji = "🔵"
+
+            name = f"{emoji} {team.capitalize()}"
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {msg.guild.id}")
+            if not st_pref:
+                name = f"Slot {index+1}"
+            
+            if team_data:
+                duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{game_id}'")
+                in_duo = []
+                for duo in duos:
+                    in_duo.extend([duo[1], duo[2]])
+            
+                value = ""
+                for data in team_data:
+                    if data[0] in in_duo:
+                        value += f"{duo_emoji} "
+                        duo_usage += 1
+                        if not duo_usage%2:
+                            if duo_usage/2 == 1:
+                                duo_emoji = ":two:"
+                            elif duo_usage/2 == 2:
+                                duo_emoji = ":three:"
+                            elif duo_usage/2 == 3:
+                                duo_emoji = ":four:"
+                            else:
+                                duo_emoji = ":five:" # Should not happen
+                    value += f"<@{data[0]}> - `{data[1].capitalize()}`\n"
+
+            else:
+                value = "No members yet"
+
+            embed.add_field(name=name, value=value)
+
+        embed.set_footer(text=game_id)
+
+        return embed
+
+    async def check_end(self, inter) -> None:
+        checks_passed = 0
+        for button in self.children:
+            if button.label in ["Leave Queue", "Switch Team", "Duo"]:
+                continue
+
+            data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and role = '{button.label.lower()}'"
+            )
+            if len(data) == 2:
+                checks_passed += 1
+
+        # CHECK
+        if checks_passed == 1:
+        # if checks_passed == len(self.children) - 3:
+            member_data = await self.bot.fetch(
+                f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+            )
+
+            mentions = (
+                ", ".join(f"<@{data[0]}>" for data in member_data)
+            )
+
+            self.msg = inter.message
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {inter.guild.id}")
+            if st_pref:
+                embed = await ReadyButton.team_embed(self, [])
+            else:
+                embed = await ReadyButton.anonymous_team_embed(self, [], self.game_id)
+
+            
+            await inter.edit_original_message(
+                view=ReadyButton(self.bot),
+                content="0/10 Players are ready!",
+                embed=embed
+            )
+
+            embed = Embed(
+                description=f"Game was found! Time to ready up!", color=Color.blurple()
+            )
+
+            await inter.message.reply(mentions, embed=embed, delete_after=300.0)
