@@ -22,8 +22,68 @@ class MyBot(commands.Bot):
             'jungle': "<:JGL:1066065288107397200>",
             'mid': "<:MID:1066065288862380033>",
             'support': "<:SUP:1066065290540093450>",
-            'adc': "<:BOT:1066065285938946078>"
+            'adc': "<:BOT:1066065285938946078>",
+            'controller': "<:Controller:1078086238961156197>",
+            'duelist': "<:Duelist:1078086241221877941>",
+            'initiator': "<:Initiator:1078086242677305426>",
+            'sentinel': "<:Sentinel:1078086244371808267>",
+            'flex': "❓",
+            'flex - controller': "<:Controller:1078086238961156197>",
+            'flex - duelist': "<:Duelist:1078086241221877941>",
+            'flex - initiator': "<:Initiator:1078086242677305426>",
+            'flex - sentinel': "<:Sentinel:1078086244371808267>",
+            'tank': "<:Tank:1078082570039873668>",
+            'dps 1': "<:Damage:1078082164949786725>",
+            'dps 2': "<:Damage:1078082164949786725>",
+            'support 1': "<:Support:1078082833198878852>",
+            'support 2': "<:Support:1078082833198878852>",
         }
+        self.valorant_maps = [
+            {'Haven': 'https://media.valorant-api.com/maps/2bee0dc9-4ffe-519b-1cbd-7fbe763a6047/splash.png'},
+            {'Split': 'https://media.valorant-api.com/maps/d960549e-485c-e861-8d71-aa9d1aed12a2/splash.png'},
+            {'Ascent': 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png'},
+            {'Icebox': 'https://media.valorant-api.com/maps/e2ad5c54-4114-a870-9641-8ea21279579a/splash.png'},
+            {'Fracture': 'https://media.valorant-api.com/maps/b529448b-4d60-346e-e89e-00a4c527a405/splash.png'},
+            {'Pearl': 'https://media.valorant-api.com/maps/fd267378-4d1d-484f-ff52-77821ed10dc2/splash.png'},
+            {'Lotus': 'https://media.valorant-api.com/maps/2fe4ed3a-450a-948b-6d6b-e89a78e680a9/splash.png'},
+            {'Bind': 'https://media.valorant-api.com/maps/2c9d57ec-4431-9c5e-2939-8f9ef6dd5cba/splash.png'},
+            {'Breeze': 'https://media.valorant-api.com/maps/2fb9a4fd-47b8-4e7d-a969-74b4046ebd53/splash.png'},
+        ]
+        self.overwatch = [
+            { 'Control': [
+                {'Busan': 'https://overfast-api.tekrop.fr/static/maps/busan.jpg'},
+                {'Ilios': 'https://overfast-api.tekrop.fr/static/maps/ilios.jpg'},
+                {'Lijiang Tower': 'https://overfast-api.tekrop.fr/static/maps/lijiang.jpg'},
+                {'Nepal': 'https://overfast-api.tekrop.fr/static/maps/nepal.jpg'},
+                {'Oasis': 'https://overfast-api.tekrop.fr/static/maps/oasis.jpg'},
+            ] },
+            { 'Escort': [
+                {'Dorado': 'https://overfast-api.tekrop.fr/static/maps/dorado.jpg'},
+                {'Junkertown': 'https://overfast-api.tekrop.fr/static/maps/junkertown.jpg'},
+                {'Circuit Royal': 'https://overfast-api.tekrop.fr/static/maps/circuit_royal.jpg'},
+                {'Rialto': 'https://overfast-api.tekrop.fr/static/maps/rialto.jpg'},
+                {'Route 66': 'https://overfast-api.tekrop.fr/static/maps/route_66.jpg'},
+                {'Shambali Monastery (new)': 'https://overfast-api.tekrop.fr/static/maps/shambali.jpg'},
+                {'Watchpoint Gibratar': 'https://overfast-api.tekrop.fr/static/maps/gibraltar.jpg'},
+            ]
+            },
+            { 'Hybrid':[
+                {'Blizzard World': 'https://overfast-api.tekrop.fr/static/maps/blizzard_world.jpg'},
+                {'Eichenwalde': 'https://overfast-api.tekrop.fr/static/maps/eichenwalde.jpg'},
+                {'King’s Row': 'https://overfast-api.tekrop.fr/static/maps/kings_row.jpg'},
+                {'Midtown': 'https://overfast-api.tekrop.fr/static/maps/midtown.jpg'},
+                {'Paraíso': 'https://overfast-api.tekrop.fr/static/maps/paraiso.jpg'},
+                {'Numbani': 'https://overfast-api.tekrop.fr/static/maps/numbani.jpg'},
+                {'Hollywood': 'https://overfast-api.tekrop.fr/static/maps/hollywood.jpg'},
+            ]
+            },
+            { 'Push':[
+                {'Colosseo': 'https://overfast-api.tekrop.fr/static/maps/colosseo.jpg'},
+                {'New Queen Street': 'https://overfast-api.tekrop.fr/static/maps/new_queen_street.jpg'},
+                {'Esperança': 'https://overfast-api.tekrop.fr/static/maps/esperanca.jpg'},
+            ]
+            }
+        ]
 
     async def commit(self):
         async with aiosqlite.connect("db/main.sqlite") as db:

@@ -1,7 +1,7 @@
 import uuid
 
 from disnake import Color, Embed
-from disnake.ext.commands import Cog, slash_command, Param
+from disnake.ext.commands import Cog, slash_command
 
 from core import match
 from core.embeds import error

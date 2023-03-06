@@ -4,6 +4,7 @@ import json
 import re
 import traceback
 from datetime import datetime, timedelta
+import random
 
 import async_timeout
 import websockets
@@ -16,6 +17,9 @@ from core.buttons import ConfirmationButtons
 from core.embeds import error, success
 from core.selectmenus import SelectMenuDeploy
 
+LOL_LABELS = ["Top", "Jungle", "Mid", "ADC", "Support"]
+VALORANT_LABELS = ["Controller", "Initiator", "Sentinel", "Duelist", "Flex"]
+OVERWATCH_LABELS = ["Tank", "DPS 1", "DPS 2", "Support 1", "Support 2"]
 
 class SpectateButton(ui.View):
     def __init__(self, bot):
@@ -1472,7 +1476,39 @@ class ReadyButton(ui.Button):
 
         return embed
 
-    async def opgg(self, inter, region):
+    async def lol_lobby(self, inter, lobby_channel):
+        response = None
+        async with websockets.connect("wss://draftlol.dawe.gg/") as websocket:
+            data = {"type": "createroom", "blueName": "In-House Queue Blue", "redName": "In-House Queue Red", "disabledTurns": [], "disabledChamps": [], "timePerPick": "30", "timePerBan": "30"}
+            await websocket.send(json.dumps(data))
+            
+            try:
+                async with async_timeout.timeout(10):
+                    result = await websocket.recv()
+                    if result:
+                        data = json.loads(result)
+                        response = ("🔵 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["bluePassword"], "🔴 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["redPassword"], "\n**Spectators:** https://draftlol.dawe.gg/" + data["roomId"])
+            except asyncio.TimeoutError:
+                pass
+        
+        if response:
+            await lobby_channel.send(
+                embed=Embed(
+                    title="League of Legends Draft",
+                    description="\n".join(response),
+                    color=Color.blurple()
+                )
+            )
+        else:
+            await lobby_channel.send(
+                embed=error("Draftlol is down, could not retrieve links.")
+            )
+
+        region = await self.bot.fetchrow(f"SELECT region FROM queuechannels WHERE channel_id = {inter.channel.id}")
+        if not region[0]:
+            region = "na"
+        else:
+            region = region[0]
         teams = {
             'blue': '',
             'red': ''
@@ -1483,7 +1519,7 @@ class ReadyButton(ui.Button):
             data = await self.bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and team = '{team}'")
             nicknames = []
             for entry in data:
-                member = inter.guild.get_member(entry[0])
+                member = lobby_channel.guild.get_member(entry[0])
                 if member.nick:
                     nick = member.nick
                 else:
@@ -1504,7 +1540,61 @@ class ReadyButton(ui.Button):
 
             teams[team] = url
         
-        return teams
+        await lobby_channel.send(
+            embed=Embed(
+                title="🔗 Multi OP.GG",
+                description=f"🔵{teams['blue']}\n🔴{teams['red']} \n \n :warning: If the OP.GG  **region** is incorrect, update your queue channel region with `/setregion`",
+                color=Color.blurple()
+            )
+        )
+
+    async def valorant_lobby(self, lobby_channel):
+        map_dict = random.choice(self.bot.valorant_maps)
+        for key in map_dict.keys():
+            map_name = key
+            map_link = map_dict[key]
+        embed = Embed(
+            title="Game Map (Optional)",
+            description=f"Set the game map to **{map_name}**.",
+            color=Color.red()
+        )
+        embed.set_image(url=map_link)
+        await lobby_channel.send(embed=embed)
+
+        options = []
+        for label in VALORANT_LABELS:
+            if label == "Flex":
+                continue
+            options.append(SelectOption(label=label, value=label.lower()))
+
+        async def Function(inter, val, *args):
+            await self.bot.execute(
+                f"UPDATE game_member_data SET role = 'flex - {val[0]}' WHERE author_id = {inter.author.id} and game_id = '{self.game_id}'"
+            )
+            await inter.send(embed=success(f"You've been given {val[0].capitalize()} successfully."))
+        
+        flex_roles = await self.bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and role = 'flex'")
+        for holder in flex_roles:
+            view = SelectMenuDeploy(self.bot, holder[0], options, 1, 1, Function)
+            await lobby_channel.send(content=f"<@{holder[0]}> select the role you wish to play.", view=view)
+
+    async def overwatch_lobby(self, lobby_channel):
+        gamemode_dict = random.choice(self.bot.overwatch)
+        for key in gamemode_dict.keys():
+            gamemode_name = key
+            gamemode_maps_Dict = gamemode_dict[key]
+        map_dict = random.choice(gamemode_maps_Dict)
+        for key in map_dict.keys():
+            map_name = key
+            map_link = map_dict[key]
+        embed = Embed(
+            title="Game Settings (Optional)",
+            description=f"Game Mode: **{gamemode_name}** \nGame Map: **{map_name}**",
+            color=Color.red()
+        )
+        embed.set_image(url=map_link)
+        await lobby_channel.send(embed=embed)
+
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
@@ -1524,7 +1614,7 @@ class ReadyButton(ui.Button):
                 self.disable_button.stop()
                 return
 
-        if (datetime.now() - self.time_of_execution).seconds >= 20:
+        if (datetime.now() - self.time_of_execution).seconds >= 300:
             if self.msg:
                 ready_ups = await self.bot.fetch(
                     f"SELECT user_id FROM ready_ups WHERE game_id = '{self.game_id}'"
@@ -1635,18 +1725,18 @@ class ReadyButton(ui.Button):
 
                     # CHECK
                     if self.game == 'lol':
-                        labels = ["Top", "Jungle", "Mid", "ADC", "Support"]
+                        labels = LOL_LABELS
                     elif self.game == 'valorant':
-                        labels = ["Agent 1", "Agent 2", "Agent 3", "Agent 4", "Agent 5"]
+                        labels = VALORANT_LABELS
                     else:
-                        labels = ["Tank", "DPS 1", "DPS 2", "Support 1", "Support 2"]
+                        labels = OVERWATCH_LABELS
                     
                     roles_occupation = {
-                        labels[0].upper(): [],
+                        labels[0].upper(): [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}],
                         labels[1].upper(): [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
                         labels[2].upper(): [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
                         labels[3].upper(): [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                        labels[4].upper(): [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}]
+                        labels[4].upper(): []
                     }
                     # roles_occupation = {
                     #    labels[0].upper(): [],
@@ -1838,48 +1928,6 @@ class ReadyButton(ui.Button):
                     )
                 )
 
-                if self.game == 'lol':
-                    response = None
-                    async with websockets.connect("wss://draftlol.dawe.gg/") as websocket:
-                        data = {"type": "createroom", "blueName": "In-House Queue Blue", "redName": "In-House Queue Red", "disabledTurns": [], "disabledChamps": [], "timePerPick": "30", "timePerBan": "30"}
-                        await websocket.send(json.dumps(data))
-                        
-                        try:
-                            async with async_timeout.timeout(10):
-                                result = await websocket.recv()
-                                if result:
-                                    data = json.loads(result)
-                                    response = ("🔵 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["bluePassword"], "🔴 https://draftlol.dawe.gg/" + data["roomId"] +"/" +data["redPassword"], "\n**Spectators:** https://draftlol.dawe.gg/" + data["roomId"])
-                        except asyncio.TimeoutError:
-                            pass
-                    
-                    if response:
-                        await game_lobby.send(
-                            embed=Embed(
-                                title="League of Legends Draft",
-                                description="\n".join(response),
-                                color=Color.blurple()
-                            )
-                        )
-                    else:
-                        await game_lobby.send(
-                            embed=error("Draftlol is down, could not retrieve links.")
-                        )
-
-                    region = await self.bot.fetchrow(f"SELECT region FROM queuechannels WHERE channel_id = {inter.channel.id}")
-                    if not region[0]:
-                        region = "na"
-                    else:
-                        region = region[0]
-                    opgg = await self.opgg(inter, region)
-                    await game_lobby.send(
-                        embed=Embed(
-                            title="🔗 Multi OP.GG",
-                            description=f"🔵{opgg['blue']}\n🔴{opgg['red']} \n \n :warning: If the OP.GG  **region** is incorrect, update your queue channel region with `/setregion`",
-                            color=Color.blurple()
-                        )
-                    )
-
                 await self.bot.execute(
                     f"INSERT INTO games(game_id, lobby_id, voice_red_id, voice_blue_id, red_role_id, blue_role_id, queuechannel_id, msg_id, game) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)",
                     self.game_id,
@@ -1892,6 +1940,15 @@ class ReadyButton(ui.Button):
                     inter.message.id,
                     self.game
                 )
+
+                if self.game == 'lol':
+                    await self.lol_lobby(inter, game_lobby)
+
+                elif self.game == 'valorant':
+                    await self.valorant_lobby(game_lobby)
+                
+                else:
+                    await self.overwatch_lobby(game_lobby)
 
                 self.disable_button.cancel()
                 # await Match.start(self, inter.channel, self.game)
@@ -1919,11 +1976,11 @@ class Queue(ui.View):
         self.game = game
         self.msg = None
         if game == 'lol':
-            labels = ["Top", "Jungle", "Mid", "ADC", "Support"]
+            labels = LOL_LABELS
         elif game == 'valorant':
-            labels = ["Agent 1", "Agent 2", "Agent 3", "Agent 4", "Agent 5"]
+            labels = VALORANT_LABELS
         else:
-            labels = ["Tank", "DPS 1", "DPS 2", "Support 1", "Support 2"]
+            labels = OVERWATCH_LABELS
         for label in labels:
             disable = False
             if label in self.disabled:
