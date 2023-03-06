@@ -1,7 +1,7 @@
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
-from cogs.buttons.lol import QueueButtons
+from core.match import QueueButtons
 from cogs.win import Win
 from core.embeds import error, success
 from core.buttons import ConfirmationButtons
