@@ -1,7 +1,6 @@
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
-from core.match import QueueButtons
 from cogs.win import Win
 from core.embeds import error, success
 from core.buttons import ConfirmationButtons
@@ -149,17 +148,8 @@ class Admin(Cog):
                 await self.bot.execute(
                     f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}'",
                 )
-                msg = self.bot.get_message(entry[4])
-                if not msg:
-                    channel = self.bot.get_channel(entry[5])
-                    msg = await channel.fetch_message(entry[4])
 
-                if msg:
-                    if msg.components[0].children[0].label == "Ready Up!":
-                        self.game_id = entry[3]
-                        await msg.edit(view=QueueButtons(self.bot), embed = await QueueButtons.gen_embed(self, msg), content=" ")
-
-        await ctx.send(embed=success(f"{member.mention} was removed from all active queues."))
+        await ctx.send(embed=success(f"{member.mention} was removed from all active queues. They may still show up in queue embed."))
 
     @admin.command()
     async def winner(self, ctx, role: Role):
