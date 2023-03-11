@@ -78,7 +78,7 @@ class Match(Cog):
                 else:
                     icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077959248853598308/IMG_6379.png"
 
-            else:
+            elif game == "overwatch":
                 if region == "americas":
                     icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077957898329673728/OW_Americas.png"
                 elif region == "asia":
@@ -86,6 +86,8 @@ class Match(Cog):
                 else:
                     icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077957898963013814/OW_Europe.png"
 
+            else:
+                icon_url = ""
             return icon_url
 
         def banner_icon(game):
@@ -93,16 +95,20 @@ class Match(Cog):
                 return "https://cdn.discordapp.com/attachments/328696263568654337/1068133100451803197/image.png"
             elif game == "valorant":
                 return "https://media.discordapp.net/attachments/1046664511324692520/1077958380964036689/image.png"
-            else:
+            elif game == "overwatch":
                 return "https://media.discordapp.net/attachments/1046664511324692520/1077958380636868638/image.png"
+            else:
+                return ""
 
         def get_title(game):
             if game == "lol":
                 return "Match Overview - SR Tournament Draft"
             elif game == "valorant":
                 return "Match Overview - Valorant Competitive"
-            else:
+            elif game == "overwatch":
                 return "Match Overview - Overwatch Competitive"
+            else:
+                return "Match Overview"
 
         data = await self.bot.fetchrow(
             f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
@@ -136,7 +142,8 @@ class Match(Cog):
             embed.set_image(url="https://media.discordapp.net/attachments/1071237723857363015/1073428745253290014/esporty_banner.png")
         else:
             banner = banner_icon(game)
-            embed.set_image(url=banner)
+            if banner:
+                embed.set_image(url=banner)
         with open('assets/tips.txt', 'r') as f:
             tips = f.readlines()
             tip = random.choice(tips)
@@ -144,8 +151,8 @@ class Match(Cog):
         if not data[1]:
             data = (data[0], 'na')
         icon_url = region_icon(data[1], game)
-        
-        embed.set_author(name=f"{data[1].upper()} Queue", icon_url=icon_url)
+        if icon_url:
+            embed.set_author(name=f"{data[1].upper()} Queue", icon_url=icon_url)
         
         duo_pref = await self.bot.fetchrow(f"SELECT * FROM duo_queue_preference WHERE guild_id = {channel.guild.id}")
         if duo_pref:

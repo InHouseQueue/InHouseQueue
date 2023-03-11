@@ -21,13 +21,13 @@ class Leaderboard(Cog):
             st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
             if not st_pref:
                 user_data = await self.bot.fetch(
-                    f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id}"
+                    f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id} and game = '{game}'"
                 )
                 user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
             else:
                 type = "basic"
                 user_data = await self.bot.fetch(
-                    f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id}"
+                    f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id} and game = '{game}'"
                 )
                 user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
                 user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
@@ -49,15 +49,33 @@ class Leaderboard(Cog):
         vals = 1
 
         async def add_field(data, current_embed) -> None:
-            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
-            if user_history:
-                roles_players = {
-                    'top': 0,
-                    'jungle': 0,
-                    'mid': 0,
-                    'support': 0,
-                    'adc': 0
-                }
+            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]} and game = '{game}'")
+            if user_history and game != 'other':
+                if game == 'lol':
+                    roles_players = {
+                        'top': 0,
+                        'jungle': 0,
+                        'mid': 0,
+                        'support': 0,
+                        'adc': 0
+                    }
+                elif game == 'valorant':
+                    roles_players = {
+                        'controller': 0,
+                        'initiator': 0,
+                        'sentinel': 0,
+                        'duelist': 0,
+                        'flex': 0
+                    }
+                elif game == "overwatch":
+                    roles_players = {
+                        'tank': 0,
+                        'dps 1': 0,
+                        'dps 2': 0,
+                        'support 1': 0,
+                        'support 2': 0
+                    }
+
                 for history in user_history:
                     if history[0]:
                         roles_players[history[0]] += 1
@@ -70,7 +88,7 @@ class Leaderboard(Cog):
             else:
                 most_played_role = "<:fill:1066868480537800714>"
 
-            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id}")
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id} and game = '{game}'")
             if user_data:
                 wins = user_data[2]
                 losses = user_data[3]
@@ -183,13 +201,13 @@ class Leaderboard(Cog):
     @slash_command()
     async def leaderboard_others(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
         """
-        View the leaderboard for Others.
+        View the leaderboard for Other.
         """
-        await self.leaderboard(ctx, 'others', type)
+        await self.leaderboard(ctx, 'other', type)
     
-    @command(name="leaderboard_others")
+    @command(name="leaderboard_other")
     async def leaderboard_others_prefix(self, ctx, type="mmr"):
-        await self.leaderboard(ctx, 'others', type)
+        await self.leaderboard(ctx, 'other', type)
 
     async def rank(self, ctx, game, type):
         if type.lower() not in ['mvp', 'mmr']:
@@ -197,12 +215,12 @@ class Leaderboard(Cog):
 
         if type == 'mmr':
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id}"
+                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id} and game = '{game}'"
             )
             user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
         else:
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id}"
+                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id} and game = '{game}'"
             )
             user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
@@ -216,7 +234,7 @@ class Leaderboard(Cog):
         if ctx.author.avatar:
             embed.set_thumbnail(url=ctx.author.avatar.url)
         async def add_field(data) -> None:
-            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]}")
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and game = '{game}'")
             if user_data:
                 wins = user_data[2]
                 losses = user_data[3]

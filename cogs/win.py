@@ -61,7 +61,7 @@ class WinButtons(ui.View):
                 losing_team_rating = []
                 
                 for member_entry in member_data:
-                    rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]} and guild_id = {inter.guild.id}")
+                    rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {member_entry[0]} and guild_id = {inter.guild.id} and game = '{game_data[8]}'")
 
                     if member_entry[2] == winner.lower():
                         winner_team_rating.append(
@@ -84,9 +84,9 @@ class WinButtons(ui.View):
                 )
 
                 for i, new_rating in enumerate(updated_rating[0]):
-                    counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']} and guild_id = {inter.guild.id}")
+                    counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_team_rating[i]['user_id']} and guild_id = {inter.guild.id} and game = '{game_data[8]}'")
                     await self.bot.execute(
-                        "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
+                        f"UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5 and game = '{game_data[8]}'",
                         str(new_rating.mu),
                         str(new_rating.sigma),
                         counter[0] + 1,
@@ -96,9 +96,9 @@ class WinButtons(ui.View):
                     new_mmr.update({str(winner_team_rating[i]['user_id']): f"{str(new_rating.mu)}:{str(new_rating.sigma)}"})
 
                 for i, new_rating in enumerate(updated_rating[1]):
-                    counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']} and guild_id = {inter.guild.id}")
+                    counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {losing_team_rating[i]['user_id']} and guild_id = {inter.guild.id} and game = '{game_data[8]}'")
                     await self.bot.execute(
-                        "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
+                        f"UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5 and game = '{game_data[8]}'",
                         str(new_rating.mu),
                         str(new_rating.sigma),
                         counter[0] + 1,
@@ -121,7 +121,7 @@ class WinButtons(ui.View):
             embed.add_field(name="Losing Team", value=losing_team_str)
 
             log_channel_id = await self.bot.fetchrow(
-                f"SELECT * FROM winner_log_channel WHERE guild_id = {inter.guild.id}"
+                f"SELECT * FROM winner_log_channel WHERE guild_id = {inter.guild.id} and game = '{game_data[8]}'"
             )
             if log_channel_id:
                 log_channel = self.bot.get_channel(log_channel_id[0])
@@ -141,7 +141,7 @@ class WinButtons(ui.View):
 
             for member_entry in member_data:
                 user_data = await self.bot.fetchrow(
-                    f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {inter.guild.id}"
+                    f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {inter.guild.id} and game = '{game_data[8]}'"
                 )
 
                 existing_voting = await self.bot.fetchrow(f"SELECT * FROM mvp_voting WHERE user_id = {member_entry[0]}")
@@ -186,7 +186,7 @@ class WinButtons(ui.View):
                 if member_entry[2] == winner.lower():
 
                     await self.bot.execute(
-                        f"INSERT INTO members_history(user_id, game_id, team, result, role, old_mmr, now_mmr, voted_team) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
+                        f"INSERT INTO members_history(user_id, game_id, team, result, role, old_mmr, now_mmr, voted_team, game) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)",
                         member_entry[0],
                         game_data[0],
                         member_entry[2],
@@ -194,28 +194,30 @@ class WinButtons(ui.View):
                         member_entry[1],
                         player_old_mmr,
                         player_new_mmr,
-                        voted_team
+                        voted_team,
+                        game_data[8]
                     )
 
                     if user_data:
                         await self.bot.execute(
-                            f"UPDATE points SET wins = $1 WHERE user_id = $2 and guild_id = $3",
+                            f"UPDATE points SET wins = $1 WHERE user_id = $2 and guild_id = $3 and game = '{game_data[8]}'",
                             user_data[2] + 1,
                             member_entry[0],
                             inter.guild.id,
                         )
                     else:
                         await self.bot.execute(
-                            "INSERT INTO points(guild_id, user_id, wins, losses) VALUES($1, $2, $3, $4)",
+                            "INSERT INTO points(guild_id, user_id, wins, losses, game) VALUES($1, $2, $3, $4, $5)",
                             inter.guild.id,
                             member_entry[0],
                             1,
                             0,
+                            game_data[8]
                         )
 
                 else:
                     await self.bot.execute(
-                        f"INSERT INTO members_history(user_id, game_id, team, result, role, old_mmr, now_mmr, voted_team) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
+                        f"INSERT INTO members_history(user_id, game_id, team, result, role, old_mmr, now_mmr, voted_team, game) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)",
                         member_entry[0],
                         game_data[0],
                         member_entry[2],
@@ -223,23 +225,25 @@ class WinButtons(ui.View):
                         member_entry[1],
                         player_old_mmr,
                         player_new_mmr,
-                        voted_team
+                        voted_team,
+                        game_data[8]
                     )
 
                     if user_data:
                         await self.bot.execute(
-                            f"UPDATE points SET losses = $1 WHERE user_id = $2 and guild_id = $3",
+                            f"UPDATE points SET losses = $1 WHERE user_id = $2 and guild_id = $3 and game = '{game_data[8]}'",
                             user_data[3] + 1,
                             member_entry[0],
                             inter.guild.id,
                         )
                     else:
                         await self.bot.execute(
-                            "INSERT INTO points(guild_id, user_id, wins, losses) VALUES($1, $2, $3, $4)",
+                            "INSERT INTO points(guild_id, user_id, wins, losses, game) VALUES($1, $2, $3, $4, $5)",
                             inter.guild.id,
                             member_entry[0],
                             0,
                             1,
+                            game_data[8]
                         )
 
         if args:

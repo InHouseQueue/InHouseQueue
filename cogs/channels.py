@@ -39,57 +39,67 @@ class ChannelCommands(Cog):
 
     @command(aliases=["channel"])
     async def setchannel(self, ctx, channel: TextChannel, game):
-        if game.lower() not in ['lol', 'valorant', 'overwatch']:
-            return await ctx.send(embeds.error("Game has to be one of these three: `valorant/lol/overwatch`."))
+        if game.lower() not in ['lol', 'valorant', 'overwatch', 'other']:
+            return await ctx.send(embed=embeds.error("Game has to be one of these three: `valorant/lol/overwatch/other`."))
+
+        data = await self.bot.fetchrow(
+            f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
+        )
+        if data:
+            return await ctx.edit_original_message(
+                embed=embeds.error(
+                    f"{channel.mention} is already setup as the queue channel."
+                )
+            )
 
         if game == 'lol':
             regions =  ["BR", "EUNE", "EUW", "LA", "LAS", "NA", "OCE", "RU", "TR", "JP"]
         elif game == 'valorant':
             regions = ["EU", "NA", "BR", "KR", "AP", "LATAM"]
-        else:
+        elif game == "overwatch":
             regions = ["AMERICAS", "ASIAS", "EUROPE"]
+        else:
+            regions = []
 
-        options = []
-        for region in regions:
-            options.append(SelectOption(label=region, value=region.lower()))
-        async def Function(inter, vals, *args):
-            view = buttons.ConfirmationButtons(inter.author.id)
-            await inter.edit_original_message(
-                embed=Embed(title=":warning: Notice", description=f"Messages in {channel.mention} will automatically be deleted to keep the queue channel clean, do you want to proceed?", color=Color.yellow()),
-                view=view,
-                content=""
-            )
-            await view.wait()
-            if view.value is None:
-                return
-            elif view.value:
-                pass
-            else:
-                return await inter.edit_original_message(embed=embeds.success("Process aborted."))
-            data = await self.bot.fetchrow(
-                f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
-            )
-            if data:
-                return await inter.edit_original_message(
-                    embed=embeds.error(
-                        f"{channel.mention} is already setup as the queue channel."
+        if regions:
+            options = []
+            for region in regions:
+                options.append(SelectOption(label=region, value=region.lower()))
+            async def Function(inter, vals, *args):
+                view = buttons.ConfirmationButtons(inter.author.id)
+                await inter.edit_original_message(
+                    embed=Embed(title=":warning: Notice", description=f"Messages in {channel.mention} will automatically be deleted to keep the queue channel clean, do you want to proceed?", color=Color.yellow()),
+                    view=view,
+                    content=""
+                )
+                await view.wait()
+                if view.value is None:
+                    return
+                elif view.value:
+                    pass
+                else:
+                    return await inter.edit_original_message(embed=embeds.success("Process aborted."))
+
+                await self.bot.execute(
+                    "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", channel.id, vals[0], game
+                )
+
+                await inter.edit_original_message(
+                    embed=embeds.success(
+                        f"{channel.mention} was successfully set as queue channel."
                     )
                 )
 
+            await ctx.send(content="Select a region for the queue.", view=selectmenus.SelectMenuDeploy(self.bot, ctx.author.id, options, 1, 1, Function))
+        else:
+            
             await self.bot.execute(
-                "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", channel.id, vals[0], game
+                "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", channel.id, "none", game
             )
-
-            await inter.edit_original_message(
-                embed=embeds.success(
-                    f"{channel.mention} was successfully set as queue channel."
-                )
-            )
-
-        await ctx.send(content="Select a region for the queue.", view=selectmenus.SelectMenuDeploy(self.bot, ctx.author.id, options, 1, 1, Function))
+            await ctx.send(embed=embeds.success(f"{channel.mention} was successfully set as queue channel."))
 
     @slash_command(name="setchannel")
-    async def setchannel_slash(self, ctx, channel: TextChannel, game = Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch"})):
+    async def setchannel_slash(self, ctx, channel: TextChannel, game = Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
         """
         Set a channel to be used as the queue.
         """
@@ -127,8 +137,8 @@ class ChannelCommands(Cog):
             
     @command()
     async def setwinnerlog(self, ctx, channel: TextChannel, game):
-        if game not in ['lol', 'valorant', 'overwatch']:
-            return await ctx.send(embed=embeds.error("Please select a valid game. Game can be `lol/valorant/overwatch`."))
+        if game not in ['lol', 'valorant', 'overwatch', 'other']:
+            return await ctx.send(embed=embeds.error("Please select a valid game. Game can be `lol/valorant/overwatch/other`."))
         data = await self.bot.fetchrow(
             f"SELECT * FROM winner_log_channel WHERE channel_id = {channel.id} and game = '{game}'"
         )
@@ -155,7 +165,7 @@ class ChannelCommands(Cog):
         )
 
     @slash_command(name="setwinnerlog")
-    async def setwinnerlog_slash(self, ctx, channel: TextChannel, game=Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch"})):
+    async def setwinnerlog_slash(self, ctx, channel: TextChannel, game=Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
         """
         Set a channel to send the game results.
         """

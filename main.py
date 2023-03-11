@@ -37,6 +37,11 @@ class MyBot(commands.Bot):
             'dps 2': "<:Damage:1078082164949786725>",
             'support 1': "<:Support:1078082833198878852>",
             'support 2': "<:Support:1078082833198878852>",
+            'role 1': "1️⃣",
+            'role 2': "2️⃣",
+            'role 3': "3️⃣",
+            'role 4': "4️⃣",
+            'role 5': "5️⃣"
         }
         self.valorant_maps = [
             {'Haven': 'https://media.valorant-api.com/maps/2bee0dc9-4ffe-519b-1cbd-7fbe763a6047/splash.png'},

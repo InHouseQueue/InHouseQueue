@@ -193,8 +193,99 @@ class Admin(Cog):
                         embed=error(f"{team.capitalize()} is already the winner.")
                     )
 
+        wrong_voters = []
+        winner_rating = []
+        loser_rating = []
+        for member_entry in member_data:
+            user_data = await self.bot.fetchrow(
+                f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {ctx.guild.id} and game = '{member_entry[8]}'"
+            )
+
+            if member_entry[7] != "none":
+                if member_entry[7] != team.lower():
+                    wrong_voters.append(member_entry[0])
+            
+            rating = Rating(mu=float(member_entry[5].split(':')[0]), sigma=float(member_entry[5].split(':')[1]))
+
+            if member_entry[2] == team.lower():
+                await self.bot.execute(
+                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
+                    "won",
+                )
+
+                await self.bot.execute(
+                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4 and game = '{member_entry[8]}'",
+                    user_data[2] + 1,
+                    user_data[3] - 1,
+                    member_entry[0],
+                    ctx.guild.id,
+                )
+
+                winner_rating.append(
+                    {"user_id": member_entry[0], "rating": rating}
+                )
+            else:
+                await self.bot.execute(
+                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
+                    "lost",
+                )
+
+                await self.bot.execute(
+                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4 and game = '{member_entry[8]}'",
+                    user_data[2] - 1,
+                    user_data[3] + 1,
+                    member_entry[0],
+                    ctx.guild.id,
+                )
+
+                loser_rating.append(
+                    {"user_id": member_entry[0], "rating": rating}
+                )
+            
+        backends.choose_backend("mpmath")
+            
+        updated_rating = rate(
+            [[x['rating'] for x in winner_rating], [x['rating'] for x in loser_rating]],
+            ranks=[0, 1]
+        )
+        
+        for i, new_rating in enumerate(updated_rating[0]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_rating[i]['user_id']} and guild_id = {ctx.guild.id} and game = '{member_entry[8]}'")
+            await self.bot.execute(
+                f"UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5 and game = '{member_entry[8]}'",
+                str(new_rating.mu),
+                str(new_rating.sigma),
+                counter[0] + 1,
+                winner_rating[i]['user_id'],
+                ctx.guild.id
+            )
+            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {winner_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
+
+        for i, new_rating in enumerate(updated_rating[1]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {loser_rating[i]['user_id']} and guild_id = {ctx.guild.id} and game = '{member_entry[8]}'")
+            await self.bot.execute(
+                f"UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5 and game = '{member_entry[8]}'",
+                str(new_rating.mu),
+                str(new_rating.sigma),
+                counter[0] + 1,
+                loser_rating[i]['user_id'],
+                ctx.guild.id
+            )
+            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {loser_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
+
+        if wrong_voters:
+            wrong_voters_embed = Embed(
+                title="Wrong Voters",
+                description="\n".join(f"{i+1}. <@{x}>" for i, x in enumerate(wrong_voters)),
+                color=Color.yellow()
+            )
+        
+            await ctx.send(embeds=[success("Game winner was changed."), wrong_voters_embed])
+        else:
+            await ctx.send(embed=success("Game winner was changed."))
+        
         log_channel_id = await self.bot.fetchrow(
-            f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}"
+            f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id} and game = '{member_entry[8]}'"
         )
         if log_channel_id:
             log_channel = self.bot.get_channel(log_channel_id[0])
@@ -214,98 +305,6 @@ class Admin(Cog):
                     color=Color.blurple(),
                 )
                 await log_channel.send(mentions, embed=embed)
-
-        wrong_voters = []
-        winner_rating = []
-        loser_rating = []
-        for member_entry in member_data:
-            user_data = await self.bot.fetchrow(
-                f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {ctx.guild.id}"
-            )
-            member_history = await self.bot.fetchrow(
-                f"SELECT * FROM members_history WHERE user_id = {member_entry[0]} and game_id = '{game_id}'"
-            )
-            if member_history[7] != team.lower():
-                wrong_voters.append(member_entry[0])
-            
-            rating = Rating(mu=float(member_history[5].split(':')[0]), sigma=float(member_history[5].split(':')[1]))
-
-            if member_entry[2] == team.lower():
-                await self.bot.execute(
-                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
-                    "won",
-                )
-
-                await self.bot.execute(
-                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4",
-                    user_data[2] + 1,
-                    user_data[3] - 1,
-                    member_entry[0],
-                    ctx.guild.id,
-                )
-
-                winner_rating.append(
-                    {"user_id": member_entry[0], "rating": rating}
-                )
-            else:
-                await self.bot.execute(
-                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
-                    "lost",
-                )
-
-                await self.bot.execute(
-                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4",
-                    user_data[2] - 1,
-                    user_data[3] + 1,
-                    member_entry[0],
-                    ctx.guild.id,
-                )
-
-                loser_rating.append(
-                    {"user_id": member_entry[0], "rating": rating}
-                )
-            
-        backends.choose_backend("mpmath")
-            
-        updated_rating = rate(
-            [[x['rating'] for x in winner_rating], [x['rating'] for x in loser_rating]],
-            ranks=[0, 1]
-        )
-        
-        for i, new_rating in enumerate(updated_rating[0]):
-            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_rating[i]['user_id']} and guild_id = {ctx.guild.id}")
-            await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
-                str(new_rating.mu),
-                str(new_rating.sigma),
-                counter[0] + 1,
-                winner_rating[i]['user_id'],
-                ctx.guild.id
-            )
-            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {winner_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
-
-        for i, new_rating in enumerate(updated_rating[1]):
-            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {loser_rating[i]['user_id']} and guild_id = {ctx.guild.id}")
-            await self.bot.execute(
-                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
-                str(new_rating.mu),
-                str(new_rating.sigma),
-                counter[0] + 1,
-                loser_rating[i]['user_id'],
-                ctx.guild.id
-            )
-            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {loser_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
-
-        if wrong_voters:
-            wrong_voters_embed = Embed(
-                title="Wrong Voters",
-                description="\n".join(f"{i+1}. <@{x}>" for i, x in enumerate(wrong_voters)),
-                color=Color.yellow()
-            )
-        
-            await ctx.send(embeds=[success("Game winner was changed."), wrong_voters_embed])
-        else:
-            await ctx.send(embed=success("Game winner was changed."))
 
     @admin.command()
     async def void(self, ctx, game_id):
