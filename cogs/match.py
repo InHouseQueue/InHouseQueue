@@ -98,7 +98,7 @@ class Match(Cog):
             elif game == "overwatch":
                 return "https://media.discordapp.net/attachments/1046664511324692520/1077958380636868638/image.png"
             else:
-                return ""
+                return "https://media.discordapp.net/attachments/328696263568654337/1067908043624423497/image.png?width=1386&height=527"
 
         def get_title(game):
             if game == "lol":
