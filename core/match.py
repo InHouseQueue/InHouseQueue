@@ -1,10 +1,10 @@
 import asyncio
 import itertools
 import json
+import random
 import re
 import traceback
 from datetime import datetime, timedelta
-import random
 
 import async_timeout
 import websockets
@@ -1413,7 +1413,10 @@ class ReadyButton(ui.Button):
         embed.add_field(name="👥 Participants", value=value1)
         embed.add_field(name="👥 Participants", value=value2)
 
-        embed.set_footer(text=self.game_id)
+        with open('assets/tips.txt', 'r') as f:
+            tips = f.readlines()
+            tip = random.choice(tips) 
+        embed.set_footer(text="🎮 " + self.game_id + '\n' + "💡 " + tip)
 
         return embed
 
@@ -1472,7 +1475,10 @@ class ReadyButton(ui.Button):
 
             embed.add_field(name=name, value=value)
 
-        embed.set_footer(text=self.game_id)
+        with open('assets/tips.txt', 'r') as f:
+            tips = f.readlines()
+            tip = random.choice(tips) 
+        embed.set_footer(text="🎮 " + self.game_id + '\n' + "💡 " + tip)
 
         return embed
 
@@ -1994,7 +2000,7 @@ class Queue(ui.View):
     
     def check_gameid(self, inter):
         if not self.game_id:
-            self.game_id = inter.message.embeds[0].footer.text.split('-')[0].replace(' ', '')
+            self.game_id = inter.message.embeds[0].footer.text.split('\n')[0].replace(' ', '').replace("🎮", "")
 
     async def has_participated(self, inter, game_id) -> bool:
         data = await self.bot.fetchrow(
@@ -2054,7 +2060,10 @@ class Queue(ui.View):
 
             embed.add_field(name=name, value=value)
 
-        embed.set_footer(text=game_id)
+        with open('assets/tips.txt', 'r') as f:
+            tips = f.readlines()
+            tip = random.choice(tips) 
+        embed.set_footer(text="🎮 " + game_id + '\n' + "💡 " + tip)
 
         return embed
 

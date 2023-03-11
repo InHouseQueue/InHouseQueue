@@ -52,11 +52,12 @@ class ChannelCommands(Cog):
         options = []
         for region in regions:
             options.append(SelectOption(label=region, value=region.lower()))
-        async def Function(vals, *args):
-            view = buttons.ConfirmationButtons(ctx.author.id)
-            await ctx.edit_original_message(
+        async def Function(inter, vals, *args):
+            view = buttons.ConfirmationButtons(inter.author.id)
+            await inter.edit_original_message(
                 embed=Embed(title=":warning: Notice", description=f"Messages in {channel.mention} will automatically be deleted to keep the queue channel clean, do you want to proceed?", color=Color.yellow()),
                 view=view,
+                content=""
             )
             await view.wait()
             if view.value is None:
@@ -64,12 +65,12 @@ class ChannelCommands(Cog):
             elif view.value:
                 pass
             else:
-                return await ctx.edit_original_message(embed=embeds.success("Process aborted."))
+                return await inter.edit_original_message(embed=embeds.success("Process aborted."))
             data = await self.bot.fetchrow(
                 f"SELECT * FROM queuechannels WHERE channel_id = {channel.id}"
             )
             if data:
-                return await ctx.edit_original_message(
+                return await inter.edit_original_message(
                     embed=embeds.error(
                         f"{channel.mention} is already setup as the queue channel."
                     )
@@ -79,13 +80,13 @@ class ChannelCommands(Cog):
                 "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", channel.id, vals[0], game
             )
 
-            await ctx.edit_original_message(
+            await inter.edit_original_message(
                 embed=embeds.success(
                     f"{channel.mention} was successfully set as queue channel."
                 )
             )
 
-        await ctx.send(view=selectmenus.SelectMenuDeploy(self.bot, ctx.author.id, options, 1, 1, Function))
+        await ctx.send(content="Select a region for the queue.", view=selectmenus.SelectMenuDeploy(self.bot, ctx.author.id, options, 1, 1, Function))
 
     @slash_command(name="setchannel")
     async def setchannel_slash(self, ctx, channel: TextChannel, game = Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch"})):

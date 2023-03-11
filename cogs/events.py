@@ -141,7 +141,10 @@ class Events(Cog):
                 game_id INTEGER,
                 team TEXT,
                 result TEXT,
-                role TEXT
+                role TEXT,
+                old_mmr INTEGER,
+                now_mmr INTEGER,
+                voted_team TEXT
             )
             """
         )

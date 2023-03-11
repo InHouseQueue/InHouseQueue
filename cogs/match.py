@@ -1,3 +1,4 @@
+import random
 import uuid
 
 from disnake import Color, Embed
@@ -5,6 +6,7 @@ from disnake.ext.commands import Cog, slash_command
 
 from core import match
 from core.embeds import error
+
 
 class Match(Cog):
     """
@@ -135,7 +137,10 @@ class Match(Cog):
         else:
             banner = banner_icon(game)
             embed.set_image(url=banner)
-        embed.set_footer(text=str(uuid.uuid4()).split("-")[0])
+        with open('assets/tips.txt', 'r') as f:
+            tips = f.readlines()
+            tip = random.choice(tips)
+        embed.set_footer(text="🎮 " +str(uuid.uuid4()).split("-")[0] + '\n' + "💡 " + tip)
         if not data[1]:
             data = (data[0], 'na')
         icon_url = region_icon(data[1], game)

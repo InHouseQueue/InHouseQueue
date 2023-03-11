@@ -1,6 +1,7 @@
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
+from trueskill import Rating, backends, rate
 from cogs.win import Win
 from core.embeds import error, success
 from core.buttons import ConfirmationButtons
@@ -197,33 +198,42 @@ class Admin(Cog):
         )
         if log_channel_id:
             log_channel = self.bot.get_channel(log_channel_id[0])
-
-            mentions = (
-                f"🔴 Red Team: "
-                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
-                + "\n🔵 Blue Team: "
-                + ", ".join(
-                    f"<@{data[0]}>" for data in member_data if data[2] == "blue"
+            if log_channel:
+                mentions = (
+                    f"🔴 Red Team: "
+                    + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
+                    + "\n🔵 Blue Team: "
+                    + ", ".join(
+                        f"<@{data[0]}>" for data in member_data if data[2] == "blue"
+                    )
                 )
-            )
 
-            embed = Embed(
-                title=f"Game results changed!",
-                description=f"Game **{game_id}**'s results were changed!\n\nResult: **{team.capitalize()} Team Won!**",
-                color=Color.blurple(),
-            )
-            await log_channel.send(mentions, embed=embed)
+                embed = Embed(
+                    title=f"Game results changed!",
+                    description=f"Game **{game_id}**'s results were changed!\n\nResult: **{team.capitalize()} Team Won!**",
+                    color=Color.blurple(),
+                )
+                await log_channel.send(mentions, embed=embed)
 
+        wrong_voters = []
+        winner_rating = []
+        loser_rating = []
         for member_entry in member_data:
             user_data = await self.bot.fetchrow(
                 f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {ctx.guild.id}"
             )
+            member_history = await self.bot.fetchrow(
+                f"SELECT * FROM members_history WHERE user_id = {member_entry[0]} and game_id = '{game_id}'"
+            )
+            if member_history[7] != team.lower():
+                wrong_voters.append(member_entry[0])
+            
+            rating = Rating(mu=float(member_history[5].split(':')[0]), sigma=float(member_history[5].split(':')[1]))
 
             if member_entry[2] == team.lower():
                 await self.bot.execute(
-                    f"UPDATE members_history SET result = $1 WHERE user_id = $2",
+                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
                     "won",
-                    member_entry[0],
                 )
 
                 await self.bot.execute(
@@ -234,11 +244,13 @@ class Admin(Cog):
                     ctx.guild.id,
                 )
 
+                winner_rating.append(
+                    {"user_id": member_entry[0], "rating": rating}
+                )
             else:
                 await self.bot.execute(
-                    f"UPDATE members_history SET result = $1 WHERE user_id = $2",
+                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
                     "lost",
-                    member_entry[0],
                 )
 
                 await self.bot.execute(
@@ -249,7 +261,51 @@ class Admin(Cog):
                     ctx.guild.id,
                 )
 
-        await ctx.send(embed=success("Game winner was changed."))
+                loser_rating.append(
+                    {"user_id": member_entry[0], "rating": rating}
+                )
+            
+        backends.choose_backend("mpmath")
+            
+        updated_rating = rate(
+            [[x['rating'] for x in winner_rating], [x['rating'] for x in loser_rating]],
+            ranks=[0, 1]
+        )
+        
+        for i, new_rating in enumerate(updated_rating[0]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_rating[i]['user_id']} and guild_id = {ctx.guild.id}")
+            await self.bot.execute(
+                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
+                str(new_rating.mu),
+                str(new_rating.sigma),
+                counter[0] + 1,
+                winner_rating[i]['user_id'],
+                ctx.guild.id
+            )
+            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {winner_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
+
+        for i, new_rating in enumerate(updated_rating[1]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {loser_rating[i]['user_id']} and guild_id = {ctx.guild.id}")
+            await self.bot.execute(
+                "UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5",
+                str(new_rating.mu),
+                str(new_rating.sigma),
+                counter[0] + 1,
+                loser_rating[i]['user_id'],
+                ctx.guild.id
+            )
+            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {loser_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
+
+        if wrong_voters:
+            wrong_voters_embed = Embed(
+                title="Wrong Voters",
+                description="\n".join(f"{i+1}. <@{x}>" for i, x in enumerate(wrong_voters)),
+                color=Color.yellow()
+            )
+        
+            await ctx.send(embeds=[success("Game winner was changed."), wrong_voters_embed])
+        else:
+            await ctx.send(embed=success("Game winner was changed."))
 
     @admin.command()
     async def void(self, ctx, game_id):
