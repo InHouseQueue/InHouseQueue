@@ -76,7 +76,7 @@ class Match(Cog):
                 elif region == "na":
                     icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077957849130467408/VAL_NA.png"
                 else:
-                    icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077959248853598308/IMG_6379.png"
+                    icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853028175934/OW_Europe.png"
 
             elif game == "overwatch":
                 if region == "americas":
