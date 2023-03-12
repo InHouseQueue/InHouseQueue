@@ -39,5 +39,18 @@ services:
       - inhouse-db:/backup/inhouse-db-backup:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    environment:
+      DOZZLE_USERNAME: ${DOZZLE_USERNAME}
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD}
+      DOZZLE_NO_ANALYTICS: "True"
+      DOZZLE_HOSTNAME: ${DOZZLE_HOSTNAME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8888:8080
+
 volumes:
   inhouse-db:
