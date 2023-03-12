@@ -245,7 +245,6 @@ class WinButtons(ui.View):
                             1,
                             game_data[8]
                         )
-
         if args:
             if args[0]:
                 if args[1] == "red":
@@ -255,14 +254,16 @@ class WinButtons(ui.View):
 
         elif len(self.red_votes) >= 6:
             await declare_winner("Red")
+        elif len(self.blue_votes) >= 6:
+            await declare_winner("Blue")
 
     async def edit_embed(self, inter):
         value_blue = ""
         value_red = ""
         for i, vote in enumerate(self.blue_votes):
-            value_blue += f"{i+1}. <@{vote}>"
+            value_blue += f"{i+1}. <@{vote}>\n"
         for i, vote in enumerate(self.red_votes):
-            value_red += f"{i+1}. <@{vote}>"
+            value_red += f"{i+1}. <@{vote}>\n"
         
         embed = inter.message.embeds[1]
         embed.clear_fields()
@@ -284,8 +285,8 @@ class WinButtons(ui.View):
                 await inter.send(embed=success("You've already voted for Blue Team."), ephemeral=True)
         else:
             await inter.send(embed=error("You've already voted for Red Team."), ephemeral=True)
-        await self.check_end(inter, game_data)
         await self.edit_embed(inter)
+        await self.check_end(inter, game_data)
         
     @ui.button(label="Red Team", style=ButtonStyle.red, custom_id="win:red")
     async def second_button(self, button, inter):

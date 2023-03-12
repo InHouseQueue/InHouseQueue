@@ -6,7 +6,7 @@ from cogs.win import Win
 from core.embeds import error, success
 from core.buttons import ConfirmationButtons
 
-async def leaderboard_persistent(bot, channel):
+async def leaderboard_persistent(bot, channel, game):
     user_data = await bot.fetch(
         f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
     )
@@ -22,15 +22,36 @@ async def leaderboard_persistent(bot, channel):
 
 
     async def add_field(data) -> None:
-        user_history = await bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
+        user_history = await bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]} and game = '{game}'")
         if user_history:
-            roles_players = {
-                'top': 0,
-                'jungle': 0,
-                'mid': 0,
-                'support': 0,
-                'adc': 0
-            }
+            if game == 'lol':
+                roles_players = {
+                    'top': 0,
+                    'jungle': 0,
+                    'mid': 0,
+                    'support': 0,
+                    'adc': 0
+                }
+            elif game == 'valorant':
+                roles_players = {
+                    'controller': 0,
+                    'initiator': 0,
+                    'sentinel': 0,
+                    'duelist': 0,
+                    'flex': 0,
+                    'flex - controller':0,
+                    'flex - duelist': 0,
+                    'flex - initiator': 0,
+                    'flex - sentinel': 0,
+                }
+            elif game == "overwatch":
+                roles_players = {
+                    'tank': 0,
+                    'dps 1': 0,
+                    'dps 2': 0,
+                    'support 1': 0,
+                    'support 2': 0
+                }
             for history in user_history:
                 if history[0]:
                     roles_players[history[0]] += 1
@@ -276,7 +297,7 @@ class Admin(Cog):
         if wrong_voters:
             wrong_voters_embed = Embed(
                 title="Wrong Voters",
-                description="\n".join(f"{i+1}. <@{x}>" for i, x in enumerate(wrong_voters)),
+                description="These player(s) purposely voted for the wrong winning team.\n" + "\n".join(f"{i+1}. <@{x}>" for i, x in enumerate(wrong_voters)),
                 color=Color.yellow()
             )
         

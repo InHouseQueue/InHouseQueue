@@ -65,7 +65,11 @@ class Leaderboard(Cog):
                         'initiator': 0,
                         'sentinel': 0,
                         'duelist': 0,
-                        'flex': 0
+                        'flex': 0,
+                        'flex - controller':0,
+                        'flex - duelist': 0,
+                        'flex - initiator': 0,
+                        'flex - sentinel': 0,
                     }
                 elif game == "overwatch":
                     roles_players = {
