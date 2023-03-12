@@ -29,7 +29,7 @@ class Events(Cog):
                 if not msg:
                     continue
             if msg:
-                embed = await leaderboard_persistent(self.bot, channel)
+                embed = await leaderboard_persistent(self.bot, channel, entry[3])
                 await msg.edit(embed=embed)
 
     @Cog.listener()

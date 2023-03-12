@@ -783,16 +783,17 @@ class ReadyButton(ui.Button):
                 embed=embed,
             )
 
-            # CHECK
-            # if len(ready_ups) == 2:
-            if len(ready_ups) == 10:
+            if self.bot.test_mode:
+                required_readyups = 2
+            else:
+                required_readyups = 10
+            if len(ready_ups) == required_readyups:
                 
                 if not st_pref:
                     member_data = await self.bot.fetch(
                         f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
                     )
 
-                    # CHECK
                     if self.game == 'lol':
                         labels = LOL_LABELS
                     elif self.game == 'valorant':
@@ -802,20 +803,22 @@ class ReadyButton(ui.Button):
                     else:
                         labels = OTHER_LABELS
                     
-                    # roles_occupation = {
-                    #     labels[0].upper(): [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}],
-                    #     labels[1].upper(): [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
-                    #     labels[2].upper(): [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
-                    #     labels[3].upper(): [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
-                    #     labels[4].upper(): []
-                    # }
-                    roles_occupation = {
-                       labels[0].upper(): [],
-                       labels[1].upper(): [],
-                       labels[2].upper(): [],
-                       labels[3].upper(): [],
-                       labels[4].upper(): []
-                    }
+                    if self.bot.test_mode:
+                        roles_occupation = {
+                            labels[0].upper(): [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}],
+                            labels[1].upper(): [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
+                            labels[2].upper(): [{'user_id': 789, 'rating': Rating()}, {'user_id': 981, 'rating': Rating()}, ],
+                            labels[3].upper(): [{'user_id': 234, 'rating': Rating()}, {'user_id': 567, 'rating': Rating()}, ],
+                            labels[4].upper(): []
+                        }
+                    else:
+                        roles_occupation = {
+                        labels[0].upper(): [],
+                        labels[1].upper(): [],
+                        labels[2].upper(): [],
+                        labels[3].upper(): [],
+                        labels[4].upper(): []
+                        }
 
                     for data in member_data:
                         member_rating = await self.bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[0]} and guild_id = {inter.guild.id} and game = '{self.game}'")
@@ -1143,9 +1146,11 @@ class Queue(ui.View):
             if len(data) == 2:
                 checks_passed += 1
 
-        # CHECK
-        # if checks_passed == 1:
-        if checks_passed == 5:
+        if self.bot.test_mode:
+            required_checks = 1
+        else:
+            required_checks = 5
+        if checks_passed == required_checks:
             member_data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )

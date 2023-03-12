@@ -8,7 +8,7 @@ from core.buttons import ConfirmationButtons
 
 async def leaderboard_persistent(bot, channel, game):
     user_data = await bot.fetch(
-        f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
+        f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id} and game = '{game}'"
     )
     if not user_data:
         return await channel.send(embed=error("There are no records to display."))
@@ -20,10 +20,9 @@ async def leaderboard_persistent(bot, channel, game):
     if channel.guild.icon:
         embed.set_thumbnail(url=channel.guild.icon.url)
 
-
     async def add_field(data) -> None:
         user_history = await bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]} and game = '{game}'")
-        if user_history:
+        if user_history and game != 'other':
             if game == 'lol':
                 roles_players = {
                     'top': 0,
@@ -52,6 +51,7 @@ async def leaderboard_persistent(bot, channel, game):
                     'support 1': 0,
                     'support 2': 0
                 }
+
             for history in user_history:
                 if history[0]:
                     roles_players[history[0]] += 1
@@ -66,7 +66,7 @@ async def leaderboard_persistent(bot, channel, game):
 
         st_pref = await bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
         if not st_pref:
-            mmr_data = await bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
+            mmr_data = await bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id} and game = '{game}'")
             if mmr_data:
                 skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
                 if mmr_data[4] >= 10:
@@ -95,7 +95,7 @@ async def leaderboard_persistent(bot, channel, game):
 
         embed.add_field(
             name=name,
-            value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}% WR`",
+            value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[5]*100)}% WR`",
             inline=False,
         )
 
@@ -594,28 +594,30 @@ class Admin(Cog):
         await self.cancel(ctx, member)
 
     @admin_slash.sub_command(name="top_ten")
-    async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
+    async def leaderboard_persistent_slash(self, ctx, channel: TextChannel, game = Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
         """
         Create a Dynamic Top 10 leaderboard
         """
-        embed = await leaderboard_persistent(self.bot, channel)
+        embed = await leaderboard_persistent(self.bot, channel, game)
         msg = await channel.send(embed=embed)
         if not msg:
             return await ctx.send(embed=error("There are no records to display in the leaderboard, try playing a match first."))
-        data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id}")
+        data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id} and game = '{game}'")
         if data:
             await self.bot.execute(
-                f"UPDATE persistent_lb SET channel_id = $1, msg_id = $2 WHERE guild_id = $3",
+                f"UPDATE persistent_lb SET channel_id = $1, msg_id = $2 WHERE guild_id = $3 and game = $4",
                 channel.id,
                 msg.id,
-                ctx.guild.id
+                ctx.guild.id,
+                game
             )
         else:
             await self.bot.execute(
-                f"INSERT INTO persistent_lb(guild_id, channel_id, msg_id) VALUES($1, $2, $3)",
+                f"INSERT INTO persistent_lb(guild_id, channel_id, msg_id, game) VALUES($1, $2, $3, $4)",
                 ctx.guild.id,
                 channel.id, 
-                msg.id
+                msg.id,
+                game
             )
         
         m = await ctx.send(embed=success("Persistent leaderboard activated successfully."))

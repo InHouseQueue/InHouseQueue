@@ -7,6 +7,8 @@ from disnake import Intents
 from disnake.ext import commands
 from dotenv import load_dotenv
 
+from CONFIG import TEST_MODE
+
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
@@ -17,6 +19,7 @@ PREFIX = "!"
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.test_mode = TEST_MODE
         self.role_emojis = {
             'top': "<:TOP:1066065292691779637>",
             'jungle': "<:JGL:1066065288107397200>",
