@@ -27,7 +27,7 @@ class Match(Cog):
                         embed=Embed(
                             title=":warning: NOTICE",
                             description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message. \n"
-                                        "Join our [Support Server](https://discord.com/invite/NDKMeT6GE7) for the patch notes.",
+                                        "Join our [Support Server](https://discord.com/invite/NDKMeT6GE7) for the patch notes. Overwatch, Valorant and any other 5v5 game is now supported!",
                             color=Color.yellow()
                         )
                     )
