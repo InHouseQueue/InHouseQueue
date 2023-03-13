@@ -23,7 +23,7 @@ VALORANT_LABELS = ["Controller", "Initiator", "Sentinel", "Duelist", "Flex"]
 OVERWATCH_LABELS = ["Tank", "DPS 1", "DPS 2", "Support 1", "Support 2"]
 OTHER_LABELS = ["Role 1", "Role 2", "Role 3", "Role 4", "Role 5"]
 
-async def start_queue(bot, channel, game, author=None, existing_inter = None, game_id = None):
+async def start_queue(bot, channel, game, author=None, existing_msg = None, game_id = None):
     def region_icon(region, game):
         if game == "lol":
             if region == "euw":
@@ -116,7 +116,7 @@ async def start_queue(bot, channel, game, author=None, existing_inter = None, ga
     st_pref = await bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
     
     if not st_pref:
-        if existing_inter:
+        if existing_msg:
             game_members = await bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'")
             slot1 = ""
             slot2 = ""
@@ -132,7 +132,7 @@ async def start_queue(bot, channel, game, author=None, existing_inter = None, ga
         embed.add_field(name="Slot 2", value=slot2)
         sbmm = True
     else:
-        if existing_inter:
+        if existing_msg:
             game_members = await bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'")
             blue_value = ""
             red_value = ""
@@ -156,7 +156,7 @@ async def start_queue(bot, channel, game, author=None, existing_inter = None, ga
     with open('assets/tips.txt', 'r') as f:
         tips = f.readlines()
         tip = random.choice(tips)
-    if existing_inter:
+    if existing_msg:
         footer_game_id = game_id
     else:
         footer_game_id = str(uuid.uuid4()).split("-")[0]
@@ -173,8 +173,8 @@ async def start_queue(bot, channel, game, author=None, existing_inter = None, ga
     else:
         duo = False
     try:
-        if existing_inter:
-            await existing_inter.edit_original_message(embed=embed, view=Queue(bot, sbmm, duo, game))
+        if existing_msg:
+            await existing_msg.edit(embed=embed, view=Queue(bot, sbmm, duo, game))
         else:
             await channel.send(embed=embed, view=Queue(bot, sbmm, duo, game))
     except:
@@ -822,7 +822,7 @@ class ReadyButton(ui.Button):
         embed.set_image(url=map_link)
         await lobby_channel.send(embed=embed)
 
-    async def check_members(self, inter):
+    async def check_members(self, msg):
         members = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
@@ -831,13 +831,14 @@ class ReadyButton(ui.Button):
         else:
             required_members = 10
         if len(members) != required_members:
-            await start_queue(self.bot, inter.channel, self.game, None, inter, self.game_id)
+            await start_queue(self.bot, msg.channel, self.game, None, msg, self.game_id)
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
         await self.bot.wait_until_ready()
-
+        
         if self.msg:
+            await self.check_members(self.msg)
             # Update the stored message and stop timer if ready up phase was removed
             msg = self.bot.get_message(self.msg.id)
             if not msg:
