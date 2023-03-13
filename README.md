@@ -1,13 +1,30 @@
-![Discord Shield](https://discord.com/api/guilds/1005601917466058792/widget.png?style=shield) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/badge/version-v0.1.0-red.svg)](https://semver.org)
+<div align="center">
+
+  <a href="https://discord.com/invite/8DZQcpxnbB">
+    <img src="https://img.shields.io/discord/1079074933008781362.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge" alt="Support">
+  </a>
+
+<br>
+
+  <a href="https://www.python.org/downloads/">
+    <img src="https://img.shields.io/badge/Made%20With-Python%203.9-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.9">
+  </a>
+
+  <a href="https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-gnu-e74c3c.svg?style=for-the-badge#" alt="GNU License">
+  </a>
+
+</div>
+
 
 # In-House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/banner.jpg)
 
 A Discord Bot designed to organise In-House Custom games for competitive 5v5 games.
-Support for 1v1 - 8v8 games will be available soon.
+
 Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
 
-**Current visuals are for League of Legends. Overwatch and Valorant visuals will soon be supported as well**
+**Current visuals are for League of Legends, Overwatch and Valorant**
 
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
@@ -17,10 +34,10 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 ## Discord Server setup
 https://docs.inhousequeue.xyz/documentation/quick-start
 
-# Documentation 
+## Documentation 
 https://docs.inhousequeue.xyz/
 
-# All Commands
+## All Commands
 https://www.inhousequeue.xyz/commands
 
 # Installation
@@ -47,7 +64,7 @@ python3 main.py
 ## Running locally with Docker 
 [Guide](https://docs.inhousequeue.xyz/documentation/reference/technical-documentation/running-with-docker)
 
-## Self hosting
+## Self-hosting
 I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the Bot to your server, but if you want to make some changes and host it yourself feel free. Here is my [Hosting guide](https://docs.inhousequeue.xyz/documentation/reference/technical-documentation/hosting)
 
 ## More details on the MMR alogrithm used
