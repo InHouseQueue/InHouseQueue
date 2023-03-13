@@ -23,7 +23,7 @@ VALORANT_LABELS = ["Controller", "Initiator", "Sentinel", "Duelist", "Flex"]
 OVERWATCH_LABELS = ["Tank", "DPS 1", "DPS 2", "Support 1", "Support 2"]
 OTHER_LABELS = ["Role 1", "Role 2", "Role 3", "Role 4", "Role 5"]
 
-async def start_queue(bot, channel, game, author=None):
+async def start_queue(bot, channel, game, author=None, existing_inter = None, game_id = None):
     def region_icon(region, game):
         if game == "lol":
             if region == "euw":
@@ -109,17 +109,43 @@ async def start_queue(bot, channel, game, author=None):
 
     # If you change this - update /events.py L28 as well!
     title = get_title(game)
+        
     embed = Embed(
         title=title, color=Color.red()
     )
     st_pref = await bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
+    
     if not st_pref:
-        embed.add_field(name="Slot 1", value="No members yet")
-        embed.add_field(name="Slot 2", value="No members yet")
+        if existing_inter:
+            game_members = await bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'")
+            slot1 = ""
+            slot2 = ""
+            for i, member in enumerate(game_members):
+                if i in [x for x in range(0, 5)]:
+                    slot1 += f"<@{member[0]}> - `{member[1].capitalize()}`\n"
+                else:
+                    slot2 += f"<@{member[0]}> - `{member[1].capitalize()}`\n"
+        else:
+            slot1 = "No members yet"
+            slot2 = "No members yet"
+        embed.add_field(name="Slot 1", value=slot1)
+        embed.add_field(name="Slot 2", value=slot2)
         sbmm = True
     else:
-        embed.add_field(name="🔵 Blue", value="No members yet")
-        embed.add_field(name="🔴 Red", value="No members yet")
+        if existing_inter:
+            game_members = await bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'")
+            blue_value = ""
+            red_value = ""
+            for member in game_members:
+                if member[2] == "blue":
+                    blue_value += f"<@{member[0]}> - `{member[1].capitalize()}`\n"
+                else:
+                    red_value += f"<@{member[0]}> - `{member[1].capitalize()}`\n"
+        else:
+            blue_value = "No members yet"
+            red_value = "No members yet"
+        embed.add_field(name="🔵 Blue", value=blue_value)
+        embed.add_field(name="🔴 Red", value=red_value)
         sbmm = False
     if channel.guild.id == 1071099639333404762:
         embed.set_image(url="https://media.discordapp.net/attachments/1071237723857363015/1073428745253290014/esporty_banner.png")
@@ -130,7 +156,11 @@ async def start_queue(bot, channel, game, author=None):
     with open('assets/tips.txt', 'r') as f:
         tips = f.readlines()
         tip = random.choice(tips)
-    embed.set_footer(text="🎮 " +str(uuid.uuid4()).split("-")[0] + '\n' + "💡 " + tip)
+    if existing_inter:
+        footer_game_id = game_id
+    else:
+        footer_game_id = str(uuid.uuid4()).split("-")[0]
+    embed.set_footer(text="🎮 " + footer_game_id + '\n' + "💡 " + tip)
     if not data[1]:
         data = (data[0], 'na')
     icon_url = region_icon(data[1], game)
@@ -143,7 +173,10 @@ async def start_queue(bot, channel, game, author=None):
     else:
         duo = False
     try:
-        await channel.send(embed=embed, view=Queue(bot, sbmm, duo, game))
+        if existing_inter:
+            await existing_inter.edit_original_message(embed=embed, view=Queue(bot, sbmm, duo, game))
+        else:
+            await channel.send(embed=embed, view=Queue(bot, sbmm, duo, game))
     except:
         if author:
             await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
@@ -789,6 +822,16 @@ class ReadyButton(ui.Button):
         embed.set_image(url=map_link)
         await lobby_channel.send(embed=embed)
 
+    async def check_members(self, inter):
+        members = await self.bot.fetch(
+            f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
+        )
+        if self.bot.test_mode:
+            required_members = 2
+        else:
+            required_members = 10
+        if len(members) != required_members:
+            await start_queue(self.bot, inter.channel, self.game, None, inter, self.game_id)
 
     @tasks.loop(seconds=1)
     async def disable_button(self):
@@ -877,6 +920,8 @@ class ReadyButton(ui.Button):
             self.data = await self.bot.fetch(
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )
+        
+        await self.check_members(inter)
 
         game_members = [member[0] for member in self.data]
         ready_ups = await self.bot.fetch(
