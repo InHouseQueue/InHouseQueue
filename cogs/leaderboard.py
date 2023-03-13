@@ -33,7 +33,7 @@ class Leaderboard(Cog):
                 user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
         else:
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id}"
+                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id} and game = '{game}'"
             )
             user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
