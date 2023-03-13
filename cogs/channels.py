@@ -131,7 +131,7 @@ class ChannelCommands(Cog):
         OptionChoice("JP", 'jp')]),
         ):
             """
-            Set a region for a league of legends queue channel.
+            Update a region for a league of legends queue channel.
             """
             await self.setregion(ctx, queue_channel, region)
             
