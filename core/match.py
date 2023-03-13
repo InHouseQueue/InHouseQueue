@@ -174,7 +174,7 @@ async def start_queue(bot, channel, game, author=None, existing_msg = None, game
         duo = False
     try:
         if existing_msg:
-            await existing_msg.edit(embed=embed, view=Queue(bot, sbmm, duo, game))
+            await existing_msg.edit(embed=embed, view=Queue(bot, sbmm, duo, game), content="")
         else:
             await channel.send(embed=embed, view=Queue(bot, sbmm, duo, game))
     except:
@@ -831,6 +831,7 @@ class ReadyButton(ui.Button):
         else:
             required_members = 10
         if len(members) != required_members:
+            self.disable_button.stop()
             await start_queue(self.bot, msg.channel, self.game, None, msg, self.game_id)
 
     @tasks.loop(seconds=1)

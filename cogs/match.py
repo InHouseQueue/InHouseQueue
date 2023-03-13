@@ -2,6 +2,7 @@ from disnake import Color, Embed
 from disnake.ext.commands import Cog, slash_command
 
 from core.match import start_queue
+from core.embeds import error
 
 class Match(Cog):
     """
@@ -41,6 +42,8 @@ class Match(Cog):
         Start a InHouse queue.
         """
         game_check = await self.bot.fetchrow(f"SELECT * FROM queuechannels WHERE channel_id = {ctx.channel.id}")
+        if not game_check:
+            return await ctx.send(embed=error("This channel is not a queue channel."))
         try:
             await ctx.send("Game was started!")
         except:
