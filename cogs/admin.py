@@ -1,14 +1,14 @@
 from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
-from cogs.match import QueueButtons
+from trueskill import Rating, backends, rate
 from cogs.win import Win
 from core.embeds import error, success
 from core.buttons import ConfirmationButtons
 
-async def leaderboard_persistent(bot, channel):
+async def leaderboard_persistent(bot, channel, game):
     user_data = await bot.fetch(
-        f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id}"
+        f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id} and game = '{game}'"
     )
     if not user_data:
         return await channel.send(embed=error("There are no records to display."))
@@ -20,17 +20,38 @@ async def leaderboard_persistent(bot, channel):
     if channel.guild.icon:
         embed.set_thumbnail(url=channel.guild.icon.url)
 
-
     async def add_field(data) -> None:
-        user_history = await bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
-        if user_history:
-            roles_players = {
-                'top': 0,
-                'jungle': 0,
-                'mid': 0,
-                'support': 0,
-                'adc': 0
-            }
+        user_history = await bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]} and game = '{game}'")
+        if user_history and game != 'other':
+            if game == 'lol':
+                roles_players = {
+                    'top': 0,
+                    'jungle': 0,
+                    'mid': 0,
+                    'support': 0,
+                    'adc': 0
+                }
+            elif game == 'valorant':
+                roles_players = {
+                    'controller': 0,
+                    'initiator': 0,
+                    'sentinel': 0,
+                    'duelist': 0,
+                    'flex': 0,
+                    'flex - controller':0,
+                    'flex - duelist': 0,
+                    'flex - initiator': 0,
+                    'flex - sentinel': 0,
+                }
+            elif game == "overwatch":
+                roles_players = {
+                    'tank': 0,
+                    'dps 1': 0,
+                    'dps 2': 0,
+                    'support 1': 0,
+                    'support 2': 0
+                }
+
             for history in user_history:
                 if history[0]:
                     roles_players[history[0]] += 1
@@ -45,7 +66,7 @@ async def leaderboard_persistent(bot, channel):
 
         st_pref = await bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {channel.guild.id}")
         if not st_pref:
-            mmr_data = await bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id}")
+            mmr_data = await bot.fetchrow(f"SELECT * FROM mmr_rating WHERE user_id = {data[1]} and guild_id = {channel.guild.id} and game = '{game}'")
             if mmr_data:
                 skill = float(mmr_data[2]) - (2 * float(mmr_data[3]))
                 if mmr_data[4] >= 10:
@@ -74,7 +95,7 @@ async def leaderboard_persistent(bot, channel):
 
         embed.add_field(
             name=name,
-            value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[4]*100)}% WR`",
+            value=f"{most_played_role} `{member_name}   {display_mmr} {data[2]}W {data[3]}L {round(data[5]*100)}% WR`",
             inline=False,
         )
 
@@ -149,17 +170,8 @@ class Admin(Cog):
                 await self.bot.execute(
                     f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}'",
                 )
-                msg = self.bot.get_message(entry[4])
-                if not msg:
-                    channel = self.bot.get_channel(entry[5])
-                    msg = await channel.fetch_message(entry[4])
 
-                if msg:
-                    if msg.components[0].children[0].label == "Ready Up!":
-                        self.game_id = entry[3]
-                        await msg.edit(view=QueueButtons(self.bot), embed = await QueueButtons.gen_embed(self, msg), content=" ")
-
-        await ctx.send(embed=success(f"{member.mention} was removed from all active queues."))
+        await ctx.send(embed=success(f"{member.mention} was removed from all active queues. They may still show up in queue embed."))
 
     @admin.command()
     async def winner(self, ctx, role: Role):
@@ -202,64 +214,118 @@ class Admin(Cog):
                         embed=error(f"{team.capitalize()} is already the winner.")
                     )
 
-        log_channel_id = await self.bot.fetchrow(
-            f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}"
-        )
-        if log_channel_id:
-            log_channel = self.bot.get_channel(log_channel_id[0])
-
-            mentions = (
-                f"🔴 Red Team: "
-                + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
-                + "\n🔵 Blue Team: "
-                + ", ".join(
-                    f"<@{data[0]}>" for data in member_data if data[2] == "blue"
-                )
-            )
-
-            embed = Embed(
-                title=f"Game results changed!",
-                description=f"Game **{game_id}**'s results were changed!\n\nResult: **{team.capitalize()} Team Won!**",
-                color=Color.blurple(),
-            )
-            await log_channel.send(mentions, embed=embed)
-
+        wrong_voters = []
+        winner_rating = []
+        loser_rating = []
         for member_entry in member_data:
             user_data = await self.bot.fetchrow(
-                f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {ctx.guild.id}"
+                f"SELECT * FROM points WHERE user_id = {member_entry[0]} and guild_id = {ctx.guild.id} and game = '{member_entry[8]}'"
             )
+
+            if member_entry[7] != "none":
+                if member_entry[7] != team.lower():
+                    wrong_voters.append(member_entry[0])
+            
+            rating = Rating(mu=float(member_entry[5].split(':')[0]), sigma=float(member_entry[5].split(':')[1]))
 
             if member_entry[2] == team.lower():
                 await self.bot.execute(
-                    f"UPDATE members_history SET result = $1 WHERE user_id = $2",
+                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
                     "won",
-                    member_entry[0],
                 )
 
                 await self.bot.execute(
-                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4",
+                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4 and game = '{member_entry[8]}'",
                     user_data[2] + 1,
                     user_data[3] - 1,
                     member_entry[0],
                     ctx.guild.id,
                 )
 
+                winner_rating.append(
+                    {"user_id": member_entry[0], "rating": rating}
+                )
             else:
                 await self.bot.execute(
-                    f"UPDATE members_history SET result = $1 WHERE user_id = $2",
+                    f"UPDATE members_history SET result = $1 WHERE user_id = {member_entry[0]} and game_id = '{game_id}'",
                     "lost",
-                    member_entry[0],
                 )
 
                 await self.bot.execute(
-                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4",
+                    f"UPDATE points SET wins = $1, losses = $2 WHERE user_id = $3 and guild_id = $4 and game = '{member_entry[8]}'",
                     user_data[2] - 1,
                     user_data[3] + 1,
                     member_entry[0],
                     ctx.guild.id,
                 )
 
-        await ctx.send(embed=success("Game winner was changed."))
+                loser_rating.append(
+                    {"user_id": member_entry[0], "rating": rating}
+                )
+            
+        backends.choose_backend("mpmath")
+            
+        updated_rating = rate(
+            [[x['rating'] for x in winner_rating], [x['rating'] for x in loser_rating]],
+            ranks=[0, 1]
+        )
+        
+        for i, new_rating in enumerate(updated_rating[0]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {winner_rating[i]['user_id']} and guild_id = {ctx.guild.id} and game = '{member_entry[8]}'")
+            await self.bot.execute(
+                f"UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5 and game = '{member_entry[8]}'",
+                str(new_rating.mu),
+                str(new_rating.sigma),
+                counter[0] + 1,
+                winner_rating[i]['user_id'],
+                ctx.guild.id
+            )
+            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {winner_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
+
+        for i, new_rating in enumerate(updated_rating[1]):
+            counter = await self.bot.fetchrow(f"SELECT counter FROM mmr_rating WHERE user_id = {loser_rating[i]['user_id']} and guild_id = {ctx.guild.id} and game = '{member_entry[8]}'")
+            await self.bot.execute(
+                f"UPDATE mmr_rating SET mu = $1, sigma = $2, counter = $3 WHERE user_id = $4 and guild_id = $5 and game = '{member_entry[8]}'",
+                str(new_rating.mu),
+                str(new_rating.sigma),
+                counter[0] + 1,
+                loser_rating[i]['user_id'],
+                ctx.guild.id
+            )
+            await self.bot.execute(f"UPDATE members_history SET now_mmr = $1 WHERE user_id = {loser_rating[i]['user_id']} and game_id = '{game_id}'", f"{str(new_rating.mu)}:{str(new_rating.sigma)}")
+
+        if wrong_voters:
+            wrong_voters_embed = Embed(
+                title="Wrong Voters",
+                description="These player(s) purposely voted for the wrong winning team.\n" + "\n".join(f"{i+1}. <@{x}>" for i, x in enumerate(wrong_voters)),
+                color=Color.yellow()
+            )
+        
+            await ctx.send(embeds=[success("Game winner was changed."), wrong_voters_embed])
+        else:
+            await ctx.send(embed=success("Game winner was changed."))
+        
+        log_channel_id = await self.bot.fetchrow(
+            f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id} and game = '{member_entry[8]}'"
+        )
+        if log_channel_id:
+            log_channel = self.bot.get_channel(log_channel_id[0])
+            if log_channel:
+                mentions = (
+                    f"🔴 Red Team: "
+                    + ", ".join(f"<@{data[0]}>" for data in member_data if data[2] == "red")
+                    + "\n🔵 Blue Team: "
+                    + ", ".join(
+                        f"<@{data[0]}>" for data in member_data if data[2] == "blue"
+                    )
+                )
+
+                embed = Embed(
+                    title=f"Game results changed!",
+                    description=f"Game **{game_id}**'s results were changed!\n\nResult: **{team.capitalize()} Team Won!**",
+                    color=Color.blurple(),
+                )
+                await log_channel.send(mentions, embed=embed)
 
     @admin.command()
     async def void(self, ctx, game_id):
@@ -528,28 +594,30 @@ class Admin(Cog):
         await self.cancel(ctx, member)
 
     @admin_slash.sub_command(name="top_ten")
-    async def leaderboard_persistent_slash(self, ctx, channel: TextChannel):
+    async def leaderboard_persistent_slash(self, ctx, channel: TextChannel, game = Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
         """
         Create a Dynamic Top 10 leaderboard
         """
-        embed = await leaderboard_persistent(self.bot, channel)
+        embed = await leaderboard_persistent(self.bot, channel, game)
         msg = await channel.send(embed=embed)
         if not msg:
             return await ctx.send(embed=error("There are no records to display in the leaderboard, try playing a match first."))
-        data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id}")
+        data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id} and game = '{game}'")
         if data:
             await self.bot.execute(
-                f"UPDATE persistent_lb SET channel_id = $1, msg_id = $2 WHERE guild_id = $3",
+                f"UPDATE persistent_lb SET channel_id = $1, msg_id = $2 WHERE guild_id = $3 and game = $4",
                 channel.id,
                 msg.id,
-                ctx.guild.id
+                ctx.guild.id,
+                game
             )
         else:
             await self.bot.execute(
-                f"INSERT INTO persistent_lb(guild_id, channel_id, msg_id) VALUES($1, $2, $3)",
+                f"INSERT INTO persistent_lb(guild_id, channel_id, msg_id, game) VALUES($1, $2, $3, $4)",
                 ctx.guild.id,
                 channel.id, 
-                msg.id
+                msg.id,
+                game
             )
         
         m = await ctx.send(embed=success("Persistent leaderboard activated successfully."))
