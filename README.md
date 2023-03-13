@@ -29,7 +29,7 @@ Written in Python using [disnake](https://docs.disnake.dev/en/stable/).
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
 - Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the Bot out yourself!
-- Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) link - Invite the Bot to your server
+- Bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=1101927804016&scope=bot) link - Invite the Bot to your server
 
 ## Discord Server setup
 https://docs.inhousequeue.xyz/documentation/quick-start
