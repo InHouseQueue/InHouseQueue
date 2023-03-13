@@ -27,7 +27,7 @@ class Match(Cog):
                         embed=Embed(
                             title=":warning: NOTICE",
                             description="The Bot has been updated for maintenance. Queues **before** this message are now invalid. Please use the queue below this message. \n"
-                                        "Join our [Support Server](https://discord.com/invite/NDKMeT6GE7) for the patch notes.",
+                                        "Join our [Support Server](https://discord.com/invite/NDKMeT6GE7) for the patch notes. Overwatch, Valorant and any other 5v5 game is now supported!",
                             color=Color.yellow()
                         )
                     )
@@ -76,7 +76,7 @@ class Match(Cog):
                 elif region == "na":
                     icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077957849130467408/VAL_NA.png"
                 else:
-                    icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1077959248853598308/IMG_6379.png"
+                    icon_url = "https://media.discordapp.net/attachments/1046664511324692520/1075444853028175934/OW_Europe.png"
 
             elif game == "overwatch":
                 if region == "americas":

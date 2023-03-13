@@ -1,7 +1,8 @@
 Enable or Disable duo queue with /admin duo_queue
 Enable or Disable MMR with /admin sbmm 
 If someone is AFK during ready up phase, remove them with /admin user_dequeue
-Give helpers permissions to run some commands! /admin enable
-Wrong winning team result? /admin change_winner
-Look at your own rank with /rank
-Your MMR will be visible after 10 placement matches with SBMM enabled.
+Give mods permissions to run admin commands! /admin enable
+Wrong results? /admin change_winner
+View your own rank with /rank
+Your MMR will be visible after 10 placement matches with MMR enabled
+Set up a dynamic leaderboard with /admin top_ten
