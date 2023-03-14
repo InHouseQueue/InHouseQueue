@@ -15,7 +15,7 @@ class SelectMenu(ui.Select):
                 "You cannot interact with this menu.", ephemeral=True
             )
         await inter.response.defer()
-        await self.function(self.values, *self.args)
+        await self.function(inter, self.values, *self.args)
 
 class SelectMenuDeploy(ui.View):
     def __init__(self, bot, author_id, options, max_values, min_values, function, *args):

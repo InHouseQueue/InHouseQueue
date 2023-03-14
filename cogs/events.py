@@ -29,7 +29,7 @@ class Events(Cog):
                 if not msg:
                     continue
             if msg:
-                embed = await leaderboard_persistent(self.bot, channel)
+                embed = await leaderboard_persistent(self.bot, channel, entry[3])
                 await msg.edit(embed=embed)
 
     @Cog.listener()
@@ -87,7 +87,8 @@ class Events(Cog):
             """
             CREATE TABLE IF NOT EXISTS queuechannels(
                 channel_id INTEGER,
-                region TEXT
+                region TEXT,
+                game TEXT
             )
             """
         )
@@ -102,7 +103,8 @@ class Events(Cog):
                 red_role_id INTEGER, 
                 blue_role_id INTEGER,
                 queuechannel_id INTEGER,
-                msg_id INTEGER
+                msg_id INTEGER,
+                game TEXT
             )
             """
         )
@@ -126,7 +128,8 @@ class Events(Cog):
                 guild_id INTEGER,
                 user_id INTEGER,
                 wins INTEGER,
-                losses INTEGER
+                losses INTEGER,
+                game TEXT
             )
             """
         )
@@ -138,7 +141,11 @@ class Events(Cog):
                 game_id INTEGER,
                 team TEXT,
                 result TEXT,
-                role TEXT
+                role TEXT,
+                old_mmr TEXT,
+                now_mmr TEXT,
+                voted_team TEXT,
+                game TEXT
             )
             """
         )
@@ -147,7 +154,8 @@ class Events(Cog):
             """
             CREATE TABLE IF NOT EXISTS winner_log_channel(
                 channel_id INTEGER,
-                guild_id INTEGER
+                guild_id INTEGER,
+                game TEXT
             )
             """
         )
@@ -166,7 +174,8 @@ class Events(Cog):
             CREATE TABLE IF NOT EXISTS persistent_lb(
                 guild_id INTEGER,
                 channel_id INTEGER,
-                msg_id INTEGER
+                msg_id INTEGER,
+                game TEXT
             )
             """
         )
@@ -178,7 +187,8 @@ class Events(Cog):
                 user_id INTEGER,
                 mu TEXT,
                 sigma TEXT,
-                counter INTEGER
+                counter INTEGER,
+                game TEXT
             )
             """
         )
@@ -199,7 +209,8 @@ class Events(Cog):
             CREATE TABLE IF NOT EXISTS mvp_points(
                 guild_id INTEGER,
                 user_id INTEGER,
-                votes INTEGER
+                votes INTEGER,
+                game TEXT
             )
             """
         )
@@ -320,7 +331,7 @@ class Events(Cog):
             else:
                 embed = msg.embeds[0]
             if (
-                    (not embed.title == "Match Overview - SR Tournament Draft")
+                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview"])
                     and (
                         not embed.description == "Game was found! Time to ready up!"
                     )
@@ -359,18 +370,19 @@ class Events(Cog):
                         if i+1 == int(msg.content):
                             if member[0] == msg.author.id:
                                 return await msg.channel.send(embed=embeds.error("You cannot vote for yourself."))
-                            mvp_data = await self.bot.fetchrow(f"SELECT * FROM mvp_points WHERE user_id = {member[0]}")
+                            mvp_data = await self.bot.fetchrow(f"SELECT * FROM mvp_points WHERE user_id = {member[0]} and game = '{member[8]}'")
                             if mvp_data:
                                 await self.bot.execute(
-                                    f"UPDATE mvp_points SET votes = $1 WHERE guild_id = {mvp_data[0]} and user_id = {mvp_data[1]} ",
+                                    f"UPDATE mvp_points SET votes = $1 WHERE guild_id = {mvp_data[0]} and user_id = {mvp_data[1]} and game = '{member[8]}'",
                                     mvp_data[2] + 1
                                 )
                             else:
                                 await self.bot.execute(
-                                    "INSERT INTO mvp_points(guild_id, user_id, votes) VALUES($1, $2, $3)",
+                                    "INSERT INTO mvp_points(guild_id, user_id, votes, game) VALUES($1, $2, $3, $4)",
                                     entry[0],
                                     member[0],
-                                    1
+                                    1,
+                                    member[8]
                                 )
                             await self.bot.execute(
                                 f"DELETE FROM mvp_voting WHERE user_id = {msg.author.id} and guild_id = {entry[0]}"

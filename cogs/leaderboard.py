@@ -13,19 +13,27 @@ class Leaderboard(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command()
-    async def leaderboard(self, ctx, type="mmr"):
+    async def leaderboard(self, ctx, game, type="mmr"):
         if not type.lower() in ['mmr', 'mvp']:
             return await ctx.send(embed=error("Leaderboard type can either be `mmr` or `mvp`."))
 
         if type == 'mmr':
-            user_data = await self.bot.fetch(
-                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id}"
-            )
-            user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+            st_pref = await self.bot.fetchrow(f"SELECT * FROM switch_team_preference WHERE guild_id = {ctx.guild.id}")
+            if not st_pref:
+                user_data = await self.bot.fetch(
+                    f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id} and game = '{game}'"
+                )
+                user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+            else:
+                type = "basic"
+                user_data = await self.bot.fetch(
+                    f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {ctx.guild.id} and game = '{game}'"
+                )
+                user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
+                user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
         else:
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id}"
+                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id} and game = '{game}'"
             )
             user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
@@ -41,15 +49,37 @@ class Leaderboard(Cog):
         vals = 1
 
         async def add_field(data, current_embed) -> None:
-            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]}")
-            if user_history:
-                roles_players = {
-                    'top': 0,
-                    'jungle': 0,
-                    'mid': 0,
-                    'support': 0,
-                    'adc': 0
-                }
+            user_history = await self.bot.fetch(f"SELECT role FROM members_history WHERE user_id = {data[1]} and game = '{game}'")
+            if user_history and game != 'other':
+                if game == 'lol':
+                    roles_players = {
+                        'top': 0,
+                        'jungle': 0,
+                        'mid': 0,
+                        'support': 0,
+                        'adc': 0
+                    }
+                elif game == 'valorant':
+                    roles_players = {
+                        'controller': 0,
+                        'initiator': 0,
+                        'sentinel': 0,
+                        'duelist': 0,
+                        'flex': 0,
+                        'flex - controller':0,
+                        'flex - duelist': 0,
+                        'flex - initiator': 0,
+                        'flex - sentinel': 0,
+                    }
+                elif game == "overwatch":
+                    roles_players = {
+                        'tank': 0,
+                        'dps 1': 0,
+                        'dps 2': 0,
+                        'support 1': 0,
+                        'support 2': 0
+                    }
+
                 for history in user_history:
                     if history[0]:
                         roles_players[history[0]] += 1
@@ -62,7 +92,7 @@ class Leaderboard(Cog):
             else:
                 most_played_role = "<:fill:1066868480537800714>"
 
-            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id}")
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and guild_id = {ctx.guild.id} and game = '{game}'")
             if user_data:
                 wins = user_data[2]
                 losses = user_data[3]
@@ -97,7 +127,7 @@ class Leaderboard(Cog):
                     value=f"{most_played_role} `{member_name}   {wins}W {losses}L {percentage}% WR {data[2]} MVP`",
                     inline=False,
                 )
-            else:
+            elif type == "mmr":
                 skill = round(float(data[2]) - (2 * float(data[3])), 2)
                 if data[4] >= 10:
                     display_mmr = f"{int(skill*100)}"
@@ -107,6 +137,12 @@ class Leaderboard(Cog):
                 embeds[current_embed].add_field(
                     name=name,
                     value=f"{most_played_role} `{member_name}   {display_mmr} {wins}W {losses}L {percentage}% WR`",
+                    inline=False,
+                )
+            else:
+                embeds[current_embed].add_field(
+                    name=name,
+                    value=f"{most_played_role} `{member_name}   {wins}W {losses}L {percentage}% WR`",
                     inline=False,
                 )
 
@@ -133,26 +169,62 @@ class Leaderboard(Cog):
         else:
             await ctx.send(embed=embeds[0])
 
-    @slash_command(name="leaderboard")
-    async def leaderboard_slash(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
+    @slash_command()
+    async def leaderboard_lol(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
         """
-        View the leaderboard.
+        View the leaderboard for League of Legends.
         """
-        await self.leaderboard(ctx, type)
+        await self.leaderboard(ctx, 'lol', type)
+    
+    @command(name="leaderboard_lol")
+    async def leaderboard_lol_prefix(self, ctx, type="mmr"):
+        await self.leaderboard(ctx, 'lol', type)
 
-    @command()
-    async def rank(self, ctx, type):
+    @slash_command()
+    async def leaderboard_valorant(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
+        """
+        View the leaderboard for Valorant.
+        """
+        await self.leaderboard(ctx, 'valorant', type)
+
+    @command(name="leaderboard_valorant")
+    async def leaderboard_valorant_prefix(self, ctx, type="mmr"):
+        await self.leaderboard(ctx, 'valorant', type)
+    
+    @slash_command()
+    async def leaderboard_overwatch(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
+        """
+        View the leaderboard for Overwatch.
+        """
+        await self.leaderboard(ctx, 'overwatch', type)
+
+    @command(name="leaderboard_overwatch")
+    async def leaderboard_overwatch_prefix(self, ctx, type="mmr"):
+        await self.leaderboard(ctx, 'overwatch', type)
+
+    @slash_command()
+    async def leaderboard_others(self, ctx, type=Param(default="mmr", choices=[OptionChoice("MVP", "mvp"), OptionChoice("MMR", "mmr")])):
+        """
+        View the leaderboard for Other.
+        """
+        await self.leaderboard(ctx, 'other', type)
+    
+    @command(name="leaderboard_other")
+    async def leaderboard_others_prefix(self, ctx, type="mmr"):
+        await self.leaderboard(ctx, 'other', type)
+
+    async def rank(self, ctx, game, type):
         if type.lower() not in ['mvp', 'mmr']:
             return await ctx.send(embed=error("Rank type can either be `mmr` or `mvp`."))
 
         if type == 'mmr':
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id}"
+                f"SELECT * FROM mmr_rating WHERE guild_id = {ctx.guild.id} and game = '{game}'"
             )
             user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
         else:
             user_data = await self.bot.fetch(
-                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id}"
+                f"SELECT * FROM mvp_points WHERE guild_id = {ctx.guild.id} and game = '{game}'"
             )
             user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
 
@@ -166,7 +238,7 @@ class Leaderboard(Cog):
         if ctx.author.avatar:
             embed.set_thumbnail(url=ctx.author.avatar.url)
         async def add_field(data) -> None:
-            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]}")
+            user_data = await self.bot.fetchrow(f"SELECT * FROM points WHERE user_id = {data[1]} and game = '{game}'")
             if user_data:
                 wins = user_data[2]
                 losses = user_data[3]
@@ -204,14 +276,49 @@ class Leaderboard(Cog):
                 await ctx.send(embed=embed)
                 break
 
-    @slash_command(name="rank")
-    async def rank_slash(self, ctx, type = Param(choices=[OptionChoice('MMR', 'mmr'), OptionChoice('MVP', 'mvp')])):
+    @slash_command()
+    async def rank_lol(self, ctx, type = Param(choices=[OptionChoice('MMR', 'mmr'), OptionChoice('MVP', 'mvp')])):
         """
-        Check your rank in the server.
+        Check your rank for League Of Legends.
         """
-        await self.rank(ctx, type)
+        await self.rank(ctx, 'lol', type)
 
+    @command(name="rank_lol")
+    async def rank_lol_prefix(self, ctx, type="mmr"):
+        await self.rank(ctx, 'lol', type)
+    
+    @slash_command()
+    async def rank_valorant(self, ctx, type = Param(choices=[OptionChoice('MMR', 'mmr'), OptionChoice('MVP', 'mvp')])):
+        """
+        Check your rank for Valorant.
+        """
+        await self.rank(ctx, 'valorant', type)
+    
+    @command(name="rank_valorant")
+    async def rank_valorant_prefix(self, ctx, type="mmr"):
+        await self.rank(ctx, 'valorant', type)
+    
+    @slash_command()
+    async def rank_overwatch(self, ctx, type = Param(choices=[OptionChoice('MMR', 'mmr'), OptionChoice('MVP', 'mvp')])):
+        """
+        Check your rank for Overwatch.
+        """
+        await self.rank(ctx, 'overwatch', type)
+    
+    @command(name="rank_overwatch")
+    async def rank_overwatch_prefix(self, ctx, type="mmr"):
+        await self.rank(ctx, 'overwatch', type)
 
+    @slash_command()
+    async def rank_others(self, ctx, type = Param(choices=[OptionChoice('MMR', 'mmr'), OptionChoice('MVP', 'mvp')])):
+        """
+        Check your rank for Others.
+        """
+        await self.rank(ctx, 'others', type)
+    
+    @command(name="rank_others")
+    async def rank_others_prefix(self, ctx, type="mmr"):
+        await self.rank(ctx, 'others', type)
 
 def setup(bot):
     bot.add_cog(Leaderboard(bot))

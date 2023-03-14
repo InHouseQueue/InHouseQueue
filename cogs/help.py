@@ -32,7 +32,7 @@ class Help(Cog):
             description=f"\n **Useful Links**\n"
                         f"\n 🌐 [All commands](https://www.inhousequeue.xyz/commands)"
                         f"\n 🔗 [Set-Up Guide](https://docs.inhousequeue.xyz/documentation/quick-start)"
-                        f"\n 📹 [Video Set-Up Guide](https://youtu.be/p9z76CRYjnI)"
+                        f"\n 📹 [Video Set-Up Guide](https://youtu.be/5Qx8D_5cVr8)"
                         f"\n 🚑 [Support Discord](https://discord.com/invite/NDKMeT6GE7)"
                         f"\n 🤖 [Discord Bot List](https://top.gg/bot/1001168331996409856)",
             color=Color.blurple(),
