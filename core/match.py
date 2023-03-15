@@ -379,7 +379,6 @@ class RoleButtons(ui.Button):
                 if member[1] not in view.disabled:
                     view.disabled.append(member[1])
         
-        await inter.message.edit(view=view, attachments=[])
         if self.label.lower() in view.disabled:
             return await inter.send(embed=error("This role is taken, please choose another."), ephemeral=True)
 
