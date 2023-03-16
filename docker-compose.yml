@@ -18,6 +18,21 @@ services:
       - inhouse-db:/app/db
     restart: on-failure
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    depends_on:
+      - dozzle
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot-etc:/etc/letsencrypt
+      - ./certbot-var:/var/lib/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - nginx_network
+
   backup:
     image: offen/docker-volume-backup:v2
     logging:
@@ -51,6 +66,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 8888:8080
+    networks:
+      - nginx_network
+
+networks:
+  nginx_network:
+    driver: bridge
 
 volumes:
   inhouse-db:
+  certbot-etc:
+  certbot-var:
