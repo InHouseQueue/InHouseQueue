@@ -407,6 +407,9 @@ class LeaveButton(ui.Button):
             await self.bot.execute(
                 f"DELETE FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
             )
+            await self.bot.execute(
+                f"DELETE FROM duo_queue WHERE user1_id = {inter.author.id} AND game_id = '{view.game_id}' OR user2_id = {inter.author.id} AND game_id = '{view.game_id}'"
+            )
 
             embed = await view.gen_embed(inter.message, view.game_id)
 
