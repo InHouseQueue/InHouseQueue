@@ -34,7 +34,9 @@ class Help(Cog):
                         f"\n 🔗 [Set-Up Guide](https://docs.inhousequeue.xyz/documentation/quick-start)"
                         f"\n 📹 [Video Set-Up Guide](https://youtu.be/5Qx8D_5cVr8)"
                         f"\n 🚑 [Support Discord](https://discord.com/invite/NDKMeT6GE7)"
-                        f"\n 🤖 [Discord Bot List](https://top.gg/bot/1001168331996409856)",
+                        f"\n 🤖 [Discord Bot List](https://top.gg/bot/1001168331996409856)"
+                        f"\n 📶 {round(self.bot.latency * 1000)}ms"
+                        ,
             color=Color.blurple(),
         )
 

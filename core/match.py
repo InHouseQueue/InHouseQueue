@@ -379,7 +379,6 @@ class RoleButtons(ui.Button):
                 if member[1] not in view.disabled:
                     view.disabled.append(member[1])
         
-        await inter.message.edit(view=view, attachments=[])
         if self.label.lower() in view.disabled:
             return await inter.send(embed=error("This role is taken, please choose another."), ephemeral=True)
 
@@ -407,6 +406,9 @@ class LeaveButton(ui.Button):
         if await view.has_participated(inter, view.game_id):
             await self.bot.execute(
                 f"DELETE FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
+            )
+            await self.bot.execute(
+                f"DELETE FROM duo_queue WHERE user1_id = {inter.author.id} AND game_id = '{view.game_id}' OR user2_id = {inter.author.id} AND game_id = '{view.game_id}'"
             )
 
             embed = await view.gen_embed(inter.message, view.game_id)
