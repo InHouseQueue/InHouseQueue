@@ -27,4 +27,14 @@ echo "### Deleting dummy certificate for $domain..."
 docker-compose run --rm --entrypoint "\
   rm -Rf /etc/letsencrypt/live/$domain && \
   rm -Rf /etc/letsencrypt/archive/$domain && \
-  rm -Rf /etc/letsencrypt
+  rm -Rf /etc/letsencrypt/renewal/$domain.conf" certbot
+
+echo "### Requesting Let's Encrypt certificate for $domain..."
+docker-compose run --rm --entrypoint "\
+  certbot certonly --webroot -w /var/lib/letsencrypt/ \
+    -d $domain \
+    --email $email --rsa-key-size $rsa_key_size --agree-tos --force-renewal \
+    $staging_arg" certbot
+
+echo "### Reloading nginx..."
+docker-compose exec nginx nginx -s reload
