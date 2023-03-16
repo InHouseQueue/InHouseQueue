@@ -18,6 +18,12 @@ services:
       - inhouse-db:/app/db
     restart: on-failure
 
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot-etc:/etc/letsencrypt
+      - ./certbot-var:/var/lib/letsencrypt
+
   nginx:
     image: nginx:latest
     container_name: nginx
