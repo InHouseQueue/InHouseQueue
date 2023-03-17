@@ -18,6 +18,16 @@ services:
       - inhouse-db:/app/db
     restart: on-failure
 
+  stats:
+    build: ../InHouseQueue-stats
+    image: stats
+    ports:
+      - "5000:5000"
+    volumes:
+      - inhouse-db:/db
+    depends_on:
+      - bot
+
   backup:
     image: offen/docker-volume-backup:v2
     logging:
