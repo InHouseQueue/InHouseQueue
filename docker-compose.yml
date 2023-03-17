@@ -18,27 +18,6 @@ services:
       - inhouse-db:/app/db
     restart: on-failure
 
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot-etc:/etc/letsencrypt
-      - ./certbot-var:/var/lib/letsencrypt
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    depends_on:
-      - dozzle
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certbot-etc:/etc/letsencrypt
-      - ./certbot-var:/var/lib/letsencrypt
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - nginx_network
-
   backup:
     image: offen/docker-volume-backup:v2
     logging:
@@ -60,26 +39,5 @@ services:
       - inhouse-db:/backup/inhouse-db-backup:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  dozzle:
-    container_name: dozzle
-    image: amir20/dozzle:latest
-    environment:
-      DOZZLE_USERNAME: ${DOZZLE_USERNAME}
-      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD}
-      DOZZLE_NO_ANALYTICS: "True"
-      DOZZLE_HOSTNAME: ${DOZZLE_HOSTNAME}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 8888:8080
-    networks:
-      - nginx_network
-
-networks:
-  nginx_network:
-    driver: bridge
-
 volumes:
   inhouse-db:
-  certbot-etc:
-  certbot-var:
