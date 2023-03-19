@@ -14,6 +14,8 @@
     <img src="https://img.shields.io/badge/license-gnu-e74c3c.svg?style=for-the-badge#" alt="GNU License">
   </a>
   
+  <br>
+  
   <a href="https://top.gg/bot/1001168331996409856">
   <img src="https://top.gg/api/widget/servers/1001168331996409856.svg">
 </a>
