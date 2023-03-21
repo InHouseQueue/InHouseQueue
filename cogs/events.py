@@ -261,6 +261,14 @@ class Events(Cog):
             """
         )
 
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS testmode(
+                guild_id INTEGER
+            )
+            """
+        )
+
     @Cog.listener()
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
@@ -330,8 +338,12 @@ class Events(Cog):
                 return
             else:
                 embed = msg.embeds[0]
+                if not embed.description:
+                    embed.description = ""
+                if not embed.title:
+                    embed.title = ""
             if (
-                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview"])
+                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview", "Match Overview - SR Tournament Draft (1v1 Test Mode)", "Match Overview - Valorant Competitive (1v1 Test Mode)", "Match Overview - Overwatch Competitive (1v1 Test Mode)", ])
                     and (
                         not embed.description == "Game was found! Time to ready up!"
                     )

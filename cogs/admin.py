@@ -678,6 +678,25 @@ class Admin(Cog):
             
         await ctx.send(embed=success(f"Duo Queue preference changed successfully."))
 
+    @admin_slash.sub_command()
+    async def testmode(self, ctx, condition: bool):
+        """
+        Enable/Disable InHouseQueue for test mode.
+        """
+        data = await self.bot.fetchrow(f"SELECT * FROM testmode WHERE guild_id = {ctx.guild.id}")
+        if data and condition:
+            return await ctx.send(embed=success("Test mode is already enabled."))
+        
+        if not data and not condition:
+            return await ctx.send(embed=success("Test mode is already disabled."))
+        
+        if condition:
+            await self.bot.execute(f"INSERT INTO testmode(guild_id) VALUES(?)", ctx.guild.id)
+            await ctx.send(embed=success("Test mode enabled successfully."))
+        else:
+            await self.bot.execute(f"DELETE FROM testmode WHERE guild_id = {ctx.guild.id}")
+            await ctx.send(embed=success("Test mode disabled successfully."))
+
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):
         pass

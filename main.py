@@ -7,8 +7,6 @@ from disnake import Intents
 from disnake.ext import commands
 from dotenv import load_dotenv
 
-from CONFIG import TEST_MODE
-
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
@@ -19,7 +17,6 @@ PREFIX = "!"
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.test_mode = TEST_MODE
         self.role_emojis = {
             'top': "<:TOP:1066065292691779637>",
             'jungle': "<:JGL:1066065288107397200>",
@@ -140,6 +137,12 @@ class MyBot(commands.Bot):
                 exe = await cur.execute(query, tuple(values))
                 all = await exe.fetchall()
             return all
+
+    async def check_testmode(self, guild_id):
+        data = await self.fetchrow(f"SELECT * FROM testmode WHERE guild_id = {guild_id}")
+        if data:
+            return True
+        return False
 
 
 # Enabling message content intent for the bot to support prefix commands.

@@ -109,6 +109,9 @@ async def start_queue(bot, channel, game, author=None, existing_msg = None, game
 
     # If you change this - update /events.py L28 as well!
     title = get_title(game)
+    testmode = await bot.check_testmode(channel.guild.id)
+    if testmode:
+        title += " (1v1 Test Mode)"
         
     embed = Embed(
         title=title, color=Color.red()
@@ -160,6 +163,7 @@ async def start_queue(bot, channel, game, author=None, existing_msg = None, game
         footer_game_id = game_id
     else:
         footer_game_id = str(uuid.uuid4()).split("-")[0]
+    
     embed.set_footer(text="🎮 " + footer_game_id + '\n' + "💡 " + tip)
     if not data[1]:
         data = (data[0], 'na')
@@ -172,11 +176,12 @@ async def start_queue(bot, channel, game, author=None, existing_msg = None, game
         duo = True
     else:
         duo = False
+    
     try:
         if existing_msg:
-            await existing_msg.edit(embed=embed, view=Queue(bot, sbmm, duo, game), content="")
+            await existing_msg.edit(embed=embed, view=Queue(bot, sbmm, duo, game, testmode), content="")
         else:
-            await channel.send(embed=embed, view=Queue(bot, sbmm, duo, game))
+            await channel.send(embed=embed, view=Queue(bot, sbmm, duo, game, testmode))
     except:
         if author:
             await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
@@ -252,9 +257,9 @@ class SpectateButton(ui.View):
         await self.process_button(button, inter)
 
 class RoleButtons(ui.Button):
-    def __init__(self, bot, label, custom_id):
+    def __init__(self, bot, label, custom_id, disabled=False):
         super().__init__(
-            label=label, style=ButtonStyle.green, custom_id=custom_id,
+            label=label, style=ButtonStyle.green, custom_id=custom_id, disabled=disabled
         )
         self.bot = bot
         self.cooldown = None
@@ -829,7 +834,7 @@ class ReadyButton(ui.Button):
         members = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
-        if self.bot.test_mode:
+        if await self.bot.check_testmode(msg.guild.id):
             required_members = 2
         else:
             required_members = 10
@@ -958,7 +963,7 @@ class ReadyButton(ui.Button):
                 embed=embed,
             )
 
-            if self.bot.test_mode:
+            if await self.bot.check_testmode(inter.guild.id):
                 required_readyups = 2
             else:
                 required_readyups = 10
@@ -978,7 +983,7 @@ class ReadyButton(ui.Button):
                     else:
                         labels = OTHER_LABELS
                     
-                    if self.bot.test_mode:
+                    if await self.bot.check_testmode(inter.guild.id):
                         roles_occupation = {
                             labels[0].upper(): [{'user_id': 890, 'rating': Rating()}, {'user_id': 3543, 'rating': Rating()}],
                             labels[1].upper(): [{'user_id': 709, 'rating': Rating()}, {'user_id': 901, 'rating': Rating()},],
@@ -1051,14 +1056,6 @@ class ReadyButton(ui.Button):
                         if entry['quality'] == closet_quality:
                             final_teams = entry['teams']
                     
-                    # mentions = (
-                    #     f"🔴 Red Team: "
-                    #     + ", ".join(f"<@{data['user_id']}>" for data in final_teams[0])
-                    #     + "\n🔵 Blue Team: "
-                    #     + ", ".join(
-                    #         f"<@{data['user_id']}>" for data in final_teams[1]
-                    #     )
-                    # )
                     for i, team_entries in enumerate(final_teams):
                         if i:
                             team = 'blue'
@@ -1218,7 +1215,7 @@ class ReadyUp(ui.View):
         Queue.check_gameid(self, inter)
 
 class Queue(ui.View):
-    def __init__(self, bot, sbmm, duo, game):
+    def __init__(self, bot, sbmm, duo, game, testmode):
         super().__init__(timeout=None)
         self.bot = bot
         self.disabled = []
@@ -1233,8 +1230,13 @@ class Queue(ui.View):
             labels = OVERWATCH_LABELS
         else:
             labels = OTHER_LABELS
-        for label in labels:
-            self.add_item(RoleButtons(bot, label, f"{game}-queue:{label.lower()}"))
+
+        for i, label in enumerate(labels):
+            if i != len(labels)-1:
+                self.add_item(RoleButtons(bot, label, f"{game}-queue:{label.lower()}", testmode))
+            else:
+                self.add_item(RoleButtons(bot, label, f"{game}-queue:{label.lower()}", False))
+        
         self.add_item(LeaveButton(bot, game))
         if not sbmm:
             self.add_item(SwitchTeamButton(bot, game))
@@ -1321,7 +1323,7 @@ class Queue(ui.View):
             if len(data) == 2:
                 checks_passed += 1
 
-        if self.bot.test_mode:
+        if await self.bot.check_testmode(inter.guild.id):
             required_checks = 1
         else:
             required_checks = 5
