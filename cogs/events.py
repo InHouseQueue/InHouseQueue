@@ -343,7 +343,7 @@ class Events(Cog):
                 if not embed.title:
                     embed.title = ""
             if (
-                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview", "Match Overview - SR Tournament Draft (1v1 Test Mode)", "Match Overview - Valorant Competitive (1v1 Test Mode)", "Match Overview - Overwatch Competitive (1v1 Test Mode)", ])
+                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview", "1v1 Test Mode"])
                     and (
                         not embed.description == "Game was found! Time to ready up!"
                     )

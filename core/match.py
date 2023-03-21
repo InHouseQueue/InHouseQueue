@@ -108,10 +108,12 @@ async def start_queue(bot, channel, game, author=None, existing_msg = None, game
                 return await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
     # If you change this - update /events.py L28 as well!
-    title = get_title(game)
+    
     testmode = await bot.check_testmode(channel.guild.id)
     if testmode:
-        title += " (1v1 Test Mode)"
+        title = "1v1 Test Mode"
+    else:
+        title = get_title(game)
         
     embed = Embed(
         title=title, color=Color.red()
