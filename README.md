@@ -13,6 +13,12 @@
   <a href="https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-gnu-e74c3c.svg?style=for-the-badge#" alt="GNU License">
   </a>
+  
+  <br>
+  
+  <a href="https://top.gg/bot/1001168331996409856">
+  <img src="https://top.gg/api/widget/servers/1001168331996409856.svg">
+</a>
 
 </div>
 
@@ -74,7 +80,17 @@ https://docs.inhousequeue.xyz/documentation/reference/sbmm
 Please read [CONTRIBUTING.md](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/docs/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 # License
-This project is licensed under the MIT License - see the LICENSE.md file for details
+This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE - see the LICENSE.md file for details
+
+### The Affero General Public License v3.0 (AGPL-3.0) is the license for this project, which offers the following key features:
+
+- Based on the GNU General Public License v3.0 (GPL-3.0), it includes an additional clause addressing network interaction.
+- Mandates that the entire source code be accessible to users interacting with the software over a network.
+- Ensures that modified versions and derivative works of the software also remain open-source by requiring them to adopt the AGPL-3.0 license.
+- Grants end users the freedom to use, study, share, and modify the software.
+- Preserves copyright notices, disclaimers, and license information within the source code.
+-Excludes the granting of patent rights; contributors with patents covering their contributions must license those patents to users.
+- Relieves original authors and contributors of liability for damages or warranty claims.
 
 # Acknowledgments
 [Aarno](https://aarno.is-a.dev)
