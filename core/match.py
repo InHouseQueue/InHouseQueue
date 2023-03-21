@@ -182,9 +182,10 @@ async def start_queue(bot, channel, game, author=None, existing_msg = None, game
             await author.send(embed=error(f"Could not send queue in {channel.mention}, please check my permissions."))
 
 class SpectateButton(ui.View):
-    def __init__(self, bot):
+    def __init__(self, bot, game_id):
         super().__init__(timeout=None)
         self.bot = bot
+        self.game_id = game_id
 
     async def process_button(self, button, inter):
         await inter.response.defer()
@@ -194,16 +195,16 @@ class SpectateButton(ui.View):
         else:
             team = "Blue"
 
-        game_id = inter.message.embeds[0].footer.text
+        
         data = await self.bot.fetchrow(
-            f"SELECT * FROM games WHERE game_id = '{game_id}'"
+            f"SELECT * FROM games WHERE game_id = '{self.game_id}'"
         )
 
         if not data:
             return await inter.send(embed=error("This match is over."), ephemeral=True)
 
         members_data = await self.bot.fetch(
-            f"SELECT * FROM game_member_data WHERE game_id = '{game_id}'"
+            f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
         for member in members_data:
             if member[0] == inter.author.id:
@@ -379,7 +380,6 @@ class RoleButtons(ui.Button):
                 if member[1] not in view.disabled:
                     view.disabled.append(member[1])
         
-        await inter.message.edit(view=view, attachments=[])
         if self.label.lower() in view.disabled:
             return await inter.send(embed=error("This role is taken, please choose another."), ephemeral=True)
 
@@ -407,6 +407,9 @@ class LeaveButton(ui.Button):
         if await view.has_participated(inter, view.game_id):
             await self.bot.execute(
                 f"DELETE FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
+            )
+            await self.bot.execute(
+                f"DELETE FROM duo_queue WHERE user1_id = {inter.author.id} AND game_id = '{view.game_id}' OR user2_id = {inter.author.id} AND game_id = '{view.game_id}'"
             )
 
             embed = await view.gen_embed(inter.message, view.game_id)
@@ -1147,7 +1150,7 @@ class ReadyButton(ui.Button):
 
                 await inter.message.edit(
                     content="Game is currently in progress!",
-                    view=SpectateButton(self.bot),
+                    view=SpectateButton(self.bot, self.game_id),
                 )
 
                 for entry in self.data:
@@ -1162,7 +1165,7 @@ class ReadyButton(ui.Button):
                 await game_lobby.send(
                     content=f"{red_role.mention} {blue_role.mention}",
                     embed=await self.team_embed(ready_ups),
-                    view=SpectateButton(self.bot)
+                    view=SpectateButton(self.bot, self.game_id)
                 )
                 await game_lobby.send(
                     embed=Embed(
