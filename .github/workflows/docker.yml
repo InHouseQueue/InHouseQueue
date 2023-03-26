@@ -21,7 +21,6 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ${{ env.REPO_NAME }}
-            docker exec inhousequeue_backup_1 backup
 
   add-bot-env:
     name: Secrets
