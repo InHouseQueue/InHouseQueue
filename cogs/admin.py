@@ -770,6 +770,19 @@ class Admin(Cog):
         else:
             await process_setup("none")
 
+    @admin_slash.sub_command()
+    async def reset_db(self, ctx, user_id):
+        """
+        Remove entries of a user from the leaderboards.
+        """
+        try:
+            await self.bot.execute(f"DELETE FROM points WHERE user_id = {user_id} and guild_id = {ctx.guild.id}")
+            await self.bot.execute(f"DELETE FROM mvp_points WHERE user_id = {user_id} and guild_id = {ctx.guild.id}")
+            await self.bot.execute(f"DELETE FROM mmr_rating WHERE user_id = {user_id} and guild_id = {ctx.guild.id}")
+            await ctx.send(embed=success("Successfully deleted entries associated with the given ID."))
+        except:
+            await ctx.send(embed=error("An error occured. Please recheck the user ID."))
+
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):
         pass

@@ -269,6 +269,16 @@ class Events(Cog):
             """
         )
 
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS igns(
+                guild_id INTEGER,
+                user_id INTEGER,
+                ign TEXT
+            )
+            """
+        )
+
     @Cog.listener()
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
@@ -401,6 +411,21 @@ class Events(Cog):
                             )
                             await msg.channel.send(embed=embeds.success("Thank you for voting."))
 
+    @Cog.listener('on_raw_member_remove')
+    async def clear_member_entries(self, payload):
+        await self.bot.wait_until_ready()
+        data = await self.bot.fetch(f"SELECT * FROM game_member_data")
+        if data:
+            for entry in data:
+                channel = self.bot.get_channel(entry[5])
+                if channel.guild.id == payload.guild_id:
+                    await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{entry[3]}' and author_id = {payload.user.id}")
+                    await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}' and user_id = {payload.user.id}")
+
+        await self.bot.execute(f"DELETE FROM igns WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(f"DELETE FROM mvp_points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(f"DELETE FROM points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(f"DELETE FROM mmr_rating WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
 
 
 def setup(bot):

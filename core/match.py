@@ -840,6 +840,7 @@ class ReadyButton(ui.Button):
             required_members = 2
         else:
             required_members = 10
+
         if len(members) != required_members:
             self.disable_button.stop()
             await start_queue(self.bot, msg.channel, self.game, None, msg, self.game_id)
@@ -879,6 +880,9 @@ class ReadyButton(ui.Button):
                             f"DELETE FROM game_member_data WHERE author_id = {user_id} and game_id = '{self.game_id}'"
                         )
                         players_removed.append(user_id)
+                        await self.bot.execute(
+                            f"DELETE FROM duo_queue WHERE game_id = '{self.game_id}' and user1_id = {user_id} OR game_id = '{self.game_id}' and user2_id = {user_id}"
+                        )
 
                         user = self.bot.get_user(user_id)
                         await user.send(
@@ -933,7 +937,7 @@ class ReadyButton(ui.Button):
                 f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
             )
         
-        await self.check_members(inter)
+        await self.check_members(inter.message)
 
         game_members = [member[0] for member in self.data]
         ready_ups = await self.bot.fetch(
@@ -1212,6 +1216,7 @@ class ReadyUp(ui.View):
         super().__init__(timeout=None)
         self.bot = bot
         self.add_item(ReadyButton(bot, game, game_id))
+        self.add_item(DuoButton(bot, game))
 
     def check_gameid(self, inter):
         Queue.check_gameid(self, inter)
