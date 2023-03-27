@@ -780,12 +780,12 @@ class Admin(Cog):
                 await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id) VALUES(?,?)", ctx.guild.id, category.id)
             
             info_channel = await category.create_text_channel("Information")
-            embed = embed = Embed(title="InHouse Queue", description="All ongoing games will be under this category. Feel free to move it around or change its name.", color=Color.red())
+            embed = Embed(title="InHouse Queue", description="All ongoing games will be under this category. Feel free to move it around or change the name.", color=Color.red())
             embed.set_image(url="https://media.discordapp.net/attachments/328696263568654337/1067908043624423497/image.png?width=1386&height=527")
-            view = LinkButton({"Vote Us": "https://top.gg/bot/1001168331996409856/vote"}, {"Support": "https://discord.com/invite/8DZQcpxnbB"}, {"Website":"https://inhousequeue.xyz/"})
+            view = LinkButton({"Vote for Us": "https://top.gg/bot/1001168331996409856/vote"}, {"Support": "https://discord.com/invite/8DZQcpxnbB"}, {"Website":"https://inhousequeue.xyz/"})
             await info_channel.send(embed=embed, view=view)
                 
-            await ctx.send(embed=success("Setup completed successfully. You may delete any preovious existing winnerlog and top_ten channels."))
+            await ctx.send(embed=success("Setup completed successfully. If any, please delete previous 'match-history', 'top_10' and 'information' text channels. These are now inactive."))
         if regions:
             options = []
             for region in regions:
