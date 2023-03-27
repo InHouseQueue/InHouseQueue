@@ -274,6 +274,7 @@ class Events(Cog):
             CREATE TABLE IF NOT EXISTS igns(
                 guild_id INTEGER,
                 user_id INTEGER,
+                game TEXT,
                 ign TEXT
             )
             """

@@ -783,6 +783,18 @@ class Admin(Cog):
         except:
             await ctx.send(embed=error("An error occured. Please recheck the user ID."))
 
+    @admin_slash.sub_command()
+    async def update_ign(self, ctx, ign, member: Member, game=Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
+        """
+        Update In game name of a player
+        """
+        data = await self.bot.fetchrow(f"SELECT * FROM igns WHERE game = '{game}' and user_id = {member.id} and guild_id = {ctx.guild.id}")
+        if data:
+            await self.bot.execute(f"UPDATE igns SET ign = ? WHERE guild_id = ? and user_id = ? and game = ?", ign, ctx.guild.id, member.id, game)
+        else:
+            await self.bot.execute(f"INSERT INTO igns(guild_id, user_id, game, ign) VALUES(?,?,?,?)", ctx.guild.id, member.id, game, ign)
+        await ctx.send(embed=success("IGN updated successfully."))
+
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):
         pass

@@ -755,19 +755,24 @@ class ReadyButton(ui.Button):
             data = await self.bot.fetch(f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}' and team = '{team}'")
             nicknames = []
             for entry in data:
-                member = lobby_channel.guild.get_member(entry[0])
-                if member.nick:
-                    nick = member.nick
+                ign = await self.bot.fetchrow(f"SELECT ign FROM igns WHERE guild_id = {inter.guild.id} and user_id = {entry[0]} and game = 'lol'")
+                if ign:
+                    nicknames.append(ign[0].replace(' ', '%20'))
                 else:
-                    nick = member.name
+                    member = lobby_channel.guild.get_member(entry[0])
+                    if member.nick:
+                        nick = member.nick
+                    else:
+                        nick = member.name
 
-                pattern = re.compile("ign ", re.IGNORECASE)
-                nick = pattern.sub("", nick)
+                    pattern = re.compile("ign ", re.IGNORECASE)
+                    nick = pattern.sub("", nick)
 
-                pattern2 = re.compile("ign: ", re.IGNORECASE)
-                nick = pattern2.sub("", nick)
+                    pattern2 = re.compile("ign: ", re.IGNORECASE)
+                    nick = pattern2.sub("", nick)
 
-                nicknames.append(str(nick).replace(' ', '%20'))
+
+                    nicknames.append(str(nick).replace(' ', '%20'))
 
             for i, nick in enumerate(nicknames):
                 if not i == 0:
