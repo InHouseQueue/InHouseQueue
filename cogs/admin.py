@@ -4,7 +4,7 @@ from disnake.ext.commands import Cog, Context, Param, group, slash_command
 from trueskill import Rating, backends, rate
 from cogs.win import Win
 from core.embeds import error, success
-from core.buttons import ConfirmationButtons
+from core.buttons import ConfirmationButtons, LinkButton
 from core.selectmenus import SelectMenuDeploy
 from core.match import start_queue
 
@@ -764,7 +764,28 @@ class Admin(Cog):
                 color=Color.red()
             )
             await match_history.send(embed=embed)
-            await ctx.send(embed=success("Setup completed successfully."))
+            overwrites = {
+                ctx.guild.default_role: PermissionOverwrite(
+                    send_messages=False
+                ),
+                self.bot.user: PermissionOverwrite(
+                    send_messages=True, manage_channels=True
+                ),
+            }
+            category = await ctx.guild.create_category(name=f"Ongoing InHouse Games", overwrites=overwrites)
+            cate_data = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {ctx.guild.id}")
+            if cate_data:
+                await self.bot.execute(f"UPDATE game_categories SET category_id = {category.id} WHERE guild_id = {ctx.guild.id}")
+            else:
+                await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id) VALUES(?,?)", ctx.guild.id, category.id)
+            
+            info_channel = await category.create_text_channel("Information")
+            embed = embed = Embed(title="InHouse Queue", description="All ongoing games will be under this category. Feel free to move it around or change its name.", color=Color.red())
+            embed.set_image(url="https://media.discordapp.net/attachments/328696263568654337/1067908043624423497/image.png?width=1386&height=527")
+            view = LinkButton({"Vote Us": "https://top.gg/bot/1001168331996409856/vote"}, {"Support": "https://discord.com/invite/8DZQcpxnbB"}, {"Website":"https://inhousequeue.xyz/"})
+            await info_channel.send(embed=embed, view=view)
+                
+            await ctx.send(embed=success("Setup completed successfully. You may delete any preovious existing winnerlog and top_ten channels."))
         if regions:
             options = []
             for region in regions:
