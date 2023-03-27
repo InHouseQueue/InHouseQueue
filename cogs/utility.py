@@ -1,5 +1,5 @@
-from disnake import *
-from disnake.ext.commands import *
+
+from disnake.ext.commands import Cog, slash_command, Param
 
 from core.embeds import error, success
 
