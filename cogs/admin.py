@@ -727,12 +727,18 @@ class Admin(Cog):
             await self.bot.execute(
                 "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", queue.id, region, game
             )
-            await self.bot.execute(
-                "INSERT INTO winner_log_channel(guild_id, channel_id, game) VALUES($1, $2, $3)",
-                ctx.guild.id,
-                match_history.id,
-                game
-            )
+            winnerlog = await self.bot.fetchrow(f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}")
+            if winnerlog:
+                await self.bot.execute(
+                    f"UPDATE winner_log_channel SET channel_id = {match_history.id} WHERE guild_id = {ctx.guild.id} and game = '{game}'"
+                )
+            else:
+                await self.bot.execute(
+                    "INSERT INTO winner_log_channel(guild_id, channel_id, game) VALUES($1, $2, $3)",
+                    ctx.guild.id,
+                    match_history.id,
+                    game
+                )
             embed = await leaderboard_persistent(self.bot, top_ten, game)
             msg = await top_ten.send(embed=embed)
             data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id} and game = '{game}'")
