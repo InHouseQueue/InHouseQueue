@@ -30,3 +30,22 @@ class ConfirmationButtons(ui.View):
             button.disabled = True
         await inter.response.edit_message(view=self)
         self.stop()
+
+class LinkButton(ui.View):
+    def __init__(self, *args):
+        super().__init__()
+        # labels = []
+        # urls = []
+        # for i in range(0, len(args)):
+        #     if i%2:
+        #         labels.append(args[i])
+        #     else:
+        #         urls.append(args[i])
+        # for i, label in enumerate(labels):
+        #     self.add_item(ui.Button(label=label, url=urls[i]))
+        for btn in args:
+            for url in btn.values():
+                pass
+            for label in btn.keys():
+                pass
+            self.add_item(ui.Button(label=label, url=url))

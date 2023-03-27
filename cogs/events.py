@@ -162,6 +162,15 @@ class Events(Cog):
 
         await bot.execute(
             """
+            CREATE TABLE IF NOT EXISTS game_categories(
+                guild_id INTEGER,
+                category_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
             CREATE TABLE IF NOT EXISTS ready_ups(
                 game_id TEXT,
                 user_id INTEGER
