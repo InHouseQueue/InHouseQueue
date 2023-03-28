@@ -505,8 +505,9 @@ class DuoButton(ui.Button):
             return await inter.send(embed=error("Duo queue is not enabled. Please ask an admin to run `/admin duo_queue Enabled`"), ephemeral=True)
 
         assert self.view is not None
-        view: Queue = self.view
-        view.check_gameid(inter)
+        view = self.view
+        if isinstance(view, Queue):
+            view.check_gameid(inter)
 
         queue_check = await self.bot.fetchrow(
             f"SELECT * FROM game_member_data WHERE author_id = {inter.author.id} and game_id = '{view.game_id}'"
@@ -605,11 +606,12 @@ class ReadyButton(ui.Button):
         embed.clear_fields()
         embed.description = "These are not the final teams."
         duos = await self.bot.fetch(f"SELECT * FROM duo_queue WHERE game_id = '{self.game_id}'")
-        in_duo = []
-        for duo in duos:
-            in_duo.extend([duo[1], duo[2]])
-        duo_usage = 0
-        duo_emoji = ":one:"
+        in_duo = {}
+        for i, duo in enumerate(duos):
+            duo_emojis = [":one:", ":two:", ":three:", ":four:"]
+            in_duo.update({duo[1]: duo_emojis[i]})
+            in_duo.update({duo[2]: duo_emojis[i]})
+        
         team_data = await self.bot.fetch(
             f"SELECT * FROM game_member_data WHERE game_id = '{self.game_id}'"
         )
@@ -622,17 +624,7 @@ class ReadyButton(ui.Button):
             else:
                 value += "❌"
             if team[0] in in_duo:
-                value += f"{duo_emoji} "
-                duo_usage += 1
-                if not duo_usage%2:
-                    if duo_usage/2 == 1:
-                        duo_emoji = ":two:"
-                    elif duo_usage/2 == 2:
-                        duo_emoji = ":three:"
-                    elif duo_usage/2 == 3:
-                        duo_emoji = ":four:"
-                    else:
-                        duo_emoji = ":five:" # Should not happen
+                value += f"{in_duo[team[0]]} "
             
             value += f"<@{team[0]}> - `{team[1].capitalize()}` \n"
             if i in range(0, 5):
@@ -910,9 +902,9 @@ class ReadyButton(ui.Button):
                     duo = True
                 else:
                     duo = False
-
+                test_mode = await self.bot.check_testmode(self.msg.guild.id)
                 await self.msg.edit(
-                    embed=await Queue.gen_embed(self, self.msg, self.game_id),
+                    embed=await Queue.gen_embed(self, self.msg, self.game_id, test_mode),
                     view=Queue(self.bot, sbmm, duo, self.game),
                     content="Not all players were ready, Queue has been vacated.",
                 )
@@ -1221,14 +1213,15 @@ class ReadyButton(ui.Button):
             )
 
 class ReadyUp(ui.View):
-    def __init__(self, bot, game, game_id):
+    def __init__(self, bot, game, game_id, duo):
         super().__init__(timeout=None)
         self.bot = bot
+        self.game_id = game_id
+        self.game = game
         self.add_item(ReadyButton(bot, game, game_id))
-        self.add_item(DuoButton(bot, game))
+        if duo:
+            self.add_item(DuoButton(bot, game))
 
-    def check_gameid(self, inter):
-        Queue.check_gameid(self, inter)
 
 class Queue(ui.View):
     def __init__(self, bot, sbmm, duo, game, testmode):
@@ -1258,6 +1251,9 @@ class Queue(ui.View):
             self.add_item(SwitchTeamButton(bot, game))
         if duo and sbmm:
             self.add_item(DuoButton(bot, game))
+            self.duo = True
+        else:
+            self.duo = False
     
     def check_gameid(self, inter):
         if not self.game_id:
@@ -1364,7 +1360,7 @@ class Queue(ui.View):
                 view=None
             )
             await inter.edit_original_message(
-                view=ReadyUp(self.bot, self.game, self.game_id),
+                view=ReadyUp(self.bot, self.game, self.game_id, self.duo),
                 content="0/10 Players are ready!",
                 embed=embed
             )
