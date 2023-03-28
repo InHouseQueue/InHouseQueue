@@ -11,6 +11,25 @@ load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 dbl_token = os.getenv("TOP_GG_TOKEN")
+
+# Roles for League of Legends
+TOP = os.getenv("TOP")
+JUNGLE = os.getenv("JUNGLE")
+MID = os.getenv("MID")
+SUPPORT = os.getenv("SUPPORT")
+ADC = os.getenv("ADC")
+
+# Roles for Valorant
+CONTROLLER = os.getenv("CONTROLLER")
+DUELIST = os.getenv("DUELIST")
+INITIATOR = os.getenv("INITIATOR")
+SENTINEL = os.getenv("SENTINEL")
+
+# Roles for Overwatch
+TANK = os.getenv("TANK")
+DPS = os.getenv("DPS")
+SUPPORT_OW = os.getenv("SUPPORT_OW")
+
 PREFIX = "!"
 
 
@@ -18,25 +37,25 @@ class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role_emojis = {
-            'top': "<:TOP:1066065292691779637>",
-            'jungle': "<:JGL:1066065288107397200>",
-            'mid': "<:MID:1066065288862380033>",
-            'support': "<:SUP:1066065290540093450>",
-            'adc': "<:BOT:1066065285938946078>",
-            'controller': "<:Controller:1078086238961156197>",
-            'duelist': "<:Duelist:1078086241221877941>",
-            'initiator': "<:Initiator:1078086242677305426>",
-            'sentinel': "<:Sentinel:1078086244371808267>",
+            'top': TOP,
+            'jungle': JUNGLE,
+            'mid': MID,
+            'support': SUPPORT,
+            'adc': ADC,
+            'controller': CONTROLLER,
+            'duelist': DUELIST,
+            'initiator': INITIATOR,
+            'sentinel': SENTINEL,
             'flex': "❓",
-            'flex - controller': "<:Controller:1078086238961156197>",
-            'flex - duelist': "<:Duelist:1078086241221877941>",
-            'flex - initiator': "<:Initiator:1078086242677305426>",
-            'flex - sentinel': "<:Sentinel:1078086244371808267>",
-            'tank': "<:Tank:1078082570039873668>",
-            'dps 1': "<:Damage:1078082164949786725>",
-            'dps 2': "<:Damage:1078082164949786725>",
-            'support 1': "<:Support:1078082833198878852>",
-            'support 2': "<:Support:1078082833198878852>",
+            'flex - controller': CONTROLLER,
+            'flex - duelist': DUELIST,
+            'flex - initiator': INITIATOR,
+            'flex - sentinel': SENTINEL,
+            'tank': TANK,
+            'dps 1': DPS,
+            'dps 2': DPS,
+            'support 1': SUPPORT,
+            'support 2': SUPPORT,
             'role 1': "1️⃣",
             'role 2': "2️⃣",
             'role 3': "3️⃣",
@@ -55,14 +74,14 @@ class MyBot(commands.Bot):
             {'Breeze': 'https://media.valorant-api.com/maps/2fb9a4fd-47b8-4e7d-a969-74b4046ebd53/splash.png'},
         ]
         self.overwatch = [
-            { 'Control': [
+            {'Control': [
                 {'Busan': 'https://overfast-api.tekrop.fr/static/maps/busan.jpg'},
                 {'Ilios': 'https://overfast-api.tekrop.fr/static/maps/ilios.jpg'},
                 {'Lijiang Tower': 'https://overfast-api.tekrop.fr/static/maps/lijiang.jpg'},
                 {'Nepal': 'https://overfast-api.tekrop.fr/static/maps/nepal.jpg'},
                 {'Oasis': 'https://overfast-api.tekrop.fr/static/maps/oasis.jpg'},
-            ] },
-            { 'Escort': [
+            ]},
+            {'Escort': [
                 {'Dorado': 'https://overfast-api.tekrop.fr/static/maps/dorado.jpg'},
                 {'Junkertown': 'https://overfast-api.tekrop.fr/static/maps/junkertown.jpg'},
                 {'Circuit Royal': 'https://overfast-api.tekrop.fr/static/maps/circuit_royal.jpg'},
@@ -72,7 +91,7 @@ class MyBot(commands.Bot):
                 {'Watchpoint Gibratar': 'https://overfast-api.tekrop.fr/static/maps/gibraltar.jpg'},
             ]
             },
-            { 'Hybrid':[
+            {'Hybrid': [
                 {'Blizzard World': 'https://overfast-api.tekrop.fr/static/maps/blizzard_world.jpg'},
                 {'Eichenwalde': 'https://overfast-api.tekrop.fr/static/maps/eichenwalde.jpg'},
                 {'King’s Row': 'https://overfast-api.tekrop.fr/static/maps/kings_row.jpg'},
@@ -82,7 +101,7 @@ class MyBot(commands.Bot):
                 {'Hollywood': 'https://overfast-api.tekrop.fr/static/maps/hollywood.jpg'},
             ]
             },
-            { 'Push':[
+            {'Push': [
                 {'Colosseo': 'https://overfast-api.tekrop.fr/static/maps/colosseo.jpg'},
                 {'New Queen Street': 'https://overfast-api.tekrop.fr/static/maps/new_queen_street.jpg'},
                 {'Esperança': 'https://overfast-api.tekrop.fr/static/maps/esperanca.jpg'},
@@ -167,6 +186,7 @@ async def on_autopost_success():
 async def before_invoke_slash(inter):
     if not inter.response.is_done():
         await inter.response.defer()
+
 
 # Load all cogs
 for filename in os.listdir("./cogs"):
