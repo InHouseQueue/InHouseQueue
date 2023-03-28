@@ -48,7 +48,6 @@ class Events(Cog):
         for deletion in deletions:
             await self.bot.execute(f"DELETE FROM {deletion} WHERE channel_id = {channel.id}")
 
-
     @Cog.listener()
     async def on_message(self, msg):
         data = await self.bot.fetch("SELECT * FROM queuechannels")
@@ -428,9 +427,10 @@ class Events(Cog):
         if data:
             for entry in data:
                 channel = self.bot.get_channel(entry[5])
-                if channel.guild.id == payload.guild_id:
-                    await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{entry[3]}' and author_id = {payload.user.id}")
-                    await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}' and user_id = {payload.user.id}")
+                if channel:
+                    if channel.guild.id == payload.guild_id:
+                        await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{entry[3]}' and author_id = {payload.user.id}")
+                        await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}' and user_id = {payload.user.id}")
 
         await self.bot.execute(f"DELETE FROM igns WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
         await self.bot.execute(f"DELETE FROM mvp_points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
