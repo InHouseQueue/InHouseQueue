@@ -1,3 +1,5 @@
+import os
+
 import traceback
 from io import StringIO
 
@@ -5,8 +7,15 @@ from core import embeds
 from disnake import Color, Embed, File, Game
 from disnake.ext import commands, tasks
 from disnake.ext.commands import Cog
+from dotenv import load_dotenv
 
 from cogs.admin import leaderboard_persistent
+
+load_dotenv()
+
+BOT_ID = int(os.getenv("BOT_ID"))
+ERROR_LOG_CHANNEL_ID_1 = int(os.getenv("ERROR_LOG_CHANNEL_ID_1"))
+ERROR_LOG_CHANNEL_ID_2 = int(os.getenv("ERROR_LOG_CHANNEL_ID_2"))
 
 
 class Events(Cog):
@@ -44,7 +53,7 @@ class Events(Cog):
         top_ten = await self.bot.fetch(f"SELECT * FROM persistent_lb WHERE channel_id = {channel.id}")
         if top_ten:
             deletions.append("persistent_lb")
-        
+
         for deletion in deletions:
             await self.bot.execute(f"DELETE FROM {deletion} WHERE channel_id = {channel.id}")
 
@@ -68,12 +77,12 @@ class Events(Cog):
             else:
                 embed = msg.embeds[0]
             if (
-                (not embed.title == "Match Overview - SR Tournament Draft")
-                and (not embed.description == "Game was found! Time to ready up!")
-                and (
+                    (not embed.title == "Match Overview - SR Tournament Draft")
+                    and (not embed.description == "Game was found! Time to ready up!")
+                    and (
                     not embed.description
-                    == "Mentioned players have been removed from the queue for not being ready on time."
-                )
+                        == "Mentioned players have been removed from the queue for not being ready on time."
+            )
             ):
                 try:
                     await msg.delete()
@@ -299,20 +308,20 @@ class Events(Cog):
         if isinstance(error, (commands.CommandNotFound, commands.CheckFailure)):
             pass
         elif isinstance(
-            error, (commands.MissingRequiredArgument, commands.BadArgument)
+                error, (commands.MissingRequiredArgument, commands.BadArgument)
         ):
             await ctx.send(embed=embeds.error(str(error)))
         else:
             await self.bot.wait_until_ready()
 
-            if self.bot.user.id == 1018498965022445638:  # Testing bot ID
+            if self.bot.user.id == BOT_ID:
                 channel = self.bot.get_channel(
-                    1045254299430694912
-                )  # Testing Server Channel
+                    ERROR_LOG_CHANNEL_ID_1
+                )
             else:
                 channel = self.bot.get_channel(
-                    1032356383506575372
-                )  # Server Support Channel
+                    ERROR_LOG_CHANNEL_ID_2
+                )
 
             if isinstance(ctx, commands.Context):
                 command = ctx.command
@@ -362,23 +371,25 @@ class Events(Cog):
                 if not embed.title:
                     embed.title = ""
             if (
-                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview", "1v1 Test Mode"])
+                    (
+                    not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive",
+                                        "Match Overview - Overwatch Competitive", "Match Overview", "1v1 Test Mode"])
                     and (
-                        not embed.description == "Game was found! Time to ready up!"
-                    )
+                    not embed.description == "Game was found! Time to ready up!"
+            )
                     and (
-                        not embed.description
-                            == "Mentioned players have been removed from the queue for not being ready on time."
-                    )
+                    not embed.description
+                        == "Mentioned players have been removed from the queue for not being ready on time."
+            )
                     and (
-                        not embed.title == ":warning: NOTICE"
-                    )
+                    not embed.title == ":warning: NOTICE"
+            )
                     and (
-                        not "Could not log the game" in embed.description
-                    )
+                    not "Could not log the game" in embed.description
+            )
                     and (
-                        not "was successfully set as queue channel." in embed.description
-                    )
+                    not "was successfully set as queue channel." in embed.description
+            )
             ):
                 try:
                     await msg.delete()
@@ -398,10 +409,11 @@ class Events(Cog):
                         return await msg.channel.send(embed=embeds.error("There are only 10 summoners to vote."))
                     all_members = await self.bot.fetch(f"SELECT * FROM members_history WHERE game_id = '{entry[2]}'")
                     for i, member in enumerate(all_members):
-                        if i+1 == int(msg.content):
+                        if i + 1 == int(msg.content):
                             if member[0] == msg.author.id:
                                 return await msg.channel.send(embed=embeds.error("You cannot vote for yourself."))
-                            mvp_data = await self.bot.fetchrow(f"SELECT * FROM mvp_points WHERE user_id = {member[0]} and game = '{member[8]}'")
+                            mvp_data = await self.bot.fetchrow(
+                                f"SELECT * FROM mvp_points WHERE user_id = {member[0]} and game = '{member[8]}'")
                             if mvp_data:
                                 await self.bot.execute(
                                     f"UPDATE mvp_points SET votes = $1 WHERE guild_id = {mvp_data[0]} and user_id = {mvp_data[1]} and game = '{member[8]}'",
@@ -429,13 +441,18 @@ class Events(Cog):
                 channel = self.bot.get_channel(entry[5])
                 if channel:
                     if channel.guild.id == payload.guild_id:
-                        await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{entry[3]}' and author_id = {payload.user.id}")
-                        await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}' and user_id = {payload.user.id}")
+                        await self.bot.execute(
+                            f"DELETE FROM game_member_data WHERE game_id = '{entry[3]}' and author_id = {payload.user.id}")
+                        await self.bot.execute(
+                            f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}' and user_id = {payload.user.id}")
 
         await self.bot.execute(f"DELETE FROM igns WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
-        await self.bot.execute(f"DELETE FROM mvp_points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
-        await self.bot.execute(f"DELETE FROM points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
-        await self.bot.execute(f"DELETE FROM mmr_rating WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(
+            f"DELETE FROM mvp_points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(
+            f"DELETE FROM points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(
+            f"DELETE FROM mmr_rating WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
 
 
 def setup(bot):
