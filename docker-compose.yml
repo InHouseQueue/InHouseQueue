@@ -1,5 +1,5 @@
-# THIS IS THE DOCKER COMPOSE I’M USING
-# DO NOT USE IT TO DEPLOY THE BOT
+# THIS FILE IS MEANT TO BE AN EXAMPLE DOCKER COMPOSE FILE TO RUN THE BOT
+
 version: '3.8'
 
 services:
@@ -8,46 +8,9 @@ services:
     image: in-house-queue
     environment:
       TOKEN: ${TOKEN}
-      TOP_GG_TOKEN: ${TOP_GG_TOKEN}
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "5"
     volumes:
       - inhouse-db:/app/db
     restart: on-failure
-
-#  stats:
-#    build: ../InHouseQueue-stats
-#    image: stats
-#    ports:
-#      - "5000:5000"
-#    volumes:
-#      - inhouse-db:/db
-#    depends_on:
-#      - bot
-
-  backup:
-    image: offen/docker-volume-backup:v2
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "5"
-    restart: always
-    environment:
-      BACKUP_FILENAME: backup-%Y-%m-%dT%H-%M-%S-${AWS_S3_PATH}.tar.gz
-      BACKUP_PRUNING_PREFIX: backup-
-      BACKUP_CRON_EXPRESSION: "0 0 * * *"
-      BACKUP_RETENTION_DAYS: "30"
-      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_S3_PATH: ${AWS_S3_PATH}
-    volumes:
-      - inhouse-db:/backup/inhouse-db-backup:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   inhouse-db:
