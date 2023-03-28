@@ -1,13 +1,37 @@
-# THIS FILE IS MEANT TO BE AN EXAMPLE DOCKER COMPOSE FILE TO RUN THE BOT
-
 version: '3.8'
 
 services:
   bot:
     build: .
     image: in-house-queue
+    # create a .env file in the root directory
     environment:
       TOKEN: ${TOKEN}
+      TOP: ${TOP}
+      JUNGLE: ${JUNGLE}
+      MID: ${MID}
+      SUPPORT: ${SUPPORT}
+      ADC: ${ADC}
+      # Roles for Valorant
+      CONTROLLER: ${CONTROLLER}
+      DUELIST: ${DUELIST}
+      INITIATOR: ${INITIATOR}
+      SENTINEL: ${SENTINEL}
+      # Roles for Overwatch
+      TANK: ${TANK}
+      DPS: ${DPS}
+      SUPPORT_OW: ${SUPPORT_OW}
+      # Discord ID of Owners. Use the SAME ID for BOTH values if there is only 1 owner.
+      DEV_1: ${DEV_1}
+      DEV_2: ${DEV_2}
+      # Guild/Server ID of where the bot is running. Use the SAME ID for BOTH values if there is only 1 server.
+      GUILD_1: ${GUILD_1}
+      GUILD_2: ${GUILD_2}
+      # Discord ID of the Bot
+      BOT_ID: ${BOT_ID}
+      # Discord ID of the Error Log channel. Use the SAME ID for BOTH values if there is only 1 error log channel.
+      ERROR_LOG_CHANNEL_ID_1: ${ERROR_LOG_CHANNEL_ID_1}
+      ERROR_LOG_CHANNEL_ID_2: ${ERROR_LOG_CHANNEL_ID_2}
     volumes:
       - inhouse-db:/app/db
     restart: on-failure
