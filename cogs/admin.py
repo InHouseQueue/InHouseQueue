@@ -1,20 +1,21 @@
-from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel
+from disnake import Color, Embed, Member, OptionChoice, Role, TextChannel, PermissionOverwrite, SelectOption
 from disnake.ext.commands import Cog, Context, Param, group, slash_command
 
 from trueskill import Rating, backends, rate
 from cogs.win import Win
 from core.embeds import error, success
-from core.buttons import ConfirmationButtons
+from core.buttons import ConfirmationButtons, LinkButton
+from core.selectmenus import SelectMenuDeploy
+from core.match import start_queue
 
 async def leaderboard_persistent(bot, channel, game):
     user_data = await bot.fetch(
         f"SELECT *, (points.wins + 0.0) / (MAX(points.wins + points.losses, 1.0) + 0.0) AS percentage FROM points WHERE guild_id = {channel.guild.id} and game = '{game}'"
     )
-    if not user_data:
-        return await channel.send(embed=error("There are no records to display."))
-    user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
-    user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
-    # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
+    if user_data:
+        user_data = sorted(list(user_data), key=lambda x: x[4], reverse=True)
+        user_data = sorted(list(user_data), key=lambda x: x[2], reverse=True)
+        # user_data = sorted(list(user_data), key=lambda x: float(x[2]) - (2 * float(x[3])), reverse=True)
 
     embed = Embed(title=f"🏆 Leaderboard", color=Color.yellow())
     if channel.guild.icon:
@@ -99,6 +100,8 @@ async def leaderboard_persistent(bot, channel, game):
             inline=False,
         )
 
+    if not user_data:
+        embed.description = "No records to display yet."
     for i, data in enumerate(user_data):
 
         if i <= 9:
@@ -620,11 +623,8 @@ class Admin(Cog):
                 game
             )
         
-        m = await ctx.send(embed=success("Persistent leaderboard activated successfully."))
-        try:
-            await m.pin()
-        except:
-            pass
+        await ctx.send(embed=success("Persistent leaderboard activated successfully."))
+
     
     @admin_slash.sub_command(name="void")
     async def void_slash(self, ctx, game_id):
@@ -677,6 +677,150 @@ class Admin(Cog):
             await self.bot.execute(f"DELETE FROM duo_queue_preference WHERE guild_id = {ctx.guild.id}")
             
         await ctx.send(embed=success(f"Duo Queue preference changed successfully."))
+
+    @admin_slash.sub_command()
+    async def test_mode(self, ctx, condition: bool):
+        """
+        Enable/Disable InHouseQueue for test mode.
+        """
+        data = await self.bot.fetchrow(f"SELECT * FROM testmode WHERE guild_id = {ctx.guild.id}")
+        if data and condition:
+            return await ctx.send(embed=success("Test mode is already enabled."))
+        
+        if not data and not condition:
+            return await ctx.send(embed=success("Test mode is already disabled."))
+        
+        if condition:
+            await self.bot.execute(f"INSERT INTO testmode(guild_id) VALUES(?)", ctx.guild.id)
+            await ctx.send(embed=success("Test mode enabled successfully."))
+        else:
+            await self.bot.execute(f"DELETE FROM testmode WHERE guild_id = {ctx.guild.id}")
+            await ctx.send(embed=success("Test mode disabled successfully."))
+
+    @admin_slash.sub_command()
+    async def setup(self, ctx, game=Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
+        """
+        Setup InHouse Queue in your server.
+        """
+        if game == 'lol':
+            regions =  ["BR", "EUNE", "EUW", "LA", "LAS", "NA", "OCE", "RU", "TR", "JP"]
+        elif game == 'valorant':
+            regions = ["EU", "NA", "BR", "KR", "AP", "LATAM"]
+        elif game == "overwatch":
+            regions = ["AMERICAS", "ASIAS", "EUROPE"]
+        else:
+            regions = []
+        
+        async def process_setup(region):
+            mutual_overwrites = {
+                    ctx.guild.default_role: PermissionOverwrite(
+                        send_messages=False
+                    ),
+                    self.bot.user: PermissionOverwrite(
+                        send_messages=True, manage_channels=True
+                    ),
+                }
+            category = await ctx.guild.create_category(name="InHouse", overwrites=mutual_overwrites)
+            queue = await category.create_text_channel(name="queue")
+            match_history = await category.create_text_channel(name="match-history")
+            top_ten = await category.create_text_channel(name="top-10")
+            await self.bot.execute(
+                "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", queue.id, region, game
+            )
+            winnerlog = await self.bot.fetchrow(f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}")
+            if winnerlog:
+                await self.bot.execute(
+                    f"UPDATE winner_log_channel SET channel_id = {match_history.id} WHERE guild_id = {ctx.guild.id} and game = '{game}'"
+                )
+            else:
+                await self.bot.execute(
+                    "INSERT INTO winner_log_channel(guild_id, channel_id, game) VALUES($1, $2, $3)",
+                    ctx.guild.id,
+                    match_history.id,
+                    game
+                )
+            embed = await leaderboard_persistent(self.bot, top_ten, game)
+            msg = await top_ten.send(embed=embed)
+            data = await self.bot.fetchrow(f"SELECT * FROM persistent_lb WHERE guild_id = {ctx.guild.id} and game = '{game}'")
+            if data:
+                await self.bot.execute(
+                    f"UPDATE persistent_lb SET channel_id = $1, msg_id = $2 WHERE guild_id = $3 and game = $4",
+                    top_ten.id,
+                    msg.id,
+                    ctx.guild.id,
+                    game
+                )
+            else:
+                await self.bot.execute(
+                    f"INSERT INTO persistent_lb(guild_id, channel_id, msg_id, game) VALUES($1, $2, $3, $4)",
+                    ctx.guild.id,
+                    top_ten.id, 
+                    msg.id,
+                    game
+                )
+            await start_queue(self.bot, queue, game)
+            embed = Embed(
+                description="Match histories will be posted in here!",
+                color=Color.red()
+            )
+            await match_history.send(embed=embed)
+            overwrites = {
+                ctx.guild.default_role: PermissionOverwrite(
+                    send_messages=False
+                ),
+                self.bot.user: PermissionOverwrite(
+                    send_messages=True, manage_channels=True
+                ),
+            }
+            category = await ctx.guild.create_category(name=f"Ongoing InHouse Games", overwrites=overwrites)
+            cate_data = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {ctx.guild.id}")
+            if cate_data:
+                await self.bot.execute(f"UPDATE game_categories SET category_id = {category.id} WHERE guild_id = {ctx.guild.id}")
+            else:
+                await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id) VALUES(?,?)", ctx.guild.id, category.id)
+            
+            info_channel = await category.create_text_channel("Information")
+            embed = Embed(title="InHouse Queue", description="All ongoing games will be under this category. Feel free to move it around or change the name.", color=Color.red())
+            embed.set_image(url="https://media.discordapp.net/attachments/328696263568654337/1067908043624423497/image.png?width=1386&height=527")
+            view = LinkButton({"Vote for Us": "https://top.gg/bot/1001168331996409856/vote"}, {"Support": "https://discord.com/invite/8DZQcpxnbB"}, {"Website":"https://inhousequeue.xyz/"})
+            await info_channel.send(embed=embed, view=view)
+                
+            await ctx.send(embed=success("Setup completed successfully. If any, please delete previous 'match-history', 'top_10' and 'information' text channels. These are now inactive."))
+        if regions:
+            options = []
+            for region in regions:
+                options.append(SelectOption(label=region, value=region.lower()))
+            async def Function(inter, vals, *args):
+                await process_setup(vals[0])
+
+            await ctx.send(content="Select a region for the queue.", view=SelectMenuDeploy(self.bot, ctx.author.id, options, 1, 1, Function))
+        else:
+            await process_setup("none")
+
+    @admin_slash.sub_command()
+    async def reset_db(self, ctx, user_id):
+        """
+        Remove entries of a user from the leaderboards.
+        """
+        try:
+            await self.bot.execute(f"DELETE FROM points WHERE user_id = {user_id} and guild_id = {ctx.guild.id}")
+            await self.bot.execute(f"DELETE FROM mvp_points WHERE user_id = {user_id} and guild_id = {ctx.guild.id}")
+            await self.bot.execute(f"DELETE FROM mmr_rating WHERE user_id = {user_id} and guild_id = {ctx.guild.id}")
+            await ctx.send(embed=success("Successfully deleted entries associated with the given ID."))
+        except:
+            await ctx.send(embed=error("An error occured. Please recheck the user ID."))
+
+    @admin_slash.sub_command()
+    async def update_ign(self, ctx, ign, member: Member, game=Param(choices={"League Of Legends": "lol", "Valorant": "valorant", "Overwatch": "overwatch", "Other": "other"})):
+        """
+        Update In game name of a player
+        """
+        data = await self.bot.fetchrow(f"SELECT * FROM igns WHERE game = '{game}' and user_id = {member.id} and guild_id = {ctx.guild.id}")
+        if data:
+            await self.bot.execute(f"UPDATE igns SET ign = ? WHERE guild_id = ? and user_id = ? and game = ?", ign, ctx.guild.id, member.id, game)
+        else:
+            await self.bot.execute(f"INSERT INTO igns(guild_id, user_id, game, ign) VALUES(?,?,?,?)", ctx.guild.id, member.id, game, ign)
+        await ctx.send(embed=success("IGN updated successfully."))
 
     @admin_slash.sub_command_group(name="reset")
     async def reset_slash(self, ctx):

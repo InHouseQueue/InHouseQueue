@@ -162,6 +162,15 @@ class Events(Cog):
 
         await bot.execute(
             """
+            CREATE TABLE IF NOT EXISTS game_categories(
+                guild_id INTEGER,
+                category_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
             CREATE TABLE IF NOT EXISTS ready_ups(
                 game_id TEXT,
                 user_id INTEGER
@@ -261,6 +270,25 @@ class Events(Cog):
             """
         )
 
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS testmode(
+                guild_id INTEGER
+            )
+            """
+        )
+
+        await bot.execute(
+            """
+            CREATE TABLE IF NOT EXISTS igns(
+                guild_id INTEGER,
+                user_id INTEGER,
+                game TEXT,
+                ign TEXT
+            )
+            """
+        )
+
     @Cog.listener()
     async def on_ready(self):
         print("*********\nBot is Ready.\n*********")
@@ -330,8 +358,12 @@ class Events(Cog):
                 return
             else:
                 embed = msg.embeds[0]
+                if not embed.description:
+                    embed.description = ""
+                if not embed.title:
+                    embed.title = ""
             if (
-                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview"])
+                    (not embed.title in ["Match Overview - SR Tournament Draft", "Match Overview - Valorant Competitive", "Match Overview - Overwatch Competitive", "Match Overview", "1v1 Test Mode"])
                     and (
                         not embed.description == "Game was found! Time to ready up!"
                     )
@@ -389,6 +421,21 @@ class Events(Cog):
                             )
                             await msg.channel.send(embed=embeds.success("Thank you for voting."))
 
+    @Cog.listener('on_raw_member_remove')
+    async def clear_member_entries(self, payload):
+        await self.bot.wait_until_ready()
+        data = await self.bot.fetch(f"SELECT * FROM game_member_data")
+        if data:
+            for entry in data:
+                channel = self.bot.get_channel(entry[5])
+                if channel.guild.id == payload.guild_id:
+                    await self.bot.execute(f"DELETE FROM game_member_data WHERE game_id = '{entry[3]}' and author_id = {payload.user.id}")
+                    await self.bot.execute(f"DELETE FROM ready_ups WHERE game_id = '{entry[3]}' and user_id = {payload.user.id}")
+
+        await self.bot.execute(f"DELETE FROM igns WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(f"DELETE FROM mvp_points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(f"DELETE FROM points WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
+        await self.bot.execute(f"DELETE FROM mmr_rating WHERE guild_id = {payload.guild_id} and user_id = {payload.user.id}")
 
 
 def setup(bot):

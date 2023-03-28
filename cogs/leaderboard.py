@@ -234,7 +234,12 @@ class Leaderboard(Cog):
         if ctx.author.id not in [x[1] for x in user_data]:
             return await ctx.send(embed=error("You have not played a game yet, or have not received any MVP votes."))
         
-        embed = Embed(title=f"⏫ Rank of {ctx.author.name}", color=ctx.author.color)
+        ign = await self.bot.fetchrow(f"SELECT ign FROM igns WHERE guild_id = {ctx.guild.id} and user_id = {ctx.author.id} and game = '{game}'")
+        if ign:
+            display_name = ign[0]
+        else:
+            display_name = ctx.author.name
+        embed = Embed(title=f"⏫ Rank of {display_name}", color=ctx.author.color)
         if ctx.author.avatar:
             embed.set_thumbnail(url=ctx.author.avatar.url)
         async def add_field(data) -> None:
