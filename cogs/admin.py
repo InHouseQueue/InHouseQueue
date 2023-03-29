@@ -476,7 +476,7 @@ class Admin(Cog):
         pass
     
     @admin_slash.sub_command()
-    async def enable(
+    async def grant(
         self,
         ctx, 
         role: Role, 
@@ -513,7 +513,7 @@ class Admin(Cog):
         await ctx.send(embed=success(f"Command enabled for {role.mention} successfully."))
     
     @admin_slash.sub_command()
-    async def disable(
+    async def revoke(
         self,
         ctx, 
         role: Role, 
