@@ -21,7 +21,6 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ${{ env.REPO_NAME }}
-            docker exec inhousequeue_backup_1 backup
 
   add-bot-env:
     name: Secrets
@@ -58,7 +57,7 @@ jobs:
           script: |
             cd /home/henry/${{ env.REPO_NAME }}
             git pull
-            docker-compose build
+            docker compose build
             docker tag in-house-queue henrykoleoso/in-house-queue:latest
             docker push henrykoleoso/in-house-queue:latest
 
@@ -77,4 +76,4 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /home/henry/${{ env.REPO_NAME }}
-            docker-compose up -d
+            docker compose up -d

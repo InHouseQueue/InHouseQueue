@@ -6,3 +6,5 @@ Wrong results? /admin change_winner
 View your own rank with /rank
 Your MMR will be visible after 10 placement matches with MMR enabled
 Set up a dynamic leaderboard with /admin top_ten
+Put the bot in test mode with /admin test_mode
+Make sure to add your IGN with /ign
