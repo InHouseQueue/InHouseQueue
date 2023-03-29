@@ -720,14 +720,22 @@ class Admin(Cog):
                         send_messages=True, manage_channels=True
                     ),
                 }
-            category = await ctx.guild.create_category(name="InHouse", overwrites=mutual_overwrites)
+            if game == "lol":
+                display_game = "League Of Legends"
+            elif game == "valorant":
+                display_game = "Valorant"
+            elif game == "overwatch":
+                display_game = "Overwatch"
+            else:
+                display_game = "Other"
+            category = await ctx.guild.create_category(name=f"InHouse - {display_game}", overwrites=mutual_overwrites)
             queue = await category.create_text_channel(name="queue")
             match_history = await category.create_text_channel(name="match-history")
             top_ten = await category.create_text_channel(name="top-10")
             await self.bot.execute(
                 "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", queue.id, region, game
             )
-            winnerlog = await self.bot.fetchrow(f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}")
+            winnerlog = await self.bot.fetchrow(f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id} and game = '{game}'")
             if winnerlog:
                 await self.bot.execute(
                     f"UPDATE winner_log_channel SET channel_id = {match_history.id} WHERE guild_id = {ctx.guild.id} and game = '{game}'"
@@ -772,15 +780,17 @@ class Admin(Cog):
                     send_messages=True, manage_channels=True
                 ),
             }
-            category = await ctx.guild.create_category(name=f"Ongoing InHouse Games", overwrites=overwrites)
-            cate_data = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {ctx.guild.id}")
+            
+            category = await ctx.guild.create_category(name=f"Ongoing {game} Games", overwrites=overwrites)
+            cate_data = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {ctx.guild.id} and game = '{game}'")
             if cate_data:
-                await self.bot.execute(f"UPDATE game_categories SET category_id = {category.id} WHERE guild_id = {ctx.guild.id}")
+                await self.bot.execute(f"UPDATE game_categories SET category_id = {category.id} WHERE guild_id = {ctx.guild.id} and game = '{game}'")
             else:
-                await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id) VALUES(?,?)", ctx.guild.id, category.id)
+                await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id, game) VALUES(?,?,?)", ctx.guild.id, category.id, game)
             
             info_channel = await category.create_text_channel("Information")
-            embed = embed = Embed(title="InHouse Queue", description="All ongoing games will be under this category. Feel free to move it around or change its name.", color=Color.red())
+            
+            embed = embed = Embed(title="InHouse Queue", description=f"All ongoing {display_game} games will be under this category. Feel free to move it around or change its name.", color=Color.red())
             embed.set_image(url="https://media.discordapp.net/attachments/328696263568654337/1067908043624423497/image.png?width=1386&height=527")
             view = LinkButton({"Vote Us": "https://top.gg/bot/1001168331996409856/vote"}, {"Support": "https://discord.com/invite/8DZQcpxnbB"}, {"Website":"https://inhousequeue.xyz/"})
             await info_channel.send(embed=embed, view=view)
