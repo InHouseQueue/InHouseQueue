@@ -22,6 +22,9 @@
 
 </div>
 
+## This Project is no longer maintained. Don't worry the bot is still being developed on a private repository. Please feel free to clone this for your personal project, or if you are looking for the most up-to-date bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=1101927804016&scope=bot) it!
+
+### Pull requests are welcome
 
 # In-House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/banner.jpg)
