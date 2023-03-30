@@ -483,7 +483,7 @@ class Admin(Cog):
         command = Param(
             choices=[
                 OptionChoice('leaderboard reset', 'admin reset leaderboard'),
-                OptionChoice('user dequeue', 'user_dequeue'),
+                OptionChoice('user dequeue', 'admin user_dequeue'),
                 OptionChoice('queue reset', 'admin reset queue'),
                 OptionChoice('change_winner', 'admin change_winner'),
                 OptionChoice('declare winner', 'admin winner'),
@@ -492,6 +492,9 @@ class Admin(Cog):
                 OptionChoice('sbmm', 'admin sbmm'),
                 OptionChoice('top_ten', 'admin top_ten'),
                 OptionChoice('queue_preference', 'admin queue_preference'),
+                OptionChoice('duo queue', 'admin duo_queue'),
+                OptionChoice('set region', 'admin setregion'),
+                OptionChoice('update ign', 'admin update_ign')
             ]
         ), 
     ):
