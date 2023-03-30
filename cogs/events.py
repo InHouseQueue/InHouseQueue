@@ -172,7 +172,8 @@ class Events(Cog):
             """
             CREATE TABLE IF NOT EXISTS game_categories(
                 guild_id INTEGER,
-                category_id INTEGER
+                category_id INTEGER,
+                game TEXT
             )
             """
         )

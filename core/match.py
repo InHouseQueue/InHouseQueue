@@ -1124,7 +1124,7 @@ class ReadyButton(ui.Button):
                     }
 
                     # Creating channels
-                    game_category_id = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {inter.guild.id}")
+                    game_category_id = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {inter.guild.id} and game = '{self.game}'")
                     if game_category_id:
                         game_category = self.bot.get_channel(game_category_id[1])
                     else:

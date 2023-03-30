@@ -476,22 +476,25 @@ class Admin(Cog):
         pass
     
     @admin_slash.sub_command()
-    async def enable(
+    async def grant(
         self,
         ctx, 
         role: Role, 
         command = Param(
             choices=[
-                OptionChoice('leaderboard reset', 'admin reset leaderboard'),
-                OptionChoice('user dequeue', 'user_dequeue'),
-                OptionChoice('queue reset', 'admin reset queue'),
-                OptionChoice('change_winner', 'admin change_winner'),
-                OptionChoice('declare winner', 'admin winner'),
-                OptionChoice('cancel game', 'admin cancel'),
-                OptionChoice('void game', 'admin void'),
-                OptionChoice('sbmm', 'admin sbmm'),
-                OptionChoice('top_ten', 'admin top_ten'),
-                OptionChoice('queue_preference', 'admin queue_preference'),
+                OptionChoice('Reset server leaderboard', 'admin reset leaderboard'),
+                OptionChoice('Remove users from queue', 'admin user_dequeue'),
+                OptionChoice('Reset a queue', 'admin reset queue'),
+                OptionChoice('Change results of a game', 'admin change_winner'),
+                OptionChoice('Force a winner', 'admin winner'),
+                OptionChoice('Cancel a game', 'admin cancel'),
+                OptionChoice('Void Game', 'admin void'),
+                OptionChoice('Enable/Disable MMR', 'admin sbmm'),
+                OptionChoice('Create a dynamic leaderboard', 'admin top_ten'),
+                OptionChoice('Set queue preferences', 'admin queue_preference'),
+                OptionChoice('Enable/Disable Duo queue', 'admin duo_queue'),
+                OptionChoice('Update members IGN', 'admin update_ign'),
+                OptionChoice('Enable/Disable test mode', 'admin test_mode')
             ]
         ), 
     ):
@@ -513,22 +516,25 @@ class Admin(Cog):
         await ctx.send(embed=success(f"Command enabled for {role.mention} successfully."))
     
     @admin_slash.sub_command()
-    async def disable(
+    async def revoke(
         self,
         ctx, 
         role: Role, 
         command = Param(
             choices=[
-                OptionChoice('leaderboard reset', 'admin reset leaderboard'),
-                OptionChoice('user dequeue', 'user_dequeue'),
-                OptionChoice('queue reset', 'admin reset queue'),
-                OptionChoice('change_winner', 'admin change_winner'),
-                OptionChoice('declare winner', 'admin winner'),
-                OptionChoice('cancel game', 'admin cancel'),
-                OptionChoice('void game', 'admin void'),
-                OptionChoice('sbmm', 'admin sbmm'),
-                OptionChoice('top_ten', 'admin top_ten'),
-                OptionChoice('queue_preference', 'admin queue_preference'),
+                OptionChoice('Leaderboard reset', 'admin reset leaderboard'),
+                OptionChoice('Remove users from queue', 'admin user_dequeue'),
+                OptionChoice('Reset a queue', 'admin reset queue'),
+                OptionChoice('Change results of a game', 'admin change_winner'),
+                OptionChoice('Force a winner', 'admin winner'),
+                OptionChoice('Cancel game', 'admin cancel'),
+                OptionChoice('Void Game', 'admin void'),
+                OptionChoice('Enable/Disable MMR', 'admin sbmm'),
+                OptionChoice('Create dynamic leaderboard', 'admin top_ten'),
+                OptionChoice('Set queue preference', 'admin queue_preference'),
+                OptionChoice('Enable/Disable duo queue', 'admin duo_queue'),
+                OptionChoice('Update members IGN', 'admin update_ign'),
+                OptionChoice('Enable/Disable test mode', 'admin test_mode')
             ]
         ), 
     ):
@@ -720,14 +726,22 @@ class Admin(Cog):
                         send_messages=True, manage_channels=True
                     ),
                 }
-            category = await ctx.guild.create_category(name="InHouse", overwrites=mutual_overwrites)
+            if game == "lol":
+                display_game = "League Of Legends"
+            elif game == "valorant":
+                display_game = "Valorant"
+            elif game == "overwatch":
+                display_game = "Overwatch"
+            else:
+                display_game = "Other"
+            category = await ctx.guild.create_category(name=f"InHouse - {display_game}", overwrites=mutual_overwrites)
             queue = await category.create_text_channel(name="queue")
             match_history = await category.create_text_channel(name="match-history")
             top_ten = await category.create_text_channel(name="top-10")
             await self.bot.execute(
                 "INSERT INTO queuechannels(channel_id, region, game) VALUES($1, $2, $3)", queue.id, region, game
             )
-            winnerlog = await self.bot.fetchrow(f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id}")
+            winnerlog = await self.bot.fetchrow(f"SELECT * FROM winner_log_channel WHERE guild_id = {ctx.guild.id} and game = '{game}'")
             if winnerlog:
                 await self.bot.execute(
                     f"UPDATE winner_log_channel SET channel_id = {match_history.id} WHERE guild_id = {ctx.guild.id} and game = '{game}'"
@@ -772,15 +786,18 @@ class Admin(Cog):
                     send_messages=True, manage_channels=True
                 ),
             }
-            category = await ctx.guild.create_category(name=f"Ongoing InHouse Games", overwrites=overwrites)
-            cate_data = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {ctx.guild.id}")
+            
+            category = await ctx.guild.create_category(name=f"Ongoing {game} Games", overwrites=overwrites)
+            cate_data = await self.bot.fetchrow(f"SELECT * FROM game_categories WHERE guild_id = {ctx.guild.id} and game = '{game}'")
             if cate_data:
-                await self.bot.execute(f"UPDATE game_categories SET category_id = {category.id} WHERE guild_id = {ctx.guild.id}")
+                await self.bot.execute(f"UPDATE game_categories SET category_id = {category.id} WHERE guild_id = {ctx.guild.id} and game = '{game}'")
             else:
-                await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id) VALUES(?,?)", ctx.guild.id, category.id)
+                await self.bot.execute(f"INSERT INTO game_categories(guild_id, category_id, game) VALUES(?,?,?)", ctx.guild.id, category.id, game)
             
             info_channel = await category.create_text_channel("Information")
-            embed = Embed(title="InHouse Queue", description="All ongoing games will be under this category. Feel free to move it around or change the name.", color=Color.red())
+ 
+            embed = embed = Embed(title="InHouse Queue", description=f"All ongoing {display_game} games will be under this category. Feel free to move it around or change the name.", color=Color.red())
+
             embed.set_image(url="https://media.discordapp.net/attachments/328696263568654337/1067908043624423497/image.png?width=1386&height=527")
             view = LinkButton({"Vote for Us": "https://top.gg/bot/1001168331996409856/vote"}, {"Support": "https://discord.com/invite/8DZQcpxnbB"}, {"Website":"https://inhousequeue.xyz/"})
             await info_channel.send(embed=embed, view=view)
