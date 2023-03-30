@@ -28,10 +28,6 @@
 
 A Discord Bot designed to organise In-House Custom games for competitive 5v5 games.
 
-Written in Python using [disnake](https://docs.disnake.dev/en/stable/). 
-
-**Current visuals are for League of Legends, Overwatch and Valorant**
-
 ## Discord Servers
 - Discord [Support](https://discord.gg/FqdatEamYm) server - Raise bugs or get help
 - Discord [Queue](https://discord.gg/8DZQcpxnbB) server - Try the Bot out yourself!
@@ -50,18 +46,60 @@ https://www.inhousequeue.xyz/commands
 ## Running locally
 ### Prerequisites
 `Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
+`pip` - https://pypi.org/project/pip/
 
 1. Clone or Download this repository:
 ```bash
 git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
 ```
-2. Create a `.env` file in the root directory and paste in your Discord Bot [Token](https://discord.com/developers/applications)
-```.env
-TOKEN = MTAwMDQwNTYzODgwMDc0ODY0NQ.G23AvO.DcsRAE_FyXkUCuKlx-mGUVnazPCkn3H5LHvlPY
-```
-3. Optional: Edit the `cogs/dev.py` file and replace the IDs with your DiscordId(s) and GuildId(s)
+2. Rename a `.env.example` to `.env`.
 
-4. Run the Bot
+3. Fill in all the details
+
+```env
+# Discord Bot Token
+TOKEN=
+
+# Roles for League of Legends
+# Example <:MID:1066065288862380033>
+# To get this, In discord Enter the emoji and add \ to the start of it. Then press enter.
+TOP=""
+JUNGLE=""
+MID=""
+SUPPORT=""
+ADC=""
+
+# Roles for Valorant
+CONTROLLER=""
+DUELIST=""
+INITIATOR=""
+SENTINEL=""
+
+# Roles for Overwatch
+TANK=""
+DPS=""
+SUPPORT_OW=""
+
+# Discord ID of Owners. Use the SAME ID for BOTH values if there is only 1 owner.
+DEV_1=
+DEV_2=
+
+# Guild/Server ID of where the bot is running. Use the SAME ID for BOTH values if there is only 1 server.
+GUILD_1=
+GUILD_2=
+
+# Discord ID of the Bot
+BOT_ID=
+
+# Discord ID of the Error Log channel. Use the SAME ID for BOTH values if there is only 1 error log channel.
+ERROR_LOG_CHANNEL_ID_1=
+ERROR_LOG_CHANNEL_ID_2=
+
+```
+5. Install requirements. 
+   1. `pip install -r requirements.txt`
+
+6. Run the Bot
 ```
 python3 main.py
 ```
@@ -73,7 +111,7 @@ python3 main.py
 ## Self-hosting
 I encourage you to [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=3489918032&scope=bot) the Bot to your server, but if you want to make some changes and host it yourself feel free. Here is my [Hosting guide](https://docs.inhousequeue.xyz/documentation/reference/technical-documentation/hosting)
 
-## More details on the MMR alogrithm used
+## More details on the MMR algorithm used
 https://docs.inhousequeue.xyz/documentation/reference/sbmm
 
 # Contributing
