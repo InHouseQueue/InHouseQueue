@@ -482,16 +482,19 @@ class Admin(Cog):
         role: Role, 
         command = Param(
             choices=[
-                OptionChoice('leaderboard reset', 'admin reset leaderboard'),
-                OptionChoice('user dequeue', 'user_dequeue'),
-                OptionChoice('queue reset', 'admin reset queue'),
-                OptionChoice('change_winner', 'admin change_winner'),
-                OptionChoice('declare winner', 'admin winner'),
-                OptionChoice('cancel game', 'admin cancel'),
-                OptionChoice('void game', 'admin void'),
-                OptionChoice('sbmm', 'admin sbmm'),
-                OptionChoice('top_ten', 'admin top_ten'),
-                OptionChoice('queue_preference', 'admin queue_preference'),
+                OptionChoice('Reset server leaderboard', 'admin reset leaderboard'),
+                OptionChoice('Remove users from queue', 'admin user_dequeue'),
+                OptionChoice('Reset a queue', 'admin reset queue'),
+                OptionChoice('Change results of a game', 'admin change_winner'),
+                OptionChoice('Force a winner', 'admin winner'),
+                OptionChoice('Cancel a game', 'admin cancel'),
+                OptionChoice('Void Game', 'admin void'),
+                OptionChoice('Enable/Disable MMR', 'admin sbmm'),
+                OptionChoice('Create a dynamic leaderboard', 'admin top_ten'),
+                OptionChoice('Set queue preferences', 'admin queue_preference'),
+                OptionChoice('Enable/Disable Duo queue', 'admin duo_queue'),
+                OptionChoice('Update members IGN', 'admin update_ign'),
+                OptionChoice('Enable/Disable test mode', 'admin test_mode')
             ]
         ), 
     ):
@@ -519,16 +522,19 @@ class Admin(Cog):
         role: Role, 
         command = Param(
             choices=[
-                OptionChoice('leaderboard reset', 'admin reset leaderboard'),
-                OptionChoice('user dequeue', 'user_dequeue'),
-                OptionChoice('queue reset', 'admin reset queue'),
-                OptionChoice('change_winner', 'admin change_winner'),
-                OptionChoice('declare winner', 'admin winner'),
-                OptionChoice('cancel game', 'admin cancel'),
-                OptionChoice('void game', 'admin void'),
-                OptionChoice('sbmm', 'admin sbmm'),
-                OptionChoice('top_ten', 'admin top_ten'),
-                OptionChoice('queue_preference', 'admin queue_preference'),
+                OptionChoice('Leaderboard reset', 'admin reset leaderboard'),
+                OptionChoice('Remove users from queue', 'admin user_dequeue'),
+                OptionChoice('Reset a queue', 'admin reset queue'),
+                OptionChoice('Change results of a game', 'admin change_winner'),
+                OptionChoice('Force a winner', 'admin winner'),
+                OptionChoice('Cancel game', 'admin cancel'),
+                OptionChoice('Void Game', 'admin void'),
+                OptionChoice('Enable/Disable MMR', 'admin sbmm'),
+                OptionChoice('Create dynamic leaderboard', 'admin top_ten'),
+                OptionChoice('Set queue preference', 'admin queue_preference'),
+                OptionChoice('Enable/Disable duo queue', 'admin duo_queue'),
+                OptionChoice('Update members IGN', 'admin update_ign'),
+                OptionChoice('Enable/Disable test mode', 'admin test_mode')
             ]
         ), 
     ):
