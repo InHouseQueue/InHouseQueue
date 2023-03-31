@@ -57,7 +57,7 @@ Check out https://github.com/InHouseQueue/generate-emoji-ids to automatically pr
 # Discord Bot Token
 TOKEN=
 
-# Roles for League of Legends
+# Emoji ID's for Roles in League of Legends
 # Example <:MID:1066065288862380033>
 # To get this, In discord Enter the emoji and add \ to the start of it. Then press enter.
 TOP=""
@@ -66,13 +66,13 @@ MID=""
 SUPPORT=""
 ADC=""
 
-# Roles for Valorant
+# Emoji ID's for Roles in Valorant
 CONTROLLER=""
 DUELIST=""
 INITIATOR=""
 SENTINEL=""
 
-# Roles for Overwatch
+# Emoji ID's for Roles in Overwatch
 TANK=""
 DPS=""
 SUPPORT_OW=""
