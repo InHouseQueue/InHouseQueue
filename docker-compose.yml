@@ -3,7 +3,7 @@ version: '3.8'
 services:
   bot:
     build: .
-    image: in-house-queue
+    image: henrykoleoso/in-house-queue
     # create a .env file in the root directory
     environment:
       TOKEN: ${TOKEN}
