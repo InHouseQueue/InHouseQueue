@@ -1,12 +1,23 @@
+import os
+
 from core.embeds import error, success
 from disnake import Game
 from disnake.ext.commands import Cog, group, slash_command
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DEV_1 = int(os.getenv("DEV_1"))
+DEV_2 = int(os.getenv("DEV_2"))
+
+GUILD_1 = int(os.getenv("GUILD_1"))
+GUILD_2 = int(os.getenv("GUILD_2"))
 
 
 class Dev(Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
-        self.devs = [135811207645888515, 821306636605718548]
+        self.devs = [DEV_1, DEV_2]
 
     async def cog_check(self, ctx) -> bool:
         if not ctx.author.id in self.devs:
@@ -24,7 +35,7 @@ class Dev(Cog):
     async def dev(self, ctx):
         pass
 
-    @slash_command(name="dev", guild_ids=[1028306608100483082, 1005601917466058792])
+    @slash_command(name="dev", guild_ids=[GUILD_1, GUILD_2])
     async def dev_slash(self, ctx):
         pass
 
