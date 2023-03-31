@@ -1,6 +1,6 @@
 <div align="center">
 
-  <a href="https://discord.com/invite/8DZQcpxnbB">
+  <a href="https://discord.gg/NDKMeT6GE7">
     <img src="https://img.shields.io/discord/1079074933008781362.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge" alt="Support">
   </a>
 
