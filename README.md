@@ -51,7 +51,7 @@ git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
 2. Rename a `.env.example` to `.env`.
 
 3. Fill in all the details
-Check out https://github.com/InHouseQueue/generate-emoji-ids to automatically print emoji Ids without doing these 1 by 1. Make sure you have emojis uploaded to your server.
+Check out https://github.com/InHouseQueue/generate-emoji-ids to automatically print emoji Ids without doing these 1 by 1. Make sure you have emojis uploaded to your server. Only fill in emoji IDs for the games you are playing.
 
 ```env
 # Discord Bot Token
