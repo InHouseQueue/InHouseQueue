@@ -51,6 +51,7 @@ git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
 2. Rename a `.env.example` to `.env`.
 
 3. Fill in all the details
+Check out https://github.com/InHouseQueue/generate-emoji-ids to automatically print emoji Ids without doing these 1 by 1. Make sure you have emojis uploaded to your server.
 
 ```env
 # Discord Bot Token
@@ -59,7 +60,6 @@ TOKEN=
 # Roles for League of Legends
 # Example <:MID:1066065288862380033>
 # To get this, In discord Enter the emoji and add \ to the start of it. Then press enter.
-# You can also check out if https://github.com/InHouseQueue/generate-emoji-ids you're lazy!
 TOP=""
 JUNGLE=""
 MID=""
