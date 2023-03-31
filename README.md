@@ -66,6 +66,7 @@ TOKEN=
 # Roles for League of Legends
 # Example <:MID:1066065288862380033>
 # To get this, In discord Enter the emoji and add \ to the start of it. Then press enter.
+# You can also check out if https://github.com/InHouseQueue/generate-emoji-ids you're lazy!
 TOP=""
 JUNGLE=""
 MID=""
@@ -130,7 +131,7 @@ This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE - see the L
 - Ensures that modified versions and derivative works of the software also remain open-source by requiring them to adopt the AGPL-3.0 license.
 - Grants end users the freedom to use, study, share, and modify the software.
 - Preserves copyright notices, disclaimers, and license information within the source code.
--Excludes the granting of patent rights; contributors with patents covering their contributions must license those patents to users.
+- Excludes the granting of patent rights; contributors with patents covering their contributions must license those patents to users.
 - Relieves original authors and contributors of liability for damages or warranty claims.
 
 # Acknowledgments
