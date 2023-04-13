@@ -42,6 +42,7 @@ https://www.inhousequeue.xyz/commands
 ## Running locally
 ### Prerequisites
 `Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
+
 `pip` - https://pypi.org/project/pip/
 
 1. Clone or Download this repository:
