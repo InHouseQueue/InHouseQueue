@@ -130,3 +130,5 @@ This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE - see the L
 
 # Acknowledgments
 [Aarno](https://aarno.is-a.dev)
+
+Copyright © 2023 HenrySpartGlobal
