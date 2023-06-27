@@ -15,7 +15,10 @@
   </a>
 </div>
 
-## The Bot is no longer open source, however it is still being developed on a private repository. Please feel free to clone this for your personal project, or if you are looking for the most up-to-date bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=1101927804016&scope=bot) it!
+## This is the open-source version of InHouseQueue using TrueSkill as MMR. Feel free to clone this and use it as a base for a personal non-commercial project. 
+
+## We've been working hard and developing a custom MMR system, with many other improvements. This is also free, please take a look and invite it:
+## [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=1101927804016&scope=bot)
 
 ### Pull requests are STILL welcome
 
