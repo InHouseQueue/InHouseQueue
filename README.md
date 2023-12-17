@@ -15,9 +15,12 @@
   </a>
 </div>
 
-## This Project is no longer maintained. The bot is still being developed on a private repository. Please feel free to clone this for your personal project, or if you are looking for the most up-to-date bot [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=1101927804016&scope=bot) it!
+## This is the open-source version of InHouseQueue using TrueSkill as MMR. Feel free to clone this and use it as a base for a personal non-commercial project. 
 
-### Pull requests are welcome
+## We've been working hard and developing a custom MMR system, with many other improvements. This is also free, please take a look and invite it:
+## [Invite](https://discord.com/api/oauth2/authorize?client_id=1001168331996409856&permissions=1101927804016&scope=bot)
+
+### Pull requests are STILL welcome
 
 # In-House Queue
 ![](https://github.com/HenrySpartGlobal/InHouseQueue/blob/main/assets/banner.jpg)
@@ -42,6 +45,7 @@ https://www.inhousequeue.xyz/commands
 ## Running locally
 ### Prerequisites
 `Python 3.9.X` - Download python [here](https://www.python.org/downloads/)
+
 `pip` - https://pypi.org/project/pip/
 
 1. Clone or Download this repository:
@@ -51,7 +55,7 @@ git clone git@github.com:HenrySpartGlobal/InHouseQueue.git
 2. Rename a `.env.example` to `.env`.
 
 3. Fill in all the details
-Check out https://github.com/InHouseQueue/generate-emoji-ids to automatically print emoji Ids without doing these 1 by 1. Make sure you have emojis uploaded to your server.
+Check out https://github.com/InHouseQueue/generate-emoji-ids to automatically print emoji Ids without doing these 1 by 1. Make sure you have emojis uploaded to your server. Only fill in emoji IDs for the games you are playing.
 
 ```env
 # Discord Bot Token
@@ -129,3 +133,5 @@ This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE - see the L
 
 # Acknowledgments
 [Aarno](https://aarno.is-a.dev)
+
+Copyright © 2023 HenrySpartGlobal
